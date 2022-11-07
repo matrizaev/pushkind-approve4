@@ -52,8 +52,8 @@ def GetOrder(order_id):
 @bp.route('/orders/<int:order_id>')
 @login_required
 @role_forbidden(['default'])
-def ShowOrder(order_id):
-    return '<p>ShowOrder</p>'
+def show_order(order_id):
+    return '<p>show_order</p>'
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -148,14 +148,14 @@ def SplitOrder(order_id):
 
     # if order.status in (OrderStatus.approved, OrderStatus.cancelled):
     #     flash('Нельзя модифицировать согласованную или аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = SplitOrderForm()
     # if form.validate_on_submit():
     #     product_ids = form.products.data
     #     if not isinstance(product_ids, list) or len(product_ids) == 0:
     #         flash('Некорректный список позиции.')
-    #         return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #         return redirect(url_for('main.show_order', order_id=order_id))
 
     #     product_lists = [[], []]
 
@@ -167,7 +167,7 @@ def SplitOrder(order_id):
 
     #     if len(product_lists[0]) == 0 or len(product_lists[1]) == 0:
     #         flash('Некорректный список позиции.')
-    #         return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #         return redirect(url_for('main.show_order', order_id=order_id))
 
     #     message_flash = 'заявка разделена на заявки'
 
@@ -301,7 +301,7 @@ def DuplicateOrder(order_id):
 
     # send_email_notification('new', new_order)
 
-    # return redirect(url_for('main.ShowOrder', order_id=new_order.id))
+    # return redirect(url_for('main.show_order', order_id=new_order.id))
 
 
 @bp.route('/orders/quantity/<int:order_id>', methods=['POST'])
@@ -316,7 +316,7 @@ def SaveQuantity(order_id):
 
     # if order.status in (OrderStatus.approved, OrderStatus.cancelled):
     #     flash('Нельзя модифицировать согласованную или аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = ChangeQuantityForm()
     # if form.validate_on_submit():
@@ -326,7 +326,7 @@ def SaveQuantity(order_id):
     #             break
     #     else:
     #         flash('Указанный товар не найден в заявке.')
-    #         return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #         return redirect(url_for('main.show_order', order_id=order_id))
 
     #     if product['quantity'] != form.product_quantity.data:
     #         message = f"{product['sku']} количество было {product['quantity']} "\
@@ -371,7 +371,7 @@ def SaveQuantity(order_id):
     #     )
     #     for error in errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/excel1/<int:order_id>')
@@ -515,7 +515,7 @@ def SetDealDone(order_id):
 
     # if order.status == OrderStatus.cancelled:
     #     flash('Нельзя модифицировать аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = LeaveCommentForm()
     # form.notify_reviewers.choices = [
@@ -529,7 +529,7 @@ def SetDealDone(order_id):
     # else:
     #     for error in form.comment.errors + form.notify_reviewers.errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 def Prepare1CReport(order, excel_date):
@@ -648,7 +648,7 @@ def GetExcelReport1C(order_id):
     # data = Prepare1CReport(order, excel_date)
     # if data is None:
     #     flash('Не удалось получить выгрузку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
     # if excel_send is False:
     #     return Response(
     #         data,
@@ -674,7 +674,7 @@ def GetExcelReport1C(order_id):
     #     flash(f'Заявка отправлена на {app_data.email_1C}')
     # else:
     #     flash('Email для отправки в 1С не настроен администратором.')
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/approval/<int:order_id>', methods=['POST'])
@@ -689,7 +689,7 @@ def SaveApproval(order_id):
 
     # if order.status == OrderStatus.cancelled:
     #     flash('Нельзя модифицировать аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = OrderApprovalForm()
     # if form.validate_on_submit():
@@ -707,7 +707,7 @@ def SaveApproval(order_id):
 
     #     if user_approval is not None:
     #         flash('Вы уже выполнили это действие.')
-    #         return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #         return redirect(url_for('main.show_order', order_id=order_id))
 
     #     last_status = order.status
 
@@ -781,7 +781,7 @@ def SaveApproval(order_id):
     #                     break
     #             else:
     #                 flash('Указанный позиция не найдена в заявке.')
-    #                 return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #                 return redirect(url_for('main.show_order', order_id=order_id))
     #             product_approval = OrderApproval.query.filter_by(
     #                 order_id=order_id,
     #                 user_id=current_user.id,
@@ -838,7 +838,7 @@ def SaveApproval(order_id):
     # else:
     #     for error in form.product_id.errors + form.comment.errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/statements/<int:order_id>', methods=['POST'])
@@ -853,7 +853,7 @@ def SaveStatements(order_id):
 
     # if order.status in (OrderStatus.approved, OrderStatus.cancelled):
     #     flash('Нельзя модифицировать согласованную или аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = ApproverForm()
 
@@ -918,7 +918,7 @@ def SaveStatements(order_id):
     # else:
     #     for error in form.income_statement.errors + form.cashflow_statement.errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/parameters/<int:order_id>', methods=['POST'])
@@ -933,7 +933,7 @@ def SaveParameters(order_id):
 
     # if order.status in (OrderStatus.approved, OrderStatus.cancelled):
     #     flash('Нельзя модифицировать согласованную или аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = InitiativeForm()
 
@@ -1001,7 +1001,7 @@ def SaveParameters(order_id):
     # else:
     #     for error in form.project.errors + form.site.errors + form.categories.errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/comment/<int:order_id>', methods=['POST'])
@@ -1023,7 +1023,7 @@ def LeaveComment(order_id):
     # else:
     #     for error in form.comment.errors + form.notify_reviewers.errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/process/<int:order_id>')
@@ -1038,7 +1038,7 @@ def ProcessHubOrder(order_id):
 
     # if order.status == OrderStatus.cancelled:
     #     flash('Нельзя отправить поставщику аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # message = 'Заявка была отправлена поставщикам: '
     # message += ', '.join(vendor.name for vendor in order.vendors)
@@ -1056,7 +1056,7 @@ def ProcessHubOrder(order_id):
 
     # flash(message)
 
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
 
 
 @bp.route('/orders/cancel/<int:order_id>', methods=['POST'])
@@ -1071,7 +1071,7 @@ def CancelOrder(order_id):
 
     # if order.status == OrderStatus.cancelled:
     #     flash('Нельзя аннулировать аннулированную заявку.')
-    #     return redirect(url_for('main.ShowOrder', order_id=order_id))
+    #     return redirect(url_for('main.show_order', order_id=order_id))
 
     # form = LeaveCommentForm()
     # form.notify_reviewers.choices = [
@@ -1086,4 +1086,4 @@ def CancelOrder(order_id):
     # else:
     #     for error in form.comment.errors + form.notify_reviewers.errors:
     #         flash(error)
-    # return redirect(url_for('main.ShowOrder', order_id=order_id))
+    # return redirect(url_for('main.show_order', order_id=order_id))
