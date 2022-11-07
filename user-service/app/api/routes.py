@@ -109,7 +109,8 @@ def put_user(user_id):
     user = User.query.filter_by(id=user_id).filter(or_(User.hub_id==current_user.hub_id, User.hub_id==None)).first()
     if user is None:
         return error_response(404, 'Пользователь не существует.')
-    user.hub_id = current_user.hub_id
+    if current_user.role == UserRoles.admin:
+        user.hub_id = data.get('hub_id', current_user.hub_id)
     user.from_dict(data)
     db.session.commit()
     Position.cleanup_unused()
