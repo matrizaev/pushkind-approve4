@@ -28,7 +28,7 @@ def get_tenders():
     )
     if current_user.role['name'] == 'vendor':
         tenders = tenders.join(TenderVendor).filter_by(vendor_id=current_user.email)
-    tenders=tenders.all()
+    tenders=tenders.order_by(Tender.timestamp.desc()).all()
     return jsonify([t.to_dict(vendor_id) for t in tenders]), 200
 
 

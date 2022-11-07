@@ -80,7 +80,7 @@ class LeaveCommentForm(FlaskForm):
             Length(max=256, message='Слишком длинный комментарий.')
         ]
     )
-    notify_reviewers = SelectMultipleField('Уведомить ↓', coerce=int)
+    notify_reviewers = SelectMultipleField('Уведомить ↓')
     submit = SubmitField('Сохранить')
 
     def comment_and_send_email(self, entity_id, event_type, entity_type, reviewers):

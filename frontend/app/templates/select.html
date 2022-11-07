@@ -52,10 +52,14 @@
                         {% endif %}
                     </li>
                     <li class="dropdown-item">
-                        <label for="proposeTenderFormSubmit">
-                            <i class="bi bi-upload"></i>
-                            <span class="text-primary text-decoration-underline">предложить</span>
-                        </label>
+                        <i class="bi bi-upload"></i>
+                        {% if vendor_id %}
+                            <label for="proposeTenderFormSubmit">
+                                <span class="text-primary text-decoration-underline">предложить</span>
+                            </label>
+                        {% else %}
+                            <span class="text-secondary">предложить</span>
+                        {% endif %}
                     </li>
                 </ul>
             </div>
