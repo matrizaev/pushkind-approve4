@@ -229,7 +229,7 @@
     </div>
 </div>
 
-<form id="proposeTenderForm" class="d-none" enctype="multipart/form-data" action="{{ url_for('main.propose_tender', tender_id=tender.id) }}" method="POST">
+<form id="proposeTenderForm" class="d-none" enctype="multipart/form-data" action="{{ url_for('main.propose_tender', tender_id=tender.id, vendor_id=vendor_id) }}" method="POST">
     {{ propose_form.csrf_token(id=False) }}
     <input id="proposeTenderFormSubmit" type="file" name="products" class="d-none" accept=".xlsx">
 </form>

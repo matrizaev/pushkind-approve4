@@ -142,6 +142,11 @@ def propose_tender(tender_id):
         vendor_id = current_user.email
     else:
         vendor_id=request.args.get('vendor_id', False)
+
+    if not vendor_id:
+        flash('Поставщик не найден.')
+        return redirect(url_for('main.show_tender', tender_id=tender_id))
+
     tender = next(iter(TenderApi.get_entities(id=tender_id, vendor_id=vendor_id)) or []) or None
     if tender is None:
         flash('Тендер не найден')
@@ -152,7 +157,8 @@ def propose_tender(tender_id):
         data = b64encode(form.products.data.read()).decode('utf-8')
         response = TenderApi.put_entity(
             tender_id,
-            products=data
+            products=data,
+            vendor_id=vendor_id
         )
         if response is not None:
             flash('Предложение успешно загружено.')
@@ -161,4 +167,4 @@ def propose_tender(tender_id):
     else:
         for error in form.products.errors:
             flash(error)
-    return redirect(url_for('main.show_tender', tender_id=tender_id))
+    return redirect(url_for('main.show_tender', tender_id=tender_id, vendor_id=vendor_id))
