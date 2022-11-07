@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container my-2">
+	<div class="row">
+		<div class="col">
+			<input class="form-control" id="hubFilter" type="text" placeholder="Фильтр..">
+		</div>
+		{% if current_user.role.name in ['supervisor', 'admin'] %}
+			<div class="col">
+				<form action="{{url_for('main.switch_hub')}}" method="POST">
+					<select class="form-select" aria-label="Switch Hub" name="hub_id" id="switchHubFormSelect">
+						<option disabled {%if current_user.hub_id is none %}selected{%endif%}>Выбор хаба</option>
+						{% for hub in hubs %}
+							{% if hub.enabled %}
+								<option value="{{hub.id}}" {%if current_user.hub_id == hub.id %}selected{%endif%}>{{hub.name}}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+				</form>
+			</div>
+		{% endif %}
+		{% if current_user.role.name == 'admin' %}
+			<div class="col-auto">
+				<a class="btn btn-primary text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addHubModal"><i class="bi bi-plus-square"></i></a>
+			</div>
+		{% endif %}
+	</div>
+	<div class="row d-none d-sm-flex fw-bold">
+		<div class="col overflow-hidden">
+			Хаб
+		</div>
+		<div class="col overflow-hidden">
+			Электронный адрес
+		</div>
+		<div class="col overflow-hidden">
+			Поставщики
+		</div>
+	</div>
+	<div id="hubList">
+		{% for hub in hubs %}
+			<div class="row my-1 py-1 border-bottom">
+				<div class="col-sm">
+					{% if current_user.role.name == 'admin' %}
+						<form action="{{url_for('main.remove_hub', hub_id=hub.id)}}" method="POST">
+							<div class="row">
+								<div class="col">
+									<span class="d-sm-none fw-bold">Хаб:</span>
+									{% if current_user.hub_id == hub.id %}
+										<a href="#" class="editHubButton text-success" data-bs-toggle="modal" data-bs-target="#editHubModal" data-id="{{ hub.id }}">
+									{% elif not hub.enabled %}
+										<a href="#" class="editHubButton text-secondary" data-bs-toggle="modal" data-bs-target="#editHubModal" data-id="{{ hub.id }}">
+									{% else %}
+										<a href="#" class="editHubButton" data-bs-toggle="modal" data-bs-target="#editHubModal" data-id="{{ hub.id }}">
+									{% endif %}
+											{{ hub.name }}
+									</a>
+								</div>
+								<div class="col-auto">
+									<a href="#" class="addVendorButton btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addVendorModal" data-id="{{ hub.id }}">
+										<i class="bi bi-plus-square"></i>
+									</a>
+									<button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="confirm('Вы действительно хотите удалить?')">
+										<i class="bi bi-x-lg"></i>
+									</button>
+								</div>
+							</div>
+						</form>
+					{% else %}
+						<span class="d-sm-none fw-bold">Хаб:</span>
+						{{ hub.name }}<br>
+					{% endif %}
+				</div>
+				<div class="col-sm">
+					<span class="d-sm-none fw-bold">Электронный адрес:</span>
+					{{ hub.email }}
+				</div>
+				<div class="col-sm">
+					{% for vendor in hub.vendors %}
+						{% if current_user.role.name == 'admin' %}
+							<form action="{{url_for('main.remove_vendor', vendor_id=vendor.id)}}" method="POST" class="my-1">
+								<div class="row">
+									<div class="col">
+										<span class="d-sm-none fw-bold">Поставщик:</span>
+										{% if not vendor.enabled %}
+											<a href="#" class="editVendorButton text-secondary" data-bs-toggle="modal" data-bs-target="#editVendorModal" data-id="{{ vendor.id }}">
+										{% else %}
+											<a href="#" class="editVendorButton" data-bs-toggle="modal" data-bs-target="#editVendorModal" data-id="{{ vendor.id }}">
+										{% endif %}
+											({{ vendor.email }})
+											{{ vendor.name }}
+										</a>
+									</div>
+									<div class="col-auto">
+										<button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="confirm('Вы действительно хотите удалить?')">
+											<i class="bi bi-x-lg"></i>
+										</button>
+									</div>
+								</div>
+							</form>
+						{% else %}
+							<span class="d-sm-none fw-bold">Поставщик:</span>
+							({{ vendor.email }})
+							{{ vendor.name }}
+							<br>
+						{% endif %}
+					{% endfor %}
+				</div>
+			</div>
+		{% endfor %}
+	</div>
+</div>
+
+{% if current_user.role.name == 'admin' %}
+<div class="modal fade" id="addHubModal" tabindex="-1" aria-labelledby="addHubModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="addHubModalLabel">ДОБАВИТЬ ХАБ</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form method="POST" action="{{ url_for('main.add_hub') }}">
+				<div class="modal-body">
+					{{ forms['add_hub'].csrf_token(id=False) }}
+					<div class="mb-3">
+						{{ forms['add_hub'].hub_name.label(id=False, class_='form-label', for='addHubName') }}
+						{{ forms['add_hub'].hub_name(id='addHubName', class_='form-control') }}
+					</div>
+					<div class="mb-3">
+						{{ forms['add_hub'].email.label(id=False, class_='form-label', for='addHubEmail') }}
+						{{ forms['add_hub'].email(id='addHubEmail',class_='form-control') }}
+					</div>
+				</div>
+				<div class="modal-footer">
+					{{ forms['add_hub'].submit(id=False, class_='btn btn-primary text-white') }}
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="addVendorModal" tabindex="-1" aria-labelledby="addVendorModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="addVendorModalLabel">ДОБАВИТЬ ПОСТАВЩИКА</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form method="POST" action="{{ url_for('main.add_vendor') }}">
+				<div class="modal-body">
+					{{ forms['add_vendor'].csrf_token(id=False) }}
+					{{ forms['add_vendor'].hub_id(id='addVendorHubId', hidden='', class_='d-none') }}
+					<div class="mb-3">
+						{{ forms['add_vendor'].vendor_name.label(id=False, class_='form-label', for='addVendorName') }}
+						{{ forms['add_vendor'].vendor_name(id='addVendorName', class_='form-control') }}
+					</div>
+					<div class="mb-3">
+						{{ forms['add_vendor'].email.label(id=False, class_='form-label', for='addVendorEmail') }}
+						{{ forms['add_vendor'].email(id='addVendorEmail',class_='form-control') }}
+					</div>
+					<div class="mb-3">
+						{{ forms['add_vendor'].password.label(id=False, class_='form-label', for='addVendorPassword') }}
+						{{ forms['add_vendor'].password(id='addVendorPassword',class_='form-control') }}
+					</div>
+				</div>
+				<div class="modal-footer">
+					{{ forms['add_vendor'].submit(id=False, class_='btn btn-primary text-white') }}
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="editHubModal" tabindex="-1" aria-labelledby="editHubModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="editHubModalLabel">РЕДАКТИРОВАТЬ ХАБ</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form method="POST" action="{{ url_for('main.edit_hub') }}">
+				<div class="modal-body">
+					{{ forms['edit_hub'].csrf_token(id=False) }}
+					{{ forms['edit_hub'].hub_id(id='editHubId', hidden='', class_='d-none') }}
+					<div class="mb-3">
+						{{ forms['edit_hub'].hub_name.label(id=False, class_='form-label', for='editHubName') }}
+						{{ forms['edit_hub'].hub_name(id='editHubName', class_='form-control') }}
+					</div>
+					<div class="mb-3 form-check">
+						{{ forms['edit_hub'].enabled(id='editHubEnabled',class_='form-check-input') }}
+						{{ forms['edit_hub'].enabled.label(id=False, class_='form-check-label', for='editHubEnabled') }}
+					</div>
+				</div>
+				<div class="modal-footer">
+					{{ forms['edit_hub'].submit(id=False, class_='btn btn-primary text-white') }}
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="editVendorModal" tabindex="-1" aria-labelledby="editVendorModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="editVendorModalLabel">РЕДАКТИРОВАТЬ ПОСТАВЩИКА</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form method="POST" action="{{ url_for('main.edit_vendor') }}">
+				<div class="modal-body">
+					{{ forms['edit_vendor'].csrf_token(id=False) }}
+					{{ forms['edit_vendor'].vendor_id(id='editVendorId', hidden='', class_='d-none') }}
+					<div class="mb-3">
+						{{ forms['edit_vendor'].vendor_name.label(id=False, class_='form-label', for='editVendorName') }}
+						{{ forms['edit_vendor'].vendor_name(id='editVendorName', class_='form-control') }}
+					</div>
+					<div class="mb-3 form-check">
+						{{ forms['edit_vendor'].enabled(id='editVendorEnabled',class_='form-check-input') }}
+						{{ forms['edit_vendor'].enabled.label(id=False, class_='form-check-label', for='editVendorEnabled') }}
+					</div>
+				</div>
+				<div class="modal-footer">
+					{{ forms['edit_vendor'].submit(id=False, class_='btn btn-primary text-white') }}
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function () {
+
+		{% if current_user.role.name == 'admin' %}
+
+		var hubs = {{hubs|to_json|safe}};
+		$(".editHubButton").click(function () {
+			let hubId = Number($(this).data("id"));
+			$("#editHubId").val(hubId);
+			hubs.some(function (hub) {
+				if (hub["id"] == hubId) {
+					$("#editHubName").val(hub["name"]);
+					$("#editHubEnabled").prop('checked', hub["enabled"]);
+					return true;
+				}
+			});
+		});
+
+		$(".addVendorButton").click(function () {
+			let hubId = Number($(this).data("id"));
+			$("#addVendorHubId").val(hubId);
+			hubs.some(function (hub) {
+				if (hub["id"] == hubId) {
+					$("#addVendorModalLabel").text("ДОБАВИТЬ ПОСТАВЩИКА В \"" + hub["name"] + "\"");
+					return true;
+				}
+			});
+		});
+
+		$(".editVendorButton").click(function () {
+			let vendorId = Number($(this).data("id"));
+			$("#editVendorId").val(vendorId);
+			hubs.some(function (hub) {
+				let found = false;
+				hub["vendors"].some(function (vendor) {
+					if (vendor["id"] == vendorId) {
+						$("#editVendorName").val(vendor["name"]);
+						$("#editVendorEnabled").prop('checked', vendor["enabled"]);
+						found = true;
+						return true;
+					}
+				});
+				if (found === true)
+					return true;
+			});
+		});
+
+		$("#switchHubFormSelect").change(function(){
+			$(this).parent('form').submit();
+		});
+
+		{% endif %}
+
+		$("#hubFilter").on("keyup", function () {
+			let value = $(this).val().toLowerCase();
+			$("#hubList .row").filter(function () {
+				$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+			});
+		});
+
+	});
+</script>
+{% endblock %}

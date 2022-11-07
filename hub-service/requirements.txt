@@ -1,0 +1,16 @@
+mysql-connector-python
+mysqlclient
+gunicorn
+flask
+gevent
+Flask-Migrate
+Flask-SQLAlchemy
+Flask-Mail
+SQLAlchemy
+python-dotenv
+PyJWT
+Flask-HTTPAuth
+pytest
+pika
+pandas
+openpyxl

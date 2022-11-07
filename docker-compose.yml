@@ -1,0 +1,102 @@
+version: '3'
+services:
+  event-service:
+    depends_on:
+      - database
+      - mq-service
+    build: ./event-service
+    restart: unless-stopped
+    environment:
+      - DB_URL
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  frontend:
+    depends_on:
+      - database
+      - mq-service
+    build: ./frontend
+    volumes:
+      - upload:/home/pushkind/app/static/upload
+    ports:
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  hub-service:
+    depends_on:
+      - database
+      - mq-service
+    build: ./hub-service
+    restart: unless-stopped
+    environment:
+      - DB_URL
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  order-service:
+    depends_on:
+      - database
+      - mq-service
+    build: ./order-service
+    environment:
+      - DB_URL
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  project-service:
+    depends_on:
+      - database
+      - mq-service
+    build: ./project-service
+    restart: unless-stopped
+    environment:
+      - DB_URL
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  tender-service:
+    depends_on:
+      - database
+      - mq-service
+    build: ./tender-service
+    restart: unless-stopped
+    environment:
+      - DB_URL
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  user-service:
+    depends_on:
+      - database
+      - mq-service
+    build: ./user-service
+    restart: unless-stopped
+    environment:
+      - DB_URL
+      - SECRET_KEY
+      - CONFIGURATION_SETUP
+
+  database:
+    image: mysql:latest
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+    restart: unless-stopped
+
+  mq-service:
+    image: rabbitmq:3-management-alpine
+    volumes:
+      - mq:/var/lib/rabbitmq/
+    ports:
+        - 127.0.0.1:15672:15672
+
+volumes:
+  db:
+  mq:
+  upload:
+

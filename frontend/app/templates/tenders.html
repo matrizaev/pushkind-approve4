@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container my-2">
+    <div class="row gx-1 justify-content-center">
+        <div class="col-md-8">
+            <input class="form-control" id="tenderFilter" type="text" placeholder="Фильтр..">
+        </div>
+        {% if current_user.role.name in ('admin', 'purchaser') %}
+            <div class="col-auto">
+                <a class="btn btn-primary" href="{{url_for('static', filename='upload/tenders.xlsx')}}">
+                    <i class="bi bi-cloud-download"></i>
+                </a>
+            </div>
+            <div class="col-auto">
+                <form method="POST" enctype="multipart/form-data" id="addTenderForm" action="{{url_for('main.add_tender')}}">
+                    {{ form.csrf_token(id=False) }}
+                    <label for="addTenderFormSubmit">
+                        <span class="btn btn-warning mb-1">
+                            <i class="bi bi-cloud-upload"></i>
+                        </span>
+                    </label>
+                    <input id="addTenderFormSubmit" type="file" name="products" class="d-none" accept=".xlsx">
+                </form>
+            </div>
+        {% endif %}
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <a href="{{ url_for('main.show_tenders') }}" class="text-decoration-none badge bg-primary">все</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row bg-light d-none d-sm-flex border">
+        <div class="col overflow-hidden">
+            Номер
+        </div>
+        <div class="col overflow-hidden">
+            Время
+        </div>
+        <div class="col overflow-hidden">
+            Закупщик
+        </div>
+        <div class="col overflow-hidden">
+            Вендоры
+        </div>
+        <div class="col overflow-hidden">
+            Статус
+        </div>
+    </div>
+    <div id="tenderList">
+        {% for tender in tenders %}
+            <div class="row selectable border bg-white my-1 py-1 rounded" data-id="{{tender.id}}">
+                <div class="col">
+                    {{ tender.id }}
+                </div>
+                <div class="col">
+                    {{ tender.timestamp }}
+                </div>
+                <div class="col">
+                    {% set user = tender.initiative %}
+                    {% include '_user.popover.html' %}
+                    {{ user.name }}
+                </div>
+                <div class="col">
+                    {% for tv in tender.vendors %}
+                        {{ tv.vendor.name }}<br>
+                    {% endfor %}
+                </div>
+                <div class="col">
+                    <span class="badge bg-{{tender.status.color }} fw-normal" title="Статус">{{ tender.status.pretty }}</span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        $("#tenderFilter").on("keyup", function () {
+            let value = $(this).val().toLowerCase();
+            $("#tenderList > .row").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+        $('#addTenderFormSubmit').on('change',()=>{
+            $('#addTenderForm').submit();
+        });
+		$(".selectable").click(function (event) {
+			let tenderId = $(this).attr('data-id');
+			document.location.href = "{{ url_for('main.show_tender', tender_id='0') }}".replace("0", tenderId);
+		});
+    });
+</script>
+{% endblock %}

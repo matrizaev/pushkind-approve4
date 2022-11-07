@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% set ns = namespace(vendor={}) %}
+<div class="container my-2">
+    <div class="row">
+        <div class="col">
+            <span class="fw-bold">
+                Тендер
+                #{{ tender.id }}
+            </span>
+            от {{ tender.timestamp }}
+            <span class="badge bg-{{tender.status.color }} fw-normal" title="Статус">{{ tender.status.pretty }}</span>
+        </div>
+        <div class="col-auto">
+            <div class="dropdown">
+                <a class="dropdown-toggle" href="#" role="button" id="tenderActionsLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    Действия с тендером
+                </a>
+                <ul class="dropdown-menu bg-light" aria-labelledby="tenderActionsLink">
+                    <li class="dropdown-item">
+                        <i class="bi bi-pencil"></i>
+                        <a class="leaveComment" href="#" data-bs-toggle="modal" data-bs-target="#leaveCommentModal" data-target="comment">комментировать</a>
+                    </li>
+                    <li class="dropdown-item">
+                        <i class="bi bi-files"></i>
+                        {% if current_user.role.name in ['admin', 'purchaser'] %}
+                            <a href="#" onclick="return confirm('Клонировать тендер?')">клонировать</a>
+                        {% else %}
+                            <span class="text-secondary">клонировать</span>
+                        {% endif %}
+                    </li>
+                    <li class="dropdown-item">
+                        <i class="bi bi-download"></i>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#excelModal">скачать</a>
+                    </li>
+                    <li class="dropdown-item">
+                        <i class="bi bi-envelope"></i>
+                        {% if current_user.role.name in ['admin', 'purchaser'] %}
+                            <a class="leaveComment" href="#" data-bs-toggle="modal" data-bs-target="#leaveCommentModal" data-target="invite">пригласить</a>
+                        {% else %}
+                            <span class="text-secondary">пригласить</span>
+                        {% endif %}
+                    </li>
+                    <li class="dropdown-item">
+                        <i class="bi bi-x-circle"></i>
+                        {% if current_user.role.name in ['admin', 'purchaser'] %}
+                            <a class="leaveComment" href="#" data-bs-toggle="modal" data-bs-target="#leaveCommentModal" data-target="cancel">аннулировать</a>
+                        {% else %}
+                            <span class="text-secondary">аннулировать</span>
+                        {% endif %}
+                    </li>
+                    <li class="dropdown-item">
+                        <label for="proposeTenderFormSubmit">
+                            <i class="bi bi-upload"></i>
+                            <span class="text-primary text-decoration-underline">предложить</span>
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row {% if current_user.role.name == 'vendor' %}d-none{%endif%}">
+        <div class="col-sm-6 my-1">
+            <form method="GET">
+                <select class="form-select" aria-label="Select Vendor" id="switchVendorFormSelect" name="vendor_id">
+                    <option disabled {%if not vendor_id %}selected{%endif%}>Выбор поставщика</option>
+                    {% for tv in tender.vendors %}
+                        {% if vendor_id == tv.vendor_id %}
+                            {% set ns.vendor=tv %}
+                        {% endif %}
+                        <option {% if tv.vendor_id == vendor_id %}selected{% endif %} value="{{ tv.vendor_id }}">{{ tv.vendor.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <span class="fw-bold">Закупщик:</span>
+            {% set user = tender.initiative %}
+            {% include '_user.popover.html' %}
+            {{ user.name }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <span class="fw-bold">Комментарии: </span>
+            <ul class="list-unstyled">
+                {% for event in events %}
+                    {% if event.event_type.name == 'commented' and event.data %}
+                        <li>
+                            <span class="bg-yellow">
+                                {% set user = event.user %}
+                                {{ event.timestamp }} {% include '_user.popover.html' %}
+                                {{ event.event_type.pretty }}: {{ event.data }}
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col text-center fw-bold">
+            Запрос
+        </div>
+        {% if vendor_id %}
+            <div class="col text-center fw-bold">
+                Предложение
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col border-end border-secondary">
+            {% for product in tender.products %}
+                <div class="row my-1 py-1 bg-white rounded" data-id="{{ product.sku }}">
+                    <div class="col overflow-hidden">
+                        <h5>{{ product.name }}</h5>
+                        <small>Артикул: {{ product.sku }}</small>
+                    </div>
+                    <div class="col-sm overflow-hidden pt-sm-3">
+                        {{ product.description }}
+                    </div>
+                    <div class="col-sm overflow-hidden pt-sm-3">
+                        Кол-во:
+                        <strong>{{ product.quantity }}</strong>
+                    </div>
+                    <div class="col-sm overflow-hidden pt-sm-3">
+                        <strong>{{ product.measurement }}</strong>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% if vendor_id %}
+            <div class="col">
+                {% if ns.vendor.products %}
+                    {% for product in ns.vendor.products %}
+                        <div class="row my-1 py-1 bg-white rounded" data-id="{{ product.sku }}">
+                            <div class="col overflow-hidden">
+                                <h5>{{ product.name }}</h5>
+                                <small>Артикул: {{ product.sku }}</small>
+                            </div>
+                            <div class="col-sm overflow-hidden pt-sm-3">
+                                {{ product.description }}
+                            </div>
+                            <div class="col-sm overflow-hidden pt-sm-3">
+                                Цена:
+                                <strong>{{ product.price }}</strong>
+                            </div>
+                            <div class="col-sm overflow-hidden pt-sm-3">
+                                <strong>{{ product.measurement }}</strong>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-warning my-1">Нет предложения от поставщика!</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+<div class="container">
+    <div class="row my-2">
+        <div class="col">
+            <span class="fw-bold">ИСТОРИЯ</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <input class="form-control" id="eventsFilter" type="text" placeholder="Фильтр..">
+        </div>
+    </div>
+    <div id="eventsSection">
+        {% for event in events %}
+            <div class="action" data-datetime="{{ event.timestamp }}">
+                <div class="row">
+                    <div class="col">
+                        {{ event.timestamp }}
+                        {% set user = event.user %}
+                        {% include '_user.popover.html' %}
+                        <span class="fw-bold text-{{event.event_type.color}}">{{event.event_type.pretty}}</span>
+                    </div>
+                </div>
+                {% if event.data %}
+                    <div class="row">
+                        <div class="col px-5 overflow-hidden">
+                            &boxur; {{ event.data }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="leaveCommentModal" tabindex="-1" aria-labelledby="leaveCommentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveCommentModalLabel">ОСТАВИТЬ КОММЕНТАРИЙ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="" id="leaveCommentForm">
+                <div class="modal-body">
+                    {{ comment_form.csrf_token(id=False) }}
+                    <div class="mb-3">
+                        {{ comment_form.comment.label(class_ = 'form-label') }}
+                        {{ comment_form.comment(class_ = 'form-control', placeholder='Вы можете оповестить без комментария') }}
+                    </div>
+                    <div class="mb-3">
+                        {{ comment_form.notify_reviewers.label(class_='form-label notifyReviewersDropDown') }}
+                        <a class="notifyReviewersDropDown" href="#">добавить из списка</a>
+                        {{ comment_form.notify_reviewers(class_='form-control', style="width:100%") }}
+                        <a id="notifyNoneReviewers" href="#" class="text-danger">удалить все</a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ comment_form.submit(class_ = 'btn btn-primary text-white', id=False) }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="proposeTenderForm" class="d-none" enctype="multipart/form-data" action="{{ url_for('main.propose_tender', tender_id=tender.id) }}" method="POST">
+    {{ propose_form.csrf_token(id=False) }}
+    <input id="proposeTenderFormSubmit" type="file" name="products" class="d-none" accept=".xlsx">
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        let notifyReviewers = $("#notify_reviewers");
+        notifyReviewers.selectize({});
+        let notifyReviewersSelectize = notifyReviewers[0].selectize;
+        $('.notifyReviewersDropDown').click(function(e) {
+            notifyReviewersSelectize.focus();
+        });
+
+        $('#notifyNoneReviewers').click(function() {
+            notifyReviewersSelectize.clear(false);
+        });
+
+        $('.leaveComment').click(function() {
+            let target = $(this).data("target");
+            if (target == 'comment'){
+                $("#leaveCommentModalLabel").text('ОСТАВИТЬ КОММЕНТАРИЙ');
+                $("#leaveCommentForm").attr('action', "{{url_for('main.comment_tender', tender_id=tender.id)}}")
+            }
+            else if (target == 'invite'){
+                $("#leaveCommentModalLabel").text('ПРИГЛАСИТЬ');
+                $("#leaveCommentForm").attr('action', "{{url_for('main.invite_tender', tender_id=tender.id)}}")
+            }
+            else if (target == 'cancel'){
+                $("#leaveCommentModalLabel").text('АННУЛИРОВАТЬ');
+                $("#leaveCommentForm").attr('action', "{{url_for('main.cancel_tender', tender_id=tender.id)}}")
+            }
+        });
+        {% if current_user.role.name != 'vendor' %}
+            $("#switchVendorFormSelect").change(function(){
+                $(this).parent('form').submit();
+            });
+        {% endif %}
+        $('#proposeTenderFormSubmit').on('change',()=>{
+            $('#proposeTenderForm').submit();
+        });
+    });
+</script>
+{%endblock %}
