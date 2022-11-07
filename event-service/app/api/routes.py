@@ -39,7 +39,7 @@ def get_events():
         except KeyError:
             event_type = EventType.commented
         events = events.filter_by(event_type=event_type)
-    events = events.all()
+    events = events.order_by(Event.timestamp.desc()).all()
     return jsonify([e.to_dict() for e in events]), 200
 
 
