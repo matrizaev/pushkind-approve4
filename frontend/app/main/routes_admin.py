@@ -46,8 +46,10 @@ def show_admin_page():
     incomes = IncomeApi.get_entities()
     cashflows = CashflowApi.get_entities()
 
-    forms['edit_category'].income_statement.choices = [(i['id'], i['name']) for i in incomes]
-    forms['edit_category'].cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
+    if incomes is not None:
+        forms['edit_category'].income_statement.choices = [(i['id'], i['name']) for i in incomes]
+    if cashflows is not None:
+        forms['edit_category'].cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
     forms['edit_category'].income_statement.choices.append((0, 'Выберите БДР...'))
     forms['edit_category'].cashflow_statement.choices.append((0, 'Выберите БДДС...'))
     forms['edit_category'].process()

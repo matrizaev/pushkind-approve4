@@ -100,9 +100,9 @@ def post_user():
 @token_auth.login_required
 def put_user(user_id):
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
-        return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
+    if current_user.hub_id is None and data.get('hub_id') is None:
+        return error_response(404, 'Хаб не существует.')
     if current_user.role != UserRoles.admin:
         user_id = current_user.id
         data.pop('role', None)

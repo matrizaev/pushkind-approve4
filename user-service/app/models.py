@@ -159,7 +159,7 @@ class User(db.Model):
         password = data.pop('password', None)
 
         if password is not None:
-            self.password = password
+            self.set_password(password)
 
         role = data.pop('role', self.role.name if self.role is not None else 'default')
         try:
