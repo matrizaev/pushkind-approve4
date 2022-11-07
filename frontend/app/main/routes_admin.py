@@ -41,15 +41,13 @@ def show_admin_page():
     else:
         forms['app'] = AppSettingsForm()
 
-    projects = ProjectApi.get_entities()
-    categories = CategoryApi.get_entities()
-    incomes = IncomeApi.get_entities()
-    cashflows = CashflowApi.get_entities()
+    projects = ProjectApi.get_entities() or []
+    categories = CategoryApi.get_entities() or []
+    incomes = IncomeApi.get_entities() or []
+    cashflows = CashflowApi.get_entities() or []
 
-    if incomes is not None:
-        forms['edit_category'].income_statement.choices = [(i['id'], i['name']) for i in incomes]
-    if cashflows is not None:
-        forms['edit_category'].cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
+    forms['edit_category'].income_statement.choices = [(i['id'], i['name']) for i in incomes]
+    forms['edit_category'].cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
     forms['edit_category'].income_statement.choices.append((0, 'Выберите БДР...'))
     forms['edit_category'].cashflow_statement.choices.append((0, 'Выберите БДДС...'))
     forms['edit_category'].process()
@@ -104,8 +102,8 @@ def save_app_settings():
 @role_required(['admin'])
 def edit_category():
     form = EditCategoryForm()
-    incomes = IncomeApi.get_entities()
-    cashflows = CashflowApi.get_entities()
+    incomes = IncomeApi.get_entities() or []
+    cashflows = CashflowApi.get_entities() or []
     form.income_statement.choices = [(i['id'], i['name']) for i in incomes]
     form.cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
     if form.validate_on_submit():

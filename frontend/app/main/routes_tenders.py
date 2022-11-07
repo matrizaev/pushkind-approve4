@@ -24,7 +24,7 @@ def show_tenders():
     return render_template(
         'tenders.html',
         form=form,
-        tenders=TenderApi.get_entities()
+        tenders=TenderApi.get_entities() or []
     )
 
 
@@ -64,7 +64,7 @@ def show_tender(tender_id):
     comment_form = LeaveCommentForm()
     propose_form = UploadProductsForm()
     if current_user.role.name in ('admin', 'purchase'):
-        vendors = VendorApi.get_entities()
+        vendors = VendorApi.get_entities() or []
         comment_form.notify_reviewers.choices = [
             (v['email'].lower(), v['name']) for v in vendors
         ]
@@ -76,7 +76,7 @@ def show_tender(tender_id):
         'select.html',
         tender=tender,
         vendor_id=vendor_id,
-        events=EventApi.get_entities(entity_id=tender_id, entity_type='tender'),
+        events=EventApi.get_entities(entity_id=tender_id, entity_type='tender') or [],
         comment_form=comment_form,
         propose_form=propose_form
     )
@@ -91,7 +91,7 @@ def invite_tender(tender_id):
         flash('Тендер не найден')
         return redirect(url_for('main.show_tenders'))
 
-    vendors = VendorApi.get_entities()
+    vendors = VendorApi.get_entities() or []
 
     form = LeaveCommentForm()
     form.notify_reviewers.choices = [

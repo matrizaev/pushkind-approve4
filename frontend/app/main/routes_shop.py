@@ -18,9 +18,9 @@ from app.api.hub import CategoryApi, ProductApi, VendorApi
 def show_categories():
     return render_template(
         'shop_categories.html',
-        projects=ProjectApi.get_entities(),
-        limits=OrderLimitApi.get_entities(),
-        categories=CategoryApi.get_entities()
+        projects=ProjectApi.get_entities() or [],
+        limits=OrderLimitApi.get_entities() or [],
+        categories=CategoryApi.get_entities() or []
     )
 
 @bp.route('/shop/<int:cat_id>', defaults={'vendor_id': None})
@@ -34,11 +34,11 @@ def shop_products(cat_id, vendor_id):
         return redirect(url_for('main.show_categories'))
 
     if vendor_id is not None:
-        products = ProductApi.get_entities(cat_id=cat_id, vendor_id=vendor_id)
+        products = ProductApi.get_entities(cat_id=cat_id, vendor_id=vendor_id) or []
     else:
-        products = ProductApi.get_entities(cat_id=cat_id)
+        products = ProductApi.get_entities(cat_id=cat_id) or []
 
-    vendors = VendorApi.get_entities(cat_id=cat_id)
+    vendors = VendorApi.get_entities(cat_id=cat_id) or []
 
     return render_template(
         'shop_products.html',

@@ -15,7 +15,7 @@ def show_limits():
 
     filter_from = request.args.get('from', default=None, type=str)
 
-    intervals = OrderLimitIntervalApi.get_entities()
+    intervals = OrderLimitIntervalApi.get_entities() or []
 
     for interval in intervals:
         if interval['name'] == filter_from:
@@ -26,9 +26,9 @@ def show_limits():
         filter_limits = {}
 
 
-    projects = ProjectApi.get_entities(enabled=1)
-    cashflows = CashflowApi.get_entities()
-    limits = OrderLimitApi.get_entities(**filter_limits)
+    projects = ProjectApi.get_entities(enabled=1) or []
+    cashflows = CashflowApi.get_entities() or []
+    limits = OrderLimitApi.get_entities(**filter_limits) or []
     form = AddLimitForm()
     form.project.choices = [(p['id'], p['name']) for p in projects]
     form.cashflow.choices = [(c['id'], c['name']) for c in cashflows]
@@ -48,9 +48,9 @@ def show_limits():
 @login_required
 @role_forbidden(['default', 'vendor', 'supervisor', 'initiative'])
 def add_limit():
-    projects = ProjectApi.get_entities(enabled=1)
-    cashflows = CashflowApi.get_entities()
-    intervals = OrderLimitIntervalApi.get_entities()
+    projects = ProjectApi.get_entities(enabled=1) or []
+    cashflows = CashflowApi.get_entities() or []
+    intervals = OrderLimitIntervalApi.get_entities() or []
 
     form = AddLimitForm()
     form.project.choices = [(p['id'], p['name']) for p in projects]

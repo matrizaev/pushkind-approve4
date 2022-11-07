@@ -38,8 +38,8 @@ def show_vendors():
     forms['product_image_form'] = UploadProductImageForm()
 
     vendor_id = request.args.get('vendor_id', type=int)
-    hubs = HubApi.get_entities()
-    categories = CategoryApi.get_entities()
+    hubs = HubApi.get_entities() or []
+    categories = CategoryApi.get_entities() or []
 
     vendors = []
     products = []
@@ -61,7 +61,7 @@ def show_vendors():
                 else:
                     vendor_id = None
         if vendor_id is not None:
-            products = ProductApi.get_entities(vendor_id=vendor_id)
+            products = ProductApi.get_entities(vendor_id=vendor_id) or []
 
     queue_size = get_upload_image_queue_size()
     if queue_size > 0:
@@ -100,7 +100,7 @@ def upload_products():
     if form.validate_on_submit():
         data = b64encode(form.products.data.read()).decode('utf-8')
         response = ProductApi.post_entity(
-            bulk=data,
+            products=data,
             vendor_id=vendor_id
         )
         if response is not None:
@@ -136,7 +136,7 @@ def upload_images():
 
     form = UploadImagesForm()
     if form.validate_on_submit():
-        products = ProductApi.get_entities(vendor_id=vendor_id)
+        products = ProductApi.get_entities(vendor_id=vendor_id) or []
         products = {p['sku']:p['id'] for p in products}
         with ZipFile(form.images.data, 'r') as zip_file:
             for zip_info in zip_file.infolist():
@@ -181,7 +181,7 @@ def download_products():
 
     vendor_id = vendor['id']
 
-    products = ProductApi.get_entities(vendor_id=vendor_id)
+    products = ProductApi.get_entities(vendor_id=vendor_id) or []
     df = pd.DataFrame(products, columns=['name', 'sku', 'price', 'measurement', 'category', 'description', 'input_required', 'image'])
     df['image'] = df['image'].apply(lambda x: (request.base_url[:-18] + x) if x else None)
     buffer = io.BytesIO()

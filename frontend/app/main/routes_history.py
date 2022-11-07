@@ -23,7 +23,7 @@ def show_history():
     dates['квартал'] = dates.pop('quarterly')
     dates['год'] = dates.pop('annually')
     dates['недавно'] = dates.pop('recently')
-    events = EventApi.get_entities(timestamp=filter_from)
+    events = EventApi.get_entities(timestamp=filter_from) or []
     return render_template(
         'history.html',
         events=events,

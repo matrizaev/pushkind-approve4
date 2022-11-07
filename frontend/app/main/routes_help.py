@@ -57,9 +57,9 @@ def show_help():
 
     project_responsibility = {}
     category_responsibility = {}
-    projects = ProjectApi.get_entities()
-    categories = CategoryApi.get_entities()
-    users = UserApi.get_entities(role='validator')
+    projects = ProjectApi.get_entities() or []
+    categories = CategoryApi.get_entities() or []
+    users = UserApi.get_entities(role='validator') or []
 
     for user in users:
         for project in projects:

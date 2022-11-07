@@ -21,9 +21,9 @@ from app.api.user import RoleApi, UserApi
 @role_forbidden(['default', 'vendor'])
 def show_users():
 
-    projects = ProjectApi.get_entities(enabled=1)
-    categories = CategoryApi.get_entities()
-    roles = RoleApi.get_entities()
+    projects = ProjectApi.get_entities(enabled=1) or []
+    categories = CategoryApi.get_entities() or []
+    roles = RoleApi.get_entities() or []
 
     if current_user.role.name == 'admin':
         user_form = UserRolesForm()
@@ -47,7 +47,7 @@ def show_users():
     user = UserApi.get_entities(id=current_user.id)[0]
 
     if current_user.role.name == 'admin':
-        users = UserApi.get_entities()
+        users = UserApi.get_entities() or []
         return render_template('settings.html', user_form=user_form, users=users, user=user)
 
     return render_template('settings.html', user_form=user_form, user=user)
@@ -58,9 +58,9 @@ def show_users():
 @role_forbidden(['default', 'vendor'])
 def edit_user():
 
-    projects = ProjectApi.get_entities(enabled=1)
-    categories = CategoryApi.get_entities()
-    roles = RoleApi.get_entities()
+    projects = ProjectApi.get_entities(enabled=1) or []
+    categories = CategoryApi.get_entities() or []
+    roles = RoleApi.get_entities() or []
 
     if current_user.role.name == 'admin':
         user_form = UserRolesForm()
