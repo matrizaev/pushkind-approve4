@@ -30,8 +30,8 @@
 		</div>
 		<div class="col-sm overflow-hidden">
 			<span class="d-sm-none fw-bold">Активность:</span>
-			{{ user.last_seen }}<br>
-			<small class="text-secondary">{{ user.registered }}</small>
+			{{ user.last_seen or '' }}<br>
+			<small class="text-secondary">{{ user.registered or '' }}</small>
 		</div>
 	</div>
 </div>
