@@ -1,139 +1,91 @@
-import os
-import tempfile
-
-import pytest
-import jwt
-
-from app import create_app, db
-
-
-def get_token(user, secret_key):
-    token = {
-        'id': user['id'],
-        'email': user['email'],
-        'name': user['name'],
-        'role': user['role'],
-        'hub_id': user['hub_id']
-    }
-    return jwt.encode(
-        token,
-        secret_key,
-        algorithm='HS256'
-    )
-
-
-class TestConfig:
-    ENV='test'
-    DEBUG=True
-    SQLALCHEMY_ECHO=True
-    ADMIN_EMAIL = 'admin@email.email'
-    USER_EMAIL = 'email@email.email'
-    USER_EMAIL2 = 'email2@email2.email2'
-    SECRET_KEY = 'you-will-never-guess'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = ''
-    MAIL_PORT = 25
-    MAIL_USE_SSL = False
-    MAIL_USE_TLS = False
-    MAIL_USERNAME = ''
-    MAIL_PASSWORD = ''
-    MOMENT_DEFAULT_FORMAT = 'DD.MM.YYYY HH:mm'
-    PASSWORD = 'password'
-    WTF_CSRF_ENABLED = False
-
-
-@pytest.fixture
-def client():
-    db_fd, db_path = tempfile.mkstemp()
-    TestConfig.SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
-    app = create_app(TestConfig)
-    app_context = app.app_context()
-    app_context.push()
-    db.create_all()
-    with app.test_client() as client:
-        yield client
-    os.close(db_fd)
-    os.unlink(db_path)
-
-
-def test_empty_db(client):
-    """Start with a blank database."""
-    rv = client.get('/')
-    data = rv.json
-    assert data['error'] == 'Not Found'
-
-
-def test_get_entities(client):
-
-    token = get_token(
-        {
-            'id': 1,
-            'email': TestConfig.ADMIN_EMAIL,
-            'name': 'admin',
-            'role': {
-                'name': 'admin'
-            },
-            'hub_id': 1
+def post_entity(client, token: "str", name: "str", data: "dict") -> "dict":
+    rv = client.post(
+        f'/api/{name}',
+        follow_redirects=True,
+        headers = {
+            'Authorization': f'Bearer {token}'
         },
-        TestConfig.SECRET_KEY
+        json=data
     )
+    data = rv.json
+    assert rv.status_code == 201
+    assert isinstance(data, dict)
+    return data
 
+
+def delete_entity(client, token: "str", name: "str", entity_id: "int") -> None:
+    rv = client.delete(
+        f'/api/{name}/{entity_id}',
+        headers = {
+            'Authorization': f'Bearer {token}'
+        }
+    )
+    data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(data, dict)
+    assert data['status'] == 'success'
+
+
+def put_entities(client, token: "str", name: "str", entity_id: "int", data: "dict") -> None:
+    rv = client.put(
+        f'/api/{name}/{entity_id}',
+        headers = {
+            'Authorization': f'Bearer {token}'
+        },
+        json=data
+    )
+    new_data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(new_data, dict)
+    for k, v in data.items():
+        assert new_data[k] == v
+
+
+def get_entities(client, token: "str", name: "str") -> "dict":
     rv = client.get(
-        '/api/projects',
+        f'/api/{name}',
         follow_redirects=True,
         headers = {
             'Authorization': f'Bearer {token}'
         }
     )
     data = rv.json
-    assert len(data) == 0
+    assert rv.status_code == 200
+    assert isinstance(data, list)
+    return data
 
-    rv = client.get(
-        '/api/sites',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    data = rv.json
-    assert len(data) == 0
 
-    rv = client.get(
-        '/api/incomes',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    data = rv.json
-    assert len(data) == 0
+def test_manage_entities(client, token):
+    project = post_entity(client, token, 'project', {'name': 'name'})
+    assert 'id' in project
+    assert project['name'] == 'name'
 
-    rv = client.get(
-        '/api/cashflows',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    data = rv.json
-    assert len(data) == 0
+    site = post_entity(client, token, 'site', {'name': 'name', 'project_id': project['id']})
+    assert 'id' in site
+    assert site['name'] == 'name'
 
-    rv = client.get(
-        '/api/order_limits',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    data = rv.json
-    assert len(data) == 0
+    income = post_entity(client, token, 'income', {'name': 'name'})
+    assert 'id' in income
+    assert income['name'] == 'name'
 
-    rv = client.get(
-        '/api/order_limit_intervals',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    data = rv.json
-    assert len(data) == 6
+    cashflow = post_entity(client, token, 'cashflow', {'name': 'name'})
+    assert 'id' in cashflow
+    assert cashflow['name'] == 'name'
+
+    put_entities(client, token, 'project', project['id'], {'name': 'new_name'})
+    put_entities(client, token, 'site', site['id'], {'name': 'new_name'})
+    put_entities(client, token, 'income', income['id'], {'name': 'new_name'})
+    put_entities(client, token, 'cashflow', cashflow['id'], {'name': 'new_name'})
+
+    delete_entity(client, token, 'project', project['id'])
+    delete_entity(client, token, 'income', income['id'])
+    delete_entity(client, token, 'cashflow', cashflow['id'])
+
+    projects = get_entities(client, token, 'projects')
+    assert len(projects) == 0
+    sites = get_entities(client, token, 'sites')
+    assert len(sites) == 0
+    incomes = get_entities(client, token, 'incomes')
+    assert len(incomes) == 0
+    cashflows = get_entities(client, token, 'cashflows')
+    assert len(cashflows) == 0

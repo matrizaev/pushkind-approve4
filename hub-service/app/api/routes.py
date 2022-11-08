@@ -116,11 +116,11 @@ def post_hub():
     data = request.get_json() or {}
     if data.get('email') is None or data['name'] is None:
         return error_response(400, 'Необходимые поля отсутствуют.')
-    data['email'] = str(data['email']).lower()
-    hub = Vendor.query.filter_by(email=data['email']).first()
+    email = str(data.pop('email')).lower()
+    hub = Vendor.query.filter_by(email=email).first()
     if hub is not None:
         return error_response(409, 'Адрес электронной почты занят.')
-    hub = Vendor()
+    hub = Vendor(email=email)
     hub.from_dict(data)
     db.session.add(hub)
     db.session.commit()
@@ -137,11 +137,11 @@ def post_vendor():
     data = request.get_json() or {}
     if not all([data.get(key) is not None for key in ('email', 'name')]):
         return error_response(400, 'Необходимые поля отсутствуют.')
-    data['email'] = str(data['email']).lower()
-    vendor = Vendor.query.filter_by(email=data['email'], hub_id=hub.id).first()
+    email = str(data['email']).lower()
+    vendor = Vendor.query.filter_by(email=email).first()
     if vendor is not None:
         return error_response(409, 'Адрес электронной почты занят.')
-    vendor = Vendor(hub_id=hub.id)
+    vendor = Vendor(hub_id=hub.id, email=email)
     vendor.from_dict(data)
     db.session.add(vendor)
     db.session.commit()
@@ -190,6 +190,8 @@ def post_product():
             engine='openpyxl'
         )
         df.columns = df.columns.str.lower()
+        if not all(key in df.columns for key in ('name', 'sku', 'price', 'category', 'measurement', 'description')):
+            return error_response(400, 'Необходимые поля отсутствуют.')
         df.drop(
             df.columns.difference([
                 'name',
@@ -230,9 +232,27 @@ def post_product():
         db.session.commit()
         return jsonify({'status': 'success'}), 201
     else:
-        if not all(data.get(key) is not None for key in ('name', 'sku', 'price', 'category')):
+        if not all(data.get(key) is not None for key in ('name', 'sku', 'price', 'category', 'measurement', 'description')):
             return error_response(400, 'Необходимые поля отсутствуют.')
-        return jsonify({'status': 'success'}), 201
+        category = Category.query.filter_by(hub_id=current_user.hub_id, name=data['category']).first()
+        if category is None:
+            return error_response(404, 'Категория не существует.')
+        product = Product.query.filter_by(sku=data['sku'], vendor_id=vendor.id).first()
+        if product is not None:
+            return error_response(409, 'Товар с таким артикулом существует.')
+        product = Product(
+            name=data['name'],
+            sku=data['sku'],
+            vendor_id=vendor.id,
+            cat_id=category.id,
+            price=data['price'],
+            image=f'/static/upload/vendor{vendor.id}/{data["sku"]}',
+            measurement=data['measurement'],
+            description=data['description']
+        )
+        db.session.add(product)
+        db.session.commit()
+        return jsonify(product.to_dict()), 201
 
 
 @bp.route('/hub/<int:hub_id>', methods=['DELETE'])
@@ -277,6 +297,21 @@ def delete_category(category_id):
     return jsonify({'status': 'success'}), 200
 
 
+@bp.route('/product/<int:product_id>', methods=['DELETE'])
+@token_auth.login_required(role=['admin', 'vendor', 'validator', 'purchaser'])
+def delete_product(product_id):
+    current_user = token_auth.current_user()
+    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    if hub is None:
+        return error_response(404, 'Хаб не существует.')
+    product = Product.query.filter_by(id=product_id).join(Vendor).filter_by(hub_id=current_user.hub_id).first()
+    if product is None:
+        return error_response(404, 'Товар не существует.')
+    db.session.delete(product)
+    db.session.commit()
+    return jsonify({'status': 'success'}), 200
+
+
 @bp.route('/hub/<int:hub_id>', methods=['PUT'])
 @token_auth.login_required(role=['admin'])
 def put_hub(hub_id):
@@ -286,7 +321,7 @@ def put_hub(hub_id):
         return error_response(404, 'Хаб не существует.')
     hub.from_dict(data)
     db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    return jsonify(hub.to_dict()), 200
 
 
 @bp.route('/vendor/<int:vendor_id>', methods=['PUT'])
@@ -302,7 +337,7 @@ def put_vendor(vendor_id):
         return error_response(404, 'Поставщик не существует.')
     vendor.from_dict(data)
     db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    return jsonify(vendor.to_dict()), 200
 
 
 @bp.route('/category/<int:category_id>', methods=['PUT'])
@@ -318,7 +353,7 @@ def put_category(category_id):
         return error_response(404, 'Категория не существует.')
     category.from_dict(data)
     db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    return jsonify(category.to_dict()), 200
 
 
 @bp.route('/product/<int:product_id>', methods=['PUT'])
@@ -342,7 +377,7 @@ def put_product(product_id):
         return error_response(404, 'Товар не существует.')
     product.from_dict(data)
     db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    return jsonify(product.to_dict()), 200
 
 
 @bp.route('/app_settings/<int:entity_id>', methods=['PUT', 'POST'])

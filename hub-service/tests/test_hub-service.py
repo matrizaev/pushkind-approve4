@@ -1,174 +1,103 @@
-import os
-import tempfile
-
-import pytest
-import jwt
-
-from app import create_app, db
-
-
-def get_token(user, secret_key):
-    token = {
-        'id': user['id'],
-        'email': user['email'],
-        'name': user['name'],
-        'role': user['role'],
-        'hub_id': user['hub_id']
-    }
-    return jwt.encode(
-        token,
-        secret_key,
-        algorithm='HS256'
+def post_entity(client, token: "str", name: "str", data: "dict") -> "dict":
+    rv = client.post(
+        f'/api/{name}',
+        follow_redirects=True,
+        headers = {
+            'Authorization': f'Bearer {token}'
+        },
+        json=data
     )
-
-
-class TestConfig:
-    ENV='test'
-    DEBUG=True
-    SQLALCHEMY_ECHO=True
-    ADMIN_EMAIL = 'admin@email.email'
-    USER_EMAIL = 'email@email.email'
-    USER_EMAIL2 = 'email2@email2.email2'
-    SECRET_KEY = 'you-will-never-guess'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = ''
-    MAIL_PORT = 25
-    MAIL_USE_SSL = False
-    MAIL_USE_TLS = False
-    MAIL_USERNAME = ''
-    MAIL_PASSWORD = ''
-    MOMENT_DEFAULT_FORMAT = 'DD.MM.YYYY HH:mm'
-    PASSWORD = 'password'
-    WTF_CSRF_ENABLED = False
-
-
-@pytest.fixture
-def client():
-    db_fd, db_path = tempfile.mkstemp()
-    TestConfig.SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
-    app = create_app(TestConfig)
-    app_context = app.app_context()
-    app_context.push()
-    db.create_all()
-    with app.test_client() as client:
-        yield client
-    os.close(db_fd)
-    os.unlink(db_path)
-
-
-def test_empty_db(client):
-    """Start with a blank database."""
-    rv = client.get('/')
     data = rv.json
-    assert data['error'] == 'Not Found'
+    assert rv.status_code == 201
+    assert isinstance(data, dict)
+    return data
 
 
-def test_create_hub(client):
+def delete_entity(client, token: "str", name: "str", entity_id: "int") -> None:
+    rv = client.delete(
+        f'/api/{name}/{entity_id}',
+        headers = {
+            'Authorization': f'Bearer {token}'
+        }
+    )
+    data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(data, dict)
+    assert data['status'] == 'success'
 
-    token = get_token(
+
+def put_entities(client, token: "str", name: "str", entity_id: "int", data: "dict") -> None:
+    rv = client.put(
+        f'/api/{name}/{entity_id}',
+        headers = {
+            'Authorization': f'Bearer {token}'
+        },
+        json=data
+    )
+    new_data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(new_data, dict)
+    for k, v in data.items():
+        assert new_data[k] == v
+
+
+def get_entities(client, token: "str", name: "str") -> "dict":
+    rv = client.get(
+        f'/api/{name}',
+        follow_redirects=True,
+        headers = {
+            'Authorization': f'Bearer {token}'
+        }
+    )
+    data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(data, list)
+    return data
+
+
+def test_manage_entities(client, token):
+    hub = post_entity(client, token, 'hub', {'name': 'name', 'email': 'email1'})
+    assert 'id' in hub
+    assert hub['name'] == 'name'
+
+    vendor = post_entity(client, token, 'vendor', {'name': 'name', 'email': 'email2'})
+    assert vendor['name'] == 'name'
+
+    category = post_entity(client, token, 'category', {'name': 'name'})
+    assert category['name'] == 'name'
+
+    product = post_entity(
+        client,
+        token,
+        'product',
         {
-            'id': 1,
-            'email': TestConfig.ADMIN_EMAIL,
-            'name': 'admin',
-            'role': {
-                'name': 'admin'
-            },
-            'hub_id': 1
-        },
-        TestConfig.SECRET_KEY
-    )
-    rv = client.post(
-        '/api/hub',
-        follow_redirects=True,
-        json={
-            'email': TestConfig.ADMIN_EMAIL,
-            'name': 'hub'
-        },
-        headers = {
-            'Authorization': f'Bearer {token}'
+            'name': 'name',
+            'sku': 'sku',
+            'vendor_id': vendor['id'],
+            'category': category['name'],
+            'measurement': 'measurement',
+            'description': 'description',
+            'price': 0.0
         }
     )
-    hub = rv.json
-    assert (
-        hub['id'] == 1 and
-        hub['email'] == TestConfig.ADMIN_EMAIL
-    )
+    assert product['name'] == 'name'
 
-    rv = client.post(
-        '/api/vendor',
-        follow_redirects=True,
-        json={
-            'email': TestConfig.USER_EMAIL,
-            'name': 'vendor'
-        },
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    vendor = rv.json
-    assert (
-        vendor['id'] == 2 and
-        vendor['email'] == TestConfig.USER_EMAIL
-    )
+    put_entities(client, token, 'hub', hub['id'], {'name': 'new_name'})
+    put_entities(client, token, 'vendor', vendor['id'], {'name': 'new_name'})
+    put_entities(client, token, 'category', category['id'], {'name': 'new_name'})
+    put_entities(client, token, 'product', product['id'], {'name': 'new_name'})
 
-    rv = client.post(
-        '/api/vendor',
-        follow_redirects=True,
-        json={
-            'email': TestConfig.USER_EMAIL2,
-            'name': 'vendor2'
-        },
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    vendor = rv.json
-    assert (
-        vendor['id'] == 3 and
-        vendor['email'] == TestConfig.USER_EMAIL2 and
-        vendor['name'] == 'vendor2'
-    )
+    delete_entity(client, token, 'product', product['id'])
+    delete_entity(client, token, 'category', category['id'])
+    delete_entity(client, token, 'vendor', vendor['id'])
 
-    rv = client.delete(
-        '/api/vendor/3',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    status = rv.json
-    assert status['status'] == 'success'
+    vendors = get_entities(client, token, 'vendors')
+    assert len(vendors) == 0
+    categories = get_entities(client, token, 'categories')
+    assert len(categories) == 0
+    products = get_entities(client, token, 'products')
+    assert len(products) == 0
 
-    rv = client.get(
-        '/api/hubs',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    hubs = rv.json
-    assert (
-        len(hubs) == 1
-    )
-
-    rv = client.delete(
-        '/api/hub/1',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    status = rv.json
-    assert status['status'] == 'success'
-
-    rv = client.get(
-        '/api/hubs',
-        follow_redirects=True,
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-    )
-    hubs = rv.json
-    assert (
-        len(hubs) == 0
-    )
+    delete_entity(client, token, 'hub', hub['id'])
+    hubs = get_entities(client, token, 'hubs')
+    assert len(hubs) == 0

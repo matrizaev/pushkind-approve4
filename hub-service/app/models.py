@@ -50,6 +50,7 @@ class Vendor(db.Model):
         data.pop('vendors', None)
         data.pop('products', None)
         data.pop('settings', None)
+        data.pop('email', None)
         for key, value in data.items():
             setattr(self, key, value)
 

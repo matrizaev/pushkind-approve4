@@ -1,74 +1,68 @@
-import os
-import tempfile
 from collections import Counter
 from base64 import b64encode
 
-import pytest
 
-from app import create_app, db
-from app.models import User, UserRoles
-
-
-class TestConfig:
-    ENV='test'
-    DEBUG=True
-    SQLALCHEMY_ECHO=True
-    ADMIN_EMAIL = 'admin@email.email'
-    USER_EMAIL = 'email@email.email'
-    SECRET_KEY = 'you-will-never-guess'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = ''
-    MAIL_PORT = 25
-    MAIL_USE_SSL = False
-    MAIL_USE_TLS = False
-    MAIL_USERNAME = ''
-    MAIL_PASSWORD = ''
-    MOMENT_DEFAULT_FORMAT = 'DD.MM.YYYY HH:mm'
-    PASSWORD = 'password'
-    WTF_CSRF_ENABLED = False
-
-
-@pytest.fixture
-def client():
-    db_fd, db_path = tempfile.mkstemp()
-    TestConfig.SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
-    app = create_app(TestConfig)
-    app_context = app.app_context()
-    app_context.push()
-    db.create_all()
-    with app.test_client() as client:
-        yield client
-    os.close(db_fd)
-    os.unlink(db_path)
-
-
-def test_empty_db(client):
-    """Start with a blank database."""
-    rv = client.get('/')
-    data = rv.json
-    assert data['error'] == 'Not Found'
-
-
-def test_create_user(client):
-
-    admin = User(email=TestConfig.ADMIN_EMAIL, role=UserRoles.admin, hub_id=1)
-    admin.set_password(TestConfig.PASSWORD)
-    db.session.add(admin)
-    db.session.commit()
-
+def post_entity(client, token: "str", name: "str", data: "dict") -> "dict":
     rv = client.post(
-        '/api/user',
+        f'/api/{name}',
         follow_redirects=True,
-        json={
-            'email': TestConfig.USER_EMAIL,
-            'password': TestConfig.PASSWORD
+        headers = {
+            'Authorization': f'Bearer {token}'
+        },
+        json=data
+    )
+    data = rv.json
+    assert rv.status_code == 201
+    assert isinstance(data, dict)
+    return data
+
+
+def delete_entity(client, token: "str", name: "str", entity_id: "int") -> None:
+    rv = client.delete(
+        f'/api/{name}/{entity_id}',
+        headers = {
+            'Authorization': f'Bearer {token}'
         }
     )
-    user = rv.json
-    assert (
-        user['email'] == TestConfig.USER_EMAIL
+    data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(data, dict)
+    assert data['status'] == 'success'
+
+
+def put_entities(client, token: "str", name: "str", entity_id: "int", data: "dict") -> None:
+    rv = client.put(
+        f'/api/{name}/{entity_id}',
+        headers = {
+            'Authorization': f'Bearer {token}'
+        },
+        json=data
     )
-    basic = b64encode(bytes(f"{TestConfig.ADMIN_EMAIL}:{TestConfig.PASSWORD}", encoding='utf-8')).decode('utf-8')
+    new_data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(new_data, dict)
+    for k, v in data.items():
+        if isinstance(new_data[k], dict):
+            assert new_data[k]['name'] == v
+        else:
+            assert new_data[k] == v
+
+
+def get_entities(client, token: "str", name: "str") -> "dict":
+    rv = client.get(
+        f'/api/{name}',
+        follow_redirects=True,
+        headers = {
+            'Authorization': f'Bearer {token}'
+        }
+    )
+    data = rv.json
+    assert rv.status_code == 200
+    assert isinstance(data, list)
+    return data
+
+def get_token(client):
+    basic = b64encode(bytes("admin@email.email:123456", encoding='utf-8')).decode('utf-8')
     rv = client.get(
         '/api/token',
         headers = {
@@ -78,104 +72,37 @@ def test_create_user(client):
     )
     data = rv.json
     assert 'token' in data
-    token = data['token']
-    rv = client.put(
-        f'/api/user/{user["id"]}',
-        headers = {
-            'Authorization': f'Bearer {token}'
-        },
-        json={
+    return data['token']
+
+
+def test_manage_entities(client):
+
+    token = get_token(client)
+
+    user = post_entity(client, token, 'user', {'email': 'email', 'password': '123456'})
+    assert 'id' in user
+    assert user['email'] == 'email'
+
+    put_entities(
+        client,
+        token,
+        'user',
+        user['id'],
+        {
+            'name': 'new_name',
             'role': 'validator',
-            'categories': [1],
+            'position': 'validator',
             'projects': [1],
-            'position': 'validator'
-        },
-        follow_redirects=True
+            'categories': [1]
+        }
     )
-    data = rv.json
-    print(data)
+
+    positions = get_entities(client, token, 'positions')
     assert (
-        data['id'] == user['id'] and
-        data['role']['name'] == 'validator' and
-        data['position'] == 'validator' and
-        Counter(data['categories']) == Counter([1]) and
-        Counter(data['projects']) == Counter([1])
+        len(positions) == 1 and
+        positions[0]['name'] == 'validator'
     )
-    rv = client.get(
-        '/api/positions',
-        headers = {
-            'Authorization': f'Bearer {token}'
-        },
-        follow_redirects=True
-    )
-    data = rv.json
-    assert (
-        len(data) == 1 and
-        data[0]['name'] == 'validator'
-    )
-    rv = client.get(
-        '/api/roles',
-        headers = {
-            'Authorization': f'Bearer {token}'
-        },
-        follow_redirects=True
-    )
-    data = rv.json
-    assert (
-        len(data) == 7 and
-        data[0]['name'] == 'default'
-    )
-    rv = client.get(
-        '/api/responsibilities',
-        headers = {
-            'Authorization': f'Bearer {token}'
-        },
-        query_string={
-            'categories': [1],
-            'project_id': 1
-        },
-        follow_redirects=True
-    )
-    data = rv.json
-    print(data)
-    assert (
-        len(data) == 1 and
-        data['1']['position'] == 'validator' and
-        data['1']['users'][0]['email'] == TestConfig.USER_EMAIL
-    )
-    rv = client.put(
-        f'/api/user/{user["id"]}',
-        headers = {
-            'Authorization': f'Bearer {token}'
-        },
-        json={
-            'role': 'validator',
-            'categories': [2],
-            'projects': [2],
-            'position': 'validator'
-        },
-        follow_redirects=True
-    )
-    data = rv.json
-    assert (
-        (data['id'] == user['id']) and
-        (data['role']['name'] == 'validator') and
-        (data['position'] == 'validator') and
-        Counter(data['categories']) == Counter([2]) and
-        Counter(data['projects']) == Counter([2])
-    )
-    rv = client.get(
-        '/api/responsibilities',
-        headers = {
-            'Authorization': f'Bearer {token}'
-        },
-        query_string={
-            'categories': [1],
-            'project_id': 1
-        },
-        follow_redirects=True
-    )
-    data = rv.json
-    assert (
-        len(data) == 0
-    )
+
+    delete_entity(client, token, 'user', user['id'])
+    users = get_entities(client, token, 'users')
+    assert len(users) == 0
