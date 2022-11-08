@@ -30,7 +30,7 @@ def get_users():
         users = users.filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
     else:
         users = users.filter_by(hub_id=current_user.hub_id)
-    users = users.filter_by(**request.args).all()
+    users = users.filter_by(**request.args).order_by(User.name).all()
     return jsonify([u.to_dict() for u in users]), 200
 
 
@@ -109,7 +109,7 @@ def put_user(user_id):
     user = User.query.filter_by(id=user_id).filter(or_(User.hub_id==current_user.hub_id, User.hub_id==None)).first()
     if user is None:
         return error_response(404, 'Пользователь не существует.')
-    if current_user.role == UserRoles.admin:
+    if current_user.role in (UserRoles.admin, UserRoles.supervisor):
         user.hub_id = data.get('hub_id', current_user.hub_id)
     user.from_dict(data)
     db.session.commit()

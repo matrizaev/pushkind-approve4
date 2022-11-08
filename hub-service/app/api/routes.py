@@ -26,7 +26,7 @@ def get_hubs():
     )
     if current_user.role['name'] not in ('admin', 'supervisor'):
         hubs = hubs.filter_by(id=current_user.hub_id)
-    hubs = hubs.all()
+    hubs = hubs.order_by(Vendor.name).all()
     return jsonify([v.to_dict() for v in hubs]), 200
 
 
@@ -49,7 +49,7 @@ def get_vendors():
         vendors = vendors.filter_by(email=current_user.email)
     if cat_id is not None:
         vendors = vendors.join(Product).filter_by(cat_id=cat_id)
-    vendors = vendors.all()
+    vendors = vendors.order_by(Vendor.name).all()
     return jsonify([v.to_dict() for v in vendors]), 200
 
 

@@ -44,7 +44,7 @@ def show_users():
         user_form.about_user.categories.choices = []
         user_form.about_user.projects.choices = []
 
-    user = UserApi.get_entities(id=current_user.id)[0]
+    user = next(iter(UserApi.get_entities(id=current_user.id) or []), None)
 
     if current_user.role.name == 'admin':
         users = UserApi.get_entities() or []

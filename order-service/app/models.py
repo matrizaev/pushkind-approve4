@@ -56,7 +56,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     number = db.Column(db.String(128), nullable=False)
     initiative_id = db.Column(db.Integer, nullable=True, index=True)
-    create_timestamp = db.Column(db.DateTime, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False)
     products = db.Column(db.JSON(), nullable=False)
     total = db.Column(db.Float, nullable=False)
     status = db.Column(
@@ -125,7 +125,7 @@ class Order(db.Model):
             'id': self.id,
             'number': self.number,
             'initiative_id': self.initiative_id,
-            'create_timestamp': self.create_timestamp,
+            'timestamp': self.timestamp.isoformat(),
             'products': self.products,
             'total': self.total,
             'status': self.status.to_dict(),

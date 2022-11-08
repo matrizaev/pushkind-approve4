@@ -18,6 +18,7 @@ def get_orders():
         .query
         .filter_by(hub_id=current_user.hub_id)
         .filter_by(**request.args)
+        .order_by(Order.timestamp.desc())
         .all()
     )
     return jsonify([o.to_dict() for o in orders]), 200

@@ -21,6 +21,8 @@ def get_projects():
         .query
         .filter_by(hub_id=current_user.hub_id)
         .filter_by(**request.args.to_dict())
+        .order_by(Project.name)
+        .all()
     )
     return jsonify([p.to_dict() for p in projects]), 200
 
@@ -37,6 +39,7 @@ def get_sites():
         .filter_by(**request.args)
         .join(Project)
         .filter_by(hub_id=current_user.hub_id)
+        .order_by(Site.name)
         .all()
     )
     return jsonify([s.to_dict() for s in sites]), 200
@@ -53,6 +56,7 @@ def get_incomes():
         .query
         .filter_by(hub_id=current_user.hub_id)
         .filter_by(**request.args)
+        .order_by(IncomeStatement.name)
         .all()
     )
     return jsonify([i.to_dict() for i in incomes]), 200
@@ -69,6 +73,7 @@ def get_cashflows():
         .query
         .filter_by(hub_id=current_user.hub_id)
         .filter_by(**request.args)
+        .order_by(CashflowStatement.name)
         .all()
     )
     return jsonify([v.to_dict() for v in casflows]), 200

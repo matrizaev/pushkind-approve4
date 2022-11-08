@@ -41,12 +41,6 @@ class UserRoles(enum.IntEnum):
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    active = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True,
-        server_default=expression.true()
-    )
     email = db.Column(db.String(128), index=True, unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
     role = db.Column(
