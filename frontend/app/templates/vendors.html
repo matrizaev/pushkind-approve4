@@ -97,7 +97,7 @@
             <div class="col-5 mb-1">
                 <input class="form-control" id="productFilter" type="text" placeholder="Фильтр..">
             </div>
-            {% if queue_size == 0 %}
+            {% if queue_size == 0 and current_user.role.name not in ('default', 'initiative', 'supervisor') %}
                 <div class="col-auto">
                     <a class="btn btn-primary" href="{{url_for('main.download_products', vendor_id=vendor_id)}}">
                         <i class="bi bi-cloud-download"></i>
@@ -160,13 +160,17 @@
         {% for product in products %}
             <div class="row my-1 selectable bg-white rounded" data-id="{{product.id}}">
                 <div class="col-auto">
-                    <form method="POST" enctype="multipart/form-data" id="uploadProductImageForm{{product.id}}" action="{{url_for('main.upload_product_image', product_id=product.id, vendor_id=vendor_id)}}">
-                        {{ forms['product_image_form'].csrf_token(id=False) }}
-                        <label for="uploadProductImageButton{{product.id}}">
-                            <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt="thumbnail" class="uploadImageIcon">
-                        </label>
-                        <input id="uploadProductImageButton{{product.id}}" type="file" name="image" class="d-none uploadProductImageButton" accept="image/png,image/jpeg">
-                    </form>
+                    {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
+                        <form method="POST" enctype="multipart/form-data" id="uploadProductImageForm{{product.id}}" action="{{url_for('main.upload_product_image', product_id=product.id, vendor_id=vendor_id)}}">
+                            {{ forms['product_image_form'].csrf_token(id=False) }}
+                            <label for="uploadProductImageButton{{product.id}}">
+                                <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt="thumbnail" class="uploadImageIcon">
+                            </label>
+                            <input id="uploadProductImageButton{{product.id}}" type="file" name="image" class="d-none uploadProductImageButton" accept="image/png,image/jpeg">
+                        </form>
+                    {% else %}
+                        <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt="thumbnail" class="uploadImageIcon">
+                    {% endif %}
                 </div>
                 <div class="col-6 overflow-hidden">
                     <h5>{{product.name}}</h5>
@@ -353,15 +357,17 @@
         $("#switchVendorFormSelect").change(function(){
             $(this).parent('form').submit();
         });
-        $('#uploadProductsButton').on('change',()=>{
-            $('#uploadProductsForm').submit();
-        });
-        $('#uploadImagesButton').on('change',()=>{
-            $('#uploadImagesForm').submit();
-        });
-        $('.uploadProductImageButton').on('change', function() {
-            $(this).parent('form').submit();
-        });
+        {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
+            $('#uploadProductsButton').on('change',()=>{
+                $('#uploadProductsForm').submit();
+            });
+            $('#uploadImagesButton').on('change',()=>{
+                $('#uploadImagesForm').submit();
+            });
+            $('.uploadProductImageButton').on('change', function() {
+                $(this).parent('form').submit();
+            });
+        {% endif %}
         $("#productFilter").on("keyup", function () {
             let value = $(this).val().toLowerCase();
             $("#productList .row").filter(function () {
