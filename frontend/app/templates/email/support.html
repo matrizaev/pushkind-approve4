@@ -1,5 +1,5 @@
 <p>
-    Пользователь: <a href="mailto:{{ current_user.email }}">{{ current_user.name }}</a>
+    Пользователь: <a href="mailto:{{ current_user.email }}">{{ current_user.name or current_user.email }}</a>
 </p>
 <p>
     <strong>Обращение:</strong> {{ comment }}

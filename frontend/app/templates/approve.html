@@ -155,7 +155,7 @@
                             <span class="fw-bold text-success">согласен</span>
                             {% set user = appr.user %}
                             {% include '_user.popover.html' %}
-                            {{ user.name }}
+                            {{ user.name or user.email }}
                             {{ moment(appr.timestamp).format('DD.MM.YYYY') }}
                         {% else %}
                             {% if appr.user is sameas none %}
@@ -174,7 +174,7 @@
                                 <span class="fw-bold text-danger">замечания</span>
                                 {% set user = appr.user %}
                                 {% include '_user.popover.html' %}
-                                {{ user.name }}
+                                {{ user.name or user.email }}
                                 {{ moment(appr.timestamp).format('DD.MM.YYYY') }}
                             {% endif %}
                         {% endif %}
@@ -469,7 +469,7 @@
                         <li class="remarkListItem" data-id="{{approval.product_id}}">
                             {% set user = approval.user %}
                             {% include '_user.popover.html' %}
-                            {{ user.name }}:
+                            {{ user.name or user.email }}:
                             {{ approval.remark or 'без комментария' }}
                         </li>
                     {% endfor %}

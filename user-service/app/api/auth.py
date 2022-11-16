@@ -30,7 +30,7 @@ def basic_auth_error(status):
 
 @token_auth.verify_token
 def verify_token(token):
-    return User.verify_token(token)
+    return User.verify_token(token, leeway=600)
 
 
 @token_auth.error_handler

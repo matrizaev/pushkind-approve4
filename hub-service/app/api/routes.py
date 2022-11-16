@@ -9,9 +9,8 @@ from app import db
 from app.api import bp
 from app.models import Vendor, Product, Category, AppSettings
 from app.api.auth import token_auth
-from app.producer import post_hub_removed
+from app.producer import post_entity_changed
 from app.api.errors import error_response
-
 
 
 @bp.route('/hubs', methods=['GET'])
@@ -24,8 +23,8 @@ def get_hubs():
         .filter_by(hub_id=None)
         .filter_by(**request.args)
     )
-    if current_user.role['name'] not in ('admin', 'supervisor'):
-        hubs = hubs.filter_by(id=current_user.hub_id)
+    if current_user['role']['name'] not in ('admin', 'supervisor'):
+        hubs = hubs.filter_by(id=current_user['hub_id'])
     hubs = hubs.order_by(Vendor.name).all()
     return jsonify([v.to_dict() for v in hubs]), 200
 
@@ -34,7 +33,7 @@ def get_hubs():
 @token_auth.login_required
 def get_vendors():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     args = request.args.copy()
@@ -42,11 +41,11 @@ def get_vendors():
     vendors = (
         Vendor
         .query
-        .filter_by(hub_id=current_user.hub_id)
+        .filter_by(hub_id=current_user['hub_id'])
         .filter_by(**args)
     )
-    if current_user.role['name'] == 'vendor':
-        vendors = vendors.filter_by(email=current_user.email)
+    if current_user['role']['name'] == 'vendor':
+        vendors = vendors.filter_by(email=current_user['email'])
     if cat_id is not None:
         vendors = vendors.join(Product).filter_by(cat_id=cat_id)
     vendors = vendors.order_by(Vendor.name).all()
@@ -57,35 +56,41 @@ def get_vendors():
 @token_auth.login_required
 def get_categories():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
+    args = request.args.copy()
+    with_products = bool(args.pop('with_products', None))
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     categories = (
         Category
         .query
-        .filter_by(hub_id=current_user.hub_id)
-        .filter_by(**request.args)
+        .filter_by(hub_id=current_user['hub_id'])
+        .filter_by(**args)
         .all()
     )
-    return jsonify([c.to_dict() for c in categories]), 200
+    return jsonify([c.to_dict(with_products) for c in categories]), 200
 
 
 @bp.route('/products', methods=['GET'])
 @token_auth.login_required
 def get_products():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
+    args = request.args.copy()
+    ids = args.poplist('ids')
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     products = (
         Product
         .query
-        .filter_by(**request.args)
+        .filter_by(**args)
         .join(Vendor)
-        .filter_by(hub_id=current_user.hub_id)
+        .filter_by(hub_id=current_user['hub_id'])
     )
-    if current_user.role['name'] == 'vendor':
-        products = products.filter_by(email=current_user.email)
+    if current_user['role']['name'] == 'vendor':
+        products = products.filter_by(email=current_user['email'])
+    if ids:
+        products = products.filter(Product.id.in_(ids))
     products = products.all()
     return jsonify([p.to_dict() for p in products]), 200
 
@@ -94,13 +99,13 @@ def get_products():
 @token_auth.login_required
 def get_app_settings():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     app_settings = (
         AppSettings
         .query
-        .filter_by(hub_id=current_user.hub_id)
+        .filter_by(hub_id=current_user['hub_id'])
         .first()
     )
     if app_settings is None:
@@ -131,7 +136,7 @@ def post_hub():
 @token_auth.login_required(role=['admin'])
 def post_vendor():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
@@ -152,11 +157,10 @@ def post_vendor():
 @token_auth.login_required(role=['admin'])
 def post_category():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
-    data['children'] = data.get('children', [])
     if data.get('name') is None:
         return error_response(400, 'Необходимые поля отсутствуют.')
     category = Category.query.filter(func.lower(Category.name)==func.lower(data['name']), Category.hub_id==hub.id).first()
@@ -173,14 +177,14 @@ def post_category():
 @token_auth.login_required(role=['admin', 'vendor', 'validator', 'purchaser'])
 def post_product():
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
     if data.get('vendor_id') is None:
         return error_response(400, 'Необходимые поля отсутствуют.')
     vendor = Vendor.query.get_or_404(data['vendor_id'])
-    if current_user.role['name'] == 'vendor' and vendor.email != current_user.email:
+    if current_user['role']['name'] == 'vendor' and vendor.email != current_user['email']:
         return error_response(403)
     if data.get('products') is not None:
         buf = BytesIO(b64decode(data['products'].encode()))
@@ -215,7 +219,7 @@ def post_product():
             }
         )
         df['vendor_id'] = vendor.id
-        categories = Category.query.filter_by(hub_id=current_user.hub_id).all()
+        categories = Category.query.filter_by(hub_id=current_user['hub_id']).all()
         categories = {c.name.lower():c.id for c in categories}
         df['cat_id'] = df['category'].apply(lambda x: categories.get(x.lower()))
         df.drop(['category'], axis=1, inplace=True)
@@ -234,7 +238,7 @@ def post_product():
     else:
         if not all(data.get(key) is not None for key in ('name', 'sku', 'price', 'category', 'measurement', 'description')):
             return error_response(400, 'Необходимые поля отсутствуют.')
-        category = Category.query.filter_by(hub_id=current_user.hub_id, name=data['category']).first()
+        category = Category.query.filter_by(hub_id=current_user['hub_id'], name=data['category']).first()
         if category is None:
             return error_response(404, 'Категория не существует.')
         product = Product.query.filter_by(sku=data['sku'], vendor_id=vendor.id).first()
@@ -263,7 +267,7 @@ def delete_hub(hub_id):
         return error_response(404, 'Хаб не существует.')
     db.session.delete(hub)
     db.session.commit()
-    post_hub_removed(hub_id)
+    post_entity_changed(hub_id, 'hub', None, 'removed') 
     return jsonify({'status': 'success'}), 200
 
 
@@ -271,7 +275,7 @@ def delete_hub(hub_id):
 @token_auth.login_required(role=['admin'])
 def delete_vendor(vendor_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     vendor = Vendor.query.filter_by(id=vendor_id).filter(Vendor.hub_id != None).first()
@@ -286,7 +290,7 @@ def delete_vendor(vendor_id):
 @token_auth.login_required(role=['admin'])
 def delete_category(category_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     category = Category.query.filter_by(id=category_id).first()
@@ -294,6 +298,7 @@ def delete_category(category_id):
         return error_response(404, 'Категория не существует.')
     db.session.delete(category)
     db.session.commit()
+    post_entity_changed(hub.id, 'category', category.name, 'removed')
     return jsonify({'status': 'success'}), 200
 
 
@@ -301,10 +306,10 @@ def delete_category(category_id):
 @token_auth.login_required(role=['admin', 'vendor', 'validator', 'purchaser'])
 def delete_product(product_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
-    product = Product.query.filter_by(id=product_id).join(Vendor).filter_by(hub_id=current_user.hub_id).first()
+    product = Product.query.filter_by(id=product_id).join(Vendor).filter_by(hub_id=current_user['hub_id']).first()
     if product is None:
         return error_response(404, 'Товар не существует.')
     db.session.delete(product)
@@ -328,7 +333,7 @@ def put_hub(hub_id):
 @token_auth.login_required(role=['admin'])
 def put_vendor(vendor_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
@@ -344,7 +349,7 @@ def put_vendor(vendor_id):
 @token_auth.login_required(role=['admin'])
 def put_category(category_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
@@ -360,18 +365,18 @@ def put_category(category_id):
 @token_auth.login_required(role=['admin', 'vendor', 'validator', 'purchaser'])
 def put_product(product_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
     product = Product.query.filter_by(id=product_id)
-    if current_user.role['name'] == 'vendor':
-        vendor = Vendor.query.filter_by(email=current_user.email).first()
+    if current_user['role']['name'] == 'vendor':
+        vendor = Vendor.query.filter_by(email=current_user['email']).first()
         if vendor is None:
             return error_response(404, 'Поставщик не существует.')
         product = product.filter_by(vendor_id=vendor.id)
     else:
-        product = product.join(Vendor).filter_by(hub_id=current_user.hub_id)
+        product = product.join(Vendor).filter_by(hub_id=current_user['hub_id'])
     product = product.first()
     if product is None:
         return error_response(404, 'Товар не существует.')
@@ -384,18 +389,18 @@ def put_product(product_id):
 @token_auth.login_required(role=['admin'])
 def put_app_settings(entity_id):
     current_user = token_auth.current_user()
-    hub = Vendor.query.filter_by(id=current_user.hub_id, hub_id=None).first()
+    hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
     app_settings = (
         AppSettings
         .query
-        .filter_by(hub_id=current_user.hub_id)
+        .filter_by(hub_id=current_user['hub_id'])
         .first()
     )
     if app_settings is None:
-        app_settings = AppSettings(hub_id=current_user.hub_id)
+        app_settings = AppSettings(hub_id=current_user['hub_id'])
     app_settings.from_dict(data)
     db.session.add(app_settings)
     db.session.commit()

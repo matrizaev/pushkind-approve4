@@ -124,6 +124,26 @@ class CashflowStatement(db.Model):
             setattr(self, key, value)
 
 
+class BudgetHolder(db.Model):
+    __tablename__ = 'budget_holder'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(128), nullable=False, index=True)
+    hub_id = db.Column(db.Integer, nullable=False, index=True)
+
+    def to_dict(self):
+        data = {
+            'id': self.id,
+            'name': self.name
+        }
+        return data
+
+    def from_dict(self, data):
+        data.pop('id', None)
+        data.pop('hub_id', None)
+        for key, value in data.items():
+            setattr(self, key, value)
+
+
 class OrderLimitsIntervals(enum.IntEnum):
     daily = 0
     weekly = 1
@@ -145,7 +165,6 @@ class OrderLimitsIntervals(enum.IntEnum):
 
     def to_dict(self):
         return {
-            'id': int(self),
             'name': self.name,
             'pretty': str(self)
         }

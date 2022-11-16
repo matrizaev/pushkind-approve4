@@ -6,11 +6,13 @@ from flask import render_template, redirect, url_for, flash
 from app.main import bp
 from app.main.forms import AddCategoryForm, AddProjectForm, AddSiteForm, EditProjectForm
 from app.main.forms import EditSiteForm, EditCategoryForm
-from app.main.forms import AppSettingsForm
+from app.main.forms import AppSettingsForm, BudgetHolderForm
 from app.main.forms import AddIncomeForm, AddCashflowForm, EditIncomeForm, EditCashflowForm
 from app.utils import role_required
 from app.api.hub import CategoryApi, AppSettingsApi
-from app.api.project import ProjectApi, IncomeApi, CashflowApi, SiteApi
+from app.api.project import ProjectApi, IncomeApi, CashflowApi, SiteApi, BudgetHolderApi
+from app.api.user import UserApi
+from app.utils import first
 
 
 @bp.route('/admin/', methods=['GET'])
@@ -27,6 +29,7 @@ def show_admin_page():
         'edit_site': EditSiteForm(),
         'add_income': AddIncomeForm(),
         'add_cashflow': AddCashflowForm(),
+        'budget_holder': BudgetHolderForm(),
         'edit_income': EditIncomeForm(),
         'edit_cashflow': EditCashflowForm()
     }
@@ -45,12 +48,17 @@ def show_admin_page():
     categories = CategoryApi.get_entities() or []
     incomes = IncomeApi.get_entities() or []
     cashflows = CashflowApi.get_entities() or []
+    responsibles = UserApi.get_entities(role='purchaser') or []
+    budget_holders = BudgetHolderApi.get_entities() or []
 
-    forms['edit_category'].income_statement.choices = [(i['id'], i['name']) for i in incomes]
-    forms['edit_category'].cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
-    forms['edit_category'].income_statement.choices.append((0, 'Выберите БДР...'))
-    forms['edit_category'].cashflow_statement.choices.append((0, 'Выберите БДДС...'))
-    forms['edit_category'].process()
+    forms['edit_category'].income.choices = [(i['name'], i['name']) for i in incomes]
+    forms['edit_category'].cashflow.choices = [(c['name'], c['name']) for c in cashflows]
+    forms['edit_category'].budget_holder.choices = [(b['name'], b['name']) for b in budget_holders]
+    forms['edit_category'].responsible.choices = [(u['id'], u['name']) for u in responsibles]
+    forms['edit_category'].income.choices.append((0, 'БДР...'))
+    forms['edit_category'].cashflow.choices.append((0, 'БДДС...'))
+    forms['edit_category'].budget_holder.choices.append((0, 'ФДБ...'))
+    forms['edit_category'].responsible.choices.append((0, 'Ответственный...'))
 
     return render_template(
         'admin.html',
@@ -58,7 +66,9 @@ def show_admin_page():
         projects=projects,
         categories=categories,
         incomes=incomes,
-        cashflows=cashflows
+        cashflows=cashflows,
+        budget_holders=budget_holders,
+        responsibles=responsibles
     )
 
 
@@ -104,8 +114,12 @@ def edit_category():
     form = EditCategoryForm()
     incomes = IncomeApi.get_entities() or []
     cashflows = CashflowApi.get_entities() or []
-    form.income_statement.choices = [(i['id'], i['name']) for i in incomes]
-    form.cashflow_statement.choices = [(c['id'], c['name']) for c in cashflows]
+    responsibles = UserApi.get_entities(role='purchaser') or []
+    budget_holders = BudgetHolderApi.get_entities() or []
+    form.income.choices = [(i['name'], i['name']) for i in incomes]
+    form.cashflow.choices = [(c['name'], c['name']) for c in cashflows]
+    form.budget_holder.choices = [(b['name'], b['name']) for b in budget_holders]
+    form.responsible.choices = [(u['id'], u['name']) for u in responsibles]
     if form.validate_on_submit():
         if form.image.data:
             f = form.image.data
@@ -121,11 +135,11 @@ def edit_category():
 
         response = CategoryApi.put_entity(
             entity_id=form.category_id.data,
-            responsible = form.responsible.data.strip(),
-            functional_budget = form.functional_budget.data.strip(),
+            responsible = first(filter(lambda x: x['id'] == form.responsible.data, responsibles)),
+            budget_holder = form.budget_holder.data,
             code = form.code.data.strip(),
-            income_id = form.income_statement.data,
-            cashflow_id = form.cashflow_statement.data,
+            income = form.income.data,
+            cashflow = form.cashflow.data,
             image=url_for('static', filename=file_name) if file_name else None
         )
         if response is not None:
@@ -136,9 +150,9 @@ def edit_category():
         errors = (
             form.category_id.errors +
             form.responsible.errors +
-            form.functional_budget.errors +
-            form.income_statement.errors +
-            form.cashflow_statement.errors +
+            form.budget_holder.errors +
+            form.income.errors +
+            form.cashflow.errors +
             form.image.errors +
             form.code.errors
         )
@@ -274,6 +288,25 @@ def add_income():
     return redirect(url_for('main.show_admin_page'))
 
 
+@bp.route('/admin/budget_holder/add', methods=['POST'])
+@login_required
+@role_required(['admin'])
+def add_budget_holder():
+    form = BudgetHolderForm()
+    if form.validate_on_submit():
+        response = BudgetHolderApi.post_entity(
+            name=form.budget_holder_name.data.strip()
+        )
+        if response is not None:
+            flash('ФДБ добавлен.')
+        else:
+            flash('Не удалось добавить ФДБ')
+    else:
+        for error in form.budget_holder_name.errors:
+            flash(error)
+    return redirect(url_for('main.show_admin_page'))
+
+
 @bp.route('/admin/cashflow/add', methods=['POST'])
 @login_required
 @role_required(['admin'])
@@ -305,6 +338,18 @@ def remove_income(income_id):
     return redirect(url_for('main.show_admin_page'))
 
 
+@bp.route('/admin/budget_holder/remove/<int:budget_holder_id>', methods=['POST'])
+@login_required
+@role_required(['admin'])
+def remove_budget_holder(budget_holder_id):
+    response = BudgetHolderApi.delete_entity(budget_holder_id)
+    if response is not None:
+        flash('ФДБ удален.')
+    else:
+        flash('Не удалось удалить ФДБ.')
+    return redirect(url_for('main.show_admin_page'))
+
+
 @bp.route('/admin/cashflow/remove/<int:cashflow_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
@@ -333,6 +378,26 @@ def edit_income():
             flash('Не удалось изменить БДР.')
     else:
         for error in form.income_id.errors + form.income_name.errors:
+            flash(error)
+    return redirect(url_for('main.show_admin_page'))
+
+
+@bp.route('/admin/budget_holder/edit/<int:budget_holder_id>', methods=['POST'])
+@login_required
+@role_required(['admin'])
+def edit_budget_holder(budget_holder_id):
+    form = BudgetHolderForm()
+    if form.validate_on_submit():
+        response = BudgetHolderApi.put_entity(
+            entity_id=budget_holder_id,
+            name=form.budget_holder_name.data.strip()
+        )
+        if response is not None:
+            flash('ФДБ изменён.')
+        else:
+            flash('Не удалось изменить ФДБ.')
+    else:
+        for error in form.budget_holder_name.errors:
             flash(error)
     return redirect(url_for('main.show_admin_page'))
 

@@ -97,7 +97,9 @@
 	{% if current_user.role.name == 'admin' %}
 		<div class="modal-footer">
 			{{ user_form.submit(class_='btn btn-primary text-white') }}
-			<a href="" id="removeUserButton" class="btn btn-danger text-white" onclick="return confirm('Удалить пользователя?')">Удалить</a>
+			<label for="removeUserId">
+				<a href="#" id="removeUserFormSubmit" class="btn btn-danger text-white">Удалить</a>				
+			</label>
 			<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
 		</div>
 	{% else %}

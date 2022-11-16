@@ -49,7 +49,7 @@
 			<strong>Инициатор:</strong>
 			{% set user = current_user %}
 			{% include '_user.popover.html' %}
-			{{ user.name }}
+			{{ user.name or user.email }}
 		</div>
 	</div>
     <div class="row mt-2">
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{url_for('main.shop_cart')}}" id="shoppingCartForm">
+    <form method="POST" action="{{url_for('main.shop_order')}}" id="shoppingCartForm">
         {{ form.csrf_token(id=False) }}
         {{ form.project_id(class_='d-none') }}
         {{ form.site_id(class_='d-none') }}
@@ -87,7 +87,7 @@
     <div class="col overflow-hidden">
         <h5 id="productNameTemplate"></h5>
         <small>Артикул: <span id="productSkuTemplate"></span></small>
-        <br><button type="button" class="cloneProductButton btn btn-link">клонировать</button>
+        <br><a href="#" class="cloneProductButton">клонировать</a>
     </div>
     <div class="col-sm-2 overflow-hidden">
         <span id="productVendorTemplate"></span>
@@ -248,7 +248,8 @@
             }, 500, form);
             form.data('timer', timerId);
         });
-        $(".cloneProductButton").click(function(){
+        $(".cloneProductButton").click(function(e){
+            e.preventDefault();
             let content = $(this).closest('.cartItem');
             let itemPosition = content.data('pos');
             let itemCost = content.data('cost');

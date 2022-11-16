@@ -12,6 +12,9 @@ from app.utils import role_forbidden, role_required
 from app.main.utils import send_email_notification, GetNewOrderNumber
 from app.utils import get_filter_timestamps
 from app.main.forms import MergeOrdersForm, SaveOrdersForm
+from app.api.order import OrderApi
+from app.api.project import ProjectApi
+from app.api.hub import CategoryApi
 
 
 ################################################################################
@@ -30,13 +33,6 @@ def show_index():
     if filter_disapproved is not None:
         filter_disapproved = True
 
-    dates['сегодня'] = dates.pop('daily')
-    dates['неделя'] = dates.pop('weekly')
-    dates['месяц'] = dates.pop('monthly')
-    dates['квартал'] = dates.pop('quarterly')
-    dates['год'] = dates.pop('annually')
-    dates['недавно'] = dates.pop('recently')
-
     if current_user.role.name in ['purchaser', 'validator']:
         filter_focus = request.args.get('focus', default=None, type=str)
         if filter_focus is not None:
@@ -44,7 +40,11 @@ def show_index():
     else:
         filter_focus = None
 
-    # orders = Order.query.filter_by(hub_id=current_user.hub_id)
+    orders = OrderApi.get_entities(filters={
+        'from': filter_from,
+        'focus': filter_focus,
+        'disapproved': filter_disapproved
+    }) or []
 
     # if filter_disapproved is None:
     #     orders = orders.filter(
@@ -97,23 +97,15 @@ def show_index():
     #             Order.vendors.any(OrderVendor.vendor_id == None)
     #         )
 
-    # orders = orders.order_by(Order.create_timestamp.desc())
-
-    # orders = orders.all()
-    # projects = Project.query.filter_by(hub_id=current_user.hub.id).all()
-    # categories = Category.query.filter_by(hub_id=current_user.hub.id).all()
-    orders = []
     return render_template(
         'index.html',
         orders=orders,
         dates=dates,
-        projects=[],
-        categories=[],
         filter_from=filter_from,
         filter_focus=filter_focus,
         filter_disapproved=filter_disapproved,
         merge_form=MergeOrdersForm(),
-        save_form=SaveOrdersForm(orders=[order.id for order in orders])
+        save_form=SaveOrdersForm(orders=[order['id'] for order in orders])
     )
 
 

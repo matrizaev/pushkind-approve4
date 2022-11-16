@@ -1,5 +1,8 @@
+from io import BytesIO
+
 from flask_login import current_user, login_required
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, send_file, request
+import pandas as pd
 from openpyxl import Workbook
 from openpyxl.writer.excel import save_virtual_workbook
 
@@ -9,6 +12,7 @@ from app.utils import role_required, role_forbidden
 from app.api.project import ProjectApi
 from app.api.hub import CategoryApi
 from app.api.user import RoleApi, UserApi
+from app.utils import first
 
 
 ################################################################################
@@ -28,23 +32,23 @@ def show_users():
     if current_user.role.name == 'admin':
         user_form = UserRolesForm()
         user_form.role.choices = [
-            (r['id'], r['pretty']) for r in roles
+            (r['name'], r['pretty']) for r in roles
         ]
     else:
         user_form = UserSettingsForm()
 
     if current_user.role.name in ('admin', 'purchaser', 'validator'):
         user_form.about_user.categories.choices = [
-            (c['id'], c['name']) for c in categories
+            c['name'] for c in categories
         ]
         user_form.about_user.projects.choices = [
-            (p['id'], p['name']) for p in projects
+            p['name'] for p in projects
         ]
     else:
         user_form.about_user.categories.choices = []
         user_form.about_user.projects.choices = []
 
-    user = next(iter(UserApi.get_entities(id=current_user.id) or []), None)
+    user = first(UserApi.get_entities(id=current_user.id))
 
     if current_user.role.name == 'admin':
         users = UserApi.get_entities() or []
@@ -65,17 +69,17 @@ def edit_user():
     if current_user.role.name == 'admin':
         user_form = UserRolesForm()
         user_form.role.choices = [
-            (r['id'], r['pretty']) for r in roles
+            (r['name'], r['pretty']) for r in roles
         ]
     else:
         user_form = UserSettingsForm()
 
     if current_user.role.name in ('admin', 'purchaser', 'validator'):
         user_form.about_user.categories.choices = [
-            (c['id'], c['name']) for c in categories
+            c['name'] for c in categories
         ]
         user_form.about_user.projects.choices = [
-            (p['id'], p['name']) for p in projects
+            p['name'] for p in projects
         ]
     else:
         user_form.about_user.categories.choices = []
@@ -84,10 +88,9 @@ def edit_user():
     if user_form.submit.data:
         if user_form.validate_on_submit():
             if current_user.role.name == 'admin':
-                user_role = next(filter(lambda x: x['id']==user_form.role.data, roles))
                 user = {
                     'hub_id': current_user.hub_id,
-                    'role': user_role['name'],
+                    'role': user_form.role.data,
                     'note': user_form.note.data,
                     'birthday': user_form.birthday.data.isoformat() if user_form.birthday.data else None,
                 }
@@ -141,10 +144,11 @@ def edit_user():
         return redirect(url_for('main.show_users'))
 
 
-@bp.route('/users/remove/<int:user_id>', methods=['POST'])
+@bp.route('/users/remove', methods=['POST'])
 @login_required
 @role_required(['admin'])
-def remove_user(user_id):
+def remove_user():
+    user_id = request.form.get('user_id', type=int)
     response = UserApi.delete_entity(user_id)
     if response is None:
         flash('Не удалось удалить пользователя.')
@@ -157,7 +161,41 @@ def remove_user(user_id):
 @login_required
 @role_required(['admin'])
 def download_users():
-    return '<p>download_users</p>'
+    users = UserApi.get_entities()
+    df = pd.DataFrame(users)
+    df.drop(
+        df.columns.difference([
+            'name',
+            'phone',
+            'email',
+            'role',
+            'location',
+            'position',
+            'note',
+            'last_seen',
+            'registered',
+            'birthday'
+        ]),
+        axis=1,
+        inplace=True
+    )
+    df['role'] = df['role'].apply(lambda x: x['pretty'])
+    df.rename(
+        {
+            'name': 'ФИО',
+            'phone': 'Телефон',
+            'email': 'Email',
+            'role': 'Права',
+            'location': 'Площадка',
+            'position': 'Роль',
+            'note': 'Заметка',
+            'last_seen': 'Активность',
+            'registered': 'Регистрация',
+            'birthday': 'День рождения'
+        },
+        axis=1,
+        inplace=True
+    )
     # users = User.query.filter(
     #     or_(User.role == UserRoles.default, User.hub_id == current_user.hub_id)
     # ).order_by(User.name, User.email).all()
@@ -238,8 +276,12 @@ def download_users():
     #         ws.cell(i, 12).value = 0
     #         ws.cell(i, 13).value = 0
     # data = save_virtual_workbook(wb)
-    # return Response(
-    #     data,
-    #     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    #     headers={'Content-Disposition': 'attachment;filename=users.xlsx'}
-    # )
+    buf = BytesIO()
+    df.to_excel(buf, index=False)
+    buf.seek(0)
+    return send_file(
+        buf,
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        download_name='users.xlsx'
+    )

@@ -5,8 +5,8 @@ ORDER_SERVICE_HOST = 'order-service:5000'
 
 
 class OrderApi(EntityApi):
-    __entity_name__ = 'project'
-    __entities_name__ = 'projects'
+    __entity_name__ = 'order'
+    __entities_name__ = 'orders'
     __service_host__ = ORDER_SERVICE_HOST
 
 

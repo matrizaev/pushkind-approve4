@@ -248,8 +248,8 @@ class UserSettings(Form):
             Length(max=128, message='Слишком длинный телефон.')
         ]
     )
-    categories = SelectMultipleField('Мои категории ↓', coerce=int)
-    projects = SelectMultipleField('Мои проекты ↓', coerce=int)
+    categories = SelectMultipleField('Мои категории ↓', coerce=str)
+    projects = SelectMultipleField('Мои проекты ↓', coerce=str)
     position = StringField(
         'Роль',
         validators=[
@@ -278,7 +278,7 @@ class UserRolesForm(FlaskForm):
     role = SelectField(
         'Права доступа',
         validators=[InputRequired(message='Некорректные права доступа пользователя.')],
-        coerce=int
+        coerce=str
     )
     about_user = FormField(UserSettings, [DataRequired()])
     note = TextAreaField('Заметка')
@@ -435,29 +435,29 @@ class EditCategoryForm(FlaskForm):
         'ID категории',
         validators=[DataRequired(message='ID категории - обязательное поле.')]
     )
-    responsible = StringField(
+    responsible = SelectField(
         'Ответственный',
         validators=[
-            DataRequired(message='Ответственный - обязательное поле.'),
-            Length(max=128, message='Слишком длинное имя ответственного.')
-        ]
+            DataRequired(message='Ответственный - обязательное поле.')
+        ],
+        coerce=int
     )
-    functional_budget = StringField(
-        'Функциональный бюджет',
+    budget_holder = SelectField(
+        'ФДБ',
         validators=[
-            DataRequired(message='Функциональный бюджет - обязательное поле.'),
-            Length(max=128, message='Слишком длинное название ФДБ.')
-        ]
+            DataRequired(message='ФДБ - обязательное поле.')
+        ],
+        coerce=str
     )
-    income_statement = SelectField(
-        'Статья БДР',
-        validators=[DataRequired(message='Статья БДР - обязательное поле.')],
-        coerce=int
+    income = SelectField(
+        'БДР',
+        validators=[DataRequired(message='БДР - обязательное поле.')],
+        coerce=str
     )
-    cashflow_statement = SelectField(
-        'Статья БДДС',
-        validators=[DataRequired(message='Статья БДДС - обязательное поле.')],
-        coerce=int
+    cashflow = SelectField(
+        'БДДС',
+        validators=[DataRequired(message='БДДС - обязательное поле.')],
+        coerce=str
     )
     code = StringField(
         'Код',
@@ -482,6 +482,17 @@ class AddIncomeForm(FlaskForm):
         ]
     )
     submit = SubmitField('Добавить')
+
+
+class BudgetHolderForm(FlaskForm):
+    budget_holder_name = StringField(
+        'ФДБ',
+        validators=[
+            DataRequired(message='ФДБ - обязательное поле.'),
+            Length(max=128, message='Слишком длинное название.')
+        ]
+    )
+    submit = SubmitField('Сохранить')
 
 
 class AddCashflowForm(FlaskForm):
@@ -532,7 +543,7 @@ class AddLimitForm(FlaskForm):
     interval = SelectField(
         'Интервал',
         validators=[InputRequired(message='Некорректный интервал лимита.')],
-        coerce=int
+        coerce=str
     )
     value = DecimalField(
         'Лимит',

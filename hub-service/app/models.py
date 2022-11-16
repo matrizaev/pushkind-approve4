@@ -58,18 +58,11 @@ class Vendor(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String(128), nullable=False, index=True)
-    children = db.Column(db.JSON(), nullable=False)
     hub_id = db.Column(db.Integer, nullable=False, index=True)
-    responsible = db.Column(db.String(128), nullable=True)
-    functional_budget = db.Column(db.String(128), nullable=True)
-    income_id = db.Column(  # БДР
-        db.Integer,
-        nullable=True
-    )
-    cashflow_id = db.Column(  # БДДС
-        db.Integer,
-        nullable=True
-    )
+    responsible = db.Column(db.JSON(), nullable=True)
+    budget_holder = db.Column(db.String(128), nullable=True)
+    income = db.Column(db.String(128), nullable=True)
+    cashflow = db.Column(db.String(128), nullable=True)
     code = db.Column(db.String(128), nullable=True)
     image = db.Column(db.String(128), nullable=True)
     products = db.relationship(
@@ -79,19 +72,19 @@ class Category(db.Model):
         passive_deletes=True
     )
 
-    def to_dict(self):
+    def to_dict(self, with_products=True):
         data = {
             'id': self.id,
             'name': self.name,
-            'children': self.children,
             'responsible': self.responsible,
-            'functional_budget': self.functional_budget,
-            'income_id': self.income_id,
-            'cashflow_id': self.cashflow_id,
+            'budget_holder': self.budget_holder,
+            'income': self.income,
+            'cashflow': self.cashflow,
             'code': self.code,
-            'image': self.image,
-            'products': [p.to_dict() for p in self.products]
+            'image': self.image
         }
+        if with_products:
+            data['products'] = [p.to_dict() for p in self.products]
         return data
 
     def from_dict(self, data):
@@ -133,17 +126,15 @@ class Product(db.Model):
     def to_dict(self):
         data = {
             'id': self.id,
-            'vendor_id': self.vendor_id,
-            'vendor': self.vendor.name,
+            'vendor': self.vendor.to_dict(),
             'name': self.name,
             'sku': self.sku,
             'price': self.price,
             'image': self.image,
             'measurement': self.measurement,
-            'cat_id': self.cat_id,
             'description': self.description,
             'input_required': self.input_required,
-            'category': self.category.name
+            'category': self.category.to_dict(with_products=False)
         }
         return data
 

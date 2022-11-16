@@ -74,7 +74,6 @@ class EventType(enum.IntEnum):
 
     def to_dict(self):
         return {
-            'id': int(self),
             'name': self.name,
             'pretty': str(self),
             'color': self.color
@@ -96,7 +95,6 @@ class EventEntityType(enum.IntEnum):
 
     def to_dict(self):
         return {
-            'id': int(self),
             'name': self.name,
             'pretty': str(self)
         }
@@ -106,6 +104,7 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     hub_id = db.Column(db.Integer, nullable=False, index=True)
     entity_id = db.Column(db.Integer, nullable=True, index=True)
+    entity = db.Column(db.JSON(), nullable=True)
     user_id = db.Column(db.Integer, nullable=False, index=True)
     user = db.Column(db.JSON(), nullable=False)
     timestamp = db.Column(
@@ -120,7 +119,7 @@ class Event(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'entity_id': self.entity_id,
+            'entity': self.entity,
             'user': self.user,
             'timestamp': self.timestamp.isoformat(),
             'event_type': self.event_type.to_dict(),
@@ -132,6 +131,7 @@ class Event(db.Model):
         data.pop('id', None)
         data.pop('hub_id', None)
         data.pop('user_id', None)
+        data.pop('entity_id', None)
         data.pop('user', None)
         event_type = data.pop('event_type', 'commented')
         try:
@@ -144,6 +144,11 @@ class Event(db.Model):
             self.entity_type = EventEntityType[entity_type]
         except KeyError:
             self.entity_type = EventEntityType.hub
+
+        entity = data.pop('entity', None)
+        if entity is not None and isinstance(entity, dict) and 'id' in entity:
+            self.entity_id = entity['id']
+            self.entity = entity
 
         for key, value in data.items():
             setattr(self, key, value)

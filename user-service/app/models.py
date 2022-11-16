@@ -5,7 +5,7 @@ from hashlib import md5
 import jwt
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.sql import expression
+from sqlalchemy.sql import expression, func
 
 from app import db
 
@@ -33,7 +33,6 @@ class UserRoles(enum.IntEnum):
 
     def to_dict(self):
         return {
-            'id': int(self),
             'name': self.name,
             'pretty': str(self)
         }
@@ -130,12 +129,13 @@ class User(db.Model):
         )
 
     @staticmethod
-    def verify_token(token, verify_exp=True):
+    def verify_token(token, verify_exp=True, leeway=0):
         try:
             user_id = jwt.decode(
                 token,
                 current_app.config['SECRET_KEY'],
                 algorithms=['HS256'],
+                leeway=leeway,
                 options={
                     'verify_exp':verify_exp
                 }
@@ -161,13 +161,11 @@ class User(db.Model):
         except KeyError:
             self.role = UserRoles.default
 
-        projects = data.pop('projects', None)
-        categories = data.pop('categories', None)
+        projects = data.pop('projects', [])
+        categories = data.pop('categories', [])
         if self.role in [UserRoles.validator, UserRoles.purchaser]:
-            if projects is not None:
-                self.projects = [UserProject(user_id=self.id, project_id=p) for p in projects]
-            if categories is not None:
-                self.categories = [UserCategory(user_id=self.id, category_id=c) for c in categories]
+            self.projects = [UserProject(user_id=self.id, project=p) for p in projects]
+            self.categories = [UserCategory(user_id=self.id, category=c) for c in categories]
         else:
             self.projects = []
             self.categories = []
@@ -199,8 +197,8 @@ class User(db.Model):
             'email_disapproved': self.email_disapproved,
             'email_approved': self.email_approved,
             'email_comment': self.email_comment,
-            'projects': [p.project_id for p in self.projects],
-            'categories': [c.category_id for c in self.categories],
+            'projects': [p.project for p in self.projects],
+            'categories': [c.category for c in self.categories],
             'last_seen': self.last_seen.isoformat() if self.last_seen is not None else None,
             'registered': self.registered.isoformat() if self.registered is not None else None
         }
@@ -215,7 +213,6 @@ class Position(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
             'name': self.name,
             'users': [u.to_dict() for u in self.users]
         }
@@ -230,30 +227,29 @@ class Position(db.Model):
         Position.query.filter(Position.users == None).delete(synchronize_session=False)
 
     @staticmethod
-    def get_responsibility(hub_id, project_id, category_list):
+    def get_responsibility(hub_id, project, categories):
 
         responsibility = {}
+        categories = [str(c).lower() for c in categories]
+        project = str(project).lower()
         users = (
             User.query.filter_by(hub_id=hub_id, role=UserRoles.validator)
             .filter(User.position != None)
-            .join(UserCategory).filter(UserCategory.category_id.in_(category_list))
-            .join(UserProject).filter(UserProject.project_id == project_id)
+            .join(UserCategory).filter(func.lower(UserCategory.category).in_(categories))
+            .join(UserProject).filter(func.lower(UserProject.project) == project)
             .all()
         )
         for user in users:
-            if user.position_id not in responsibility:
-                responsibility[user.position_id] = {
-                    'position': user.position.name,
-                    'users': []
-                }
-            responsibility[user.position_id]['users'].append(user.to_dict())
+            if user.position.name not in responsibility:
+                responsibility[user.position.name] = []
+            responsibility[user.position.name].append(user.to_dict())
         return responsibility
 
 
 class UserCategory(db.Model):
     __tablename__ = 'user_category'
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
-    category_id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(128), primary_key=True)
 
     @staticmethod
     def cleanup_unused():
@@ -270,7 +266,7 @@ class UserCategory(db.Model):
 class UserProject(db.Model):
     __tablename__ = 'user_project'
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
-    project_id = db.Column(db.Integer, primary_key=True)
+    project = db.Column(db.String(128), primary_key=True)
 
     @staticmethod
     def cleanup_unused():

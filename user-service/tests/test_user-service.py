@@ -92,8 +92,8 @@ def test_manage_entities(client):
             'name': 'new_name',
             'role': 'validator',
             'position': 'validator',
-            'projects': [1],
-            'categories': [1]
+            'projects': ['project'],
+            'categories': ['category']
         }
     )
 

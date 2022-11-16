@@ -12,7 +12,7 @@ from app.api.errors import error_response
 @token_auth.login_required
 def get_events():
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     args = request.args.copy()
     timestamp = args.pop('timestamp', None)
@@ -21,7 +21,7 @@ def get_events():
     events = (
         Event
         .query
-        .filter_by(hub_id=current_user.hub_id)
+        .filter_by(hub_id=current_user['hub_id'])
         .filter_by(**args)
     )
     if timestamp is not None:
@@ -47,7 +47,7 @@ def get_events():
 @token_auth.login_required
 def get_event_types():
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     return jsonify([i.to_dict() for i in EventType]), 200
 
@@ -56,22 +56,13 @@ def get_event_types():
 @token_auth.login_required(role=['admin'])
 def post_event():
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     data = request.get_json() or {}
-    if data.get('event_type') is None or data.get('data') is None:
-        return error_response(400, 'Необходимые поля отсутствуют.')
     event = Event(
-        hub_id=current_user.hub_id,
-        user_id=current_user.id,
-        user={
-            'name': current_user.name,
-            'role': current_user.role,
-            'email': current_user.email,
-            'position': current_user.position,
-            'location': current_user.location,
-            'phone': current_user.phone
-        }
+        hub_id=current_user['hub_id'],
+        user_id=current_user['id'],
+        user=current_user
     )
     event.from_dict(data)
     db.session.add(event)

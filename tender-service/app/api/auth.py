@@ -1,5 +1,4 @@
 import jwt
-from types import SimpleNamespace
 
 from flask_httpauth import HTTPTokenAuth
 from flask import current_app
@@ -16,11 +15,12 @@ def verify_token(token):
         user = jwt.decode(
             token,
             current_app.config['SECRET_KEY'],
-            algorithms=['HS256']
+            algorithms=['HS256'],
+            leeway=600
         )
     except:
         return None
-    return SimpleNamespace(**user)
+    return user
 
 
 @token_auth.error_handler
@@ -30,4 +30,4 @@ def token_auth_error(status):
 
 @token_auth.get_user_roles
 def get_user_roles(user):
-    return user.role['name']
+    return user['role']['name']

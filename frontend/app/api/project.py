@@ -37,3 +37,9 @@ class OrderLimitIntervalApi(EntityApi):
     __entity_name__ = 'order_limit_interval'
     __entities_name__ = 'order_limit_intervals'
     __service_host__ = PROJECT_SERVICE_HOST
+
+
+class BudgetHolderApi(EntityApi):
+    __entity_name__ = 'budget_holder'
+    __entities_name__ = 'budget_holders'
+    __service_host__ = PROJECT_SERVICE_HOST

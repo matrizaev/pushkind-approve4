@@ -42,11 +42,19 @@ def delete_user(user_id):
         return error_response(404, 'Хаб не существует.')
     if current_user.role != UserRoles.admin:
         user_id = current_user.id
-    users = User.query
-    users = users.filter(User.hub_id.in_([current_user.hub_id, None]))
-    users.filter_by(id=user_id)
-    users.delete()
-    return jsonify({'status': 'success'}), 200
+    user = (
+        User
+        .query
+        .filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
+        .filter_by(id=user_id)
+        .first()
+    )
+    if user is not None:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'status': 'success'}), 200
+    else:
+        return error_response(404, 'Пользователь не существует.')
 
 
 @bp.route('/roles', methods=['GET'])
@@ -74,9 +82,9 @@ def get_responsibilities():
     current_user = token_auth.current_user()
     if current_user.hub_id is None:
         return error_response(404, 'Хаб не существует.')
-    category_list = request.args.getlist('categories')
-    project_id = request.args.get('project_id', None)
-    positions = Position.get_responsibility(current_user.hub_id, project_id, category_list)
+    categories = request.args.getlist('categories')
+    project = request.args.get('project', None)
+    positions = Position.get_responsibility(current_user.hub_id, project, categories)
     return jsonify(positions), 200
 
 
@@ -89,7 +97,7 @@ def post_user():
     user = User.query.filter_by(email=email).first()
     if user is not None:
         return error_response(409, 'Адрес электронной почты занят.')
-    user = User(email=email)
+    user = User(email=email, registered=datetime.now(tz=timezone.utc))
     user.from_dict(data)
     db.session.add(user)
     db.session.commit()

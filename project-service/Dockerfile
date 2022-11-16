@@ -19,7 +19,7 @@ RUN venv/bin/pip install -r requirements.txt
 
 COPY --chown=pushkind:pushkind app app
 COPY --chown=pushkind:pushkind tests tests
-COPY --chown=pushkind:pushkind run.py config.py consumer.py boot.sh test.sh ./
-RUN chmod +x boot.sh && chmod +x test.sh
+COPY --chown=pushkind:pushkind run.py config.py consumer.py boot.sh test.sh deploy.sh ./
+RUN chmod +x boot.sh && chmod +x test.sh && chmod +x deploy.sh
 
 CMD ["./boot.sh"]

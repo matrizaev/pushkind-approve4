@@ -1,6 +1,6 @@
 from io import BytesIO
 from base64 import b64decode
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import request, jsonify
 import pandas as pd
@@ -16,18 +16,18 @@ from app.api.errors import error_response
 @token_auth.login_required(role=['admin', 'purchaser', 'vendor'])
 def get_tenders():
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     args = request.args.copy()
     vendor_id = args.pop('vendor_id', None)
     tenders = (
         Tender
         .query
-        .filter_by(hub_id=current_user.hub_id)
+        .filter_by(hub_id=current_user['hub_id'])
         .filter_by(**args)
     )
-    if current_user.role['name'] == 'vendor':
-        tenders = tenders.join(TenderVendor).filter_by(vendor_id=current_user.email)
+    if current_user['role']['name'] == 'vendor':
+        tenders = tenders.join(TenderVendor).filter_by(vendor_id=current_user['email'])
     tenders=tenders.order_by(Tender.timestamp.desc()).all()
     return jsonify([t.to_dict(vendor_id) for t in tenders]), 200
 
@@ -36,7 +36,7 @@ def get_tenders():
 @token_auth.login_required
 def get_tender_statuses():
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     return jsonify([status.to_dict() for status in TenderStatus]), 200
 
@@ -45,7 +45,7 @@ def get_tender_statuses():
 @token_auth.login_required(role=['admin', 'purchaser'])
 def post_tender():
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     data = request.json or {}
     if data.get('products') is None:
@@ -85,17 +85,10 @@ def post_tender():
         .sort_values('sku')
     )
     tender = Tender(
-        hub_id=current_user.hub_id,
-        initiative_id=current_user.id,
-        initiative={
-            'name': current_user.name,
-            'role': current_user.role,
-            'email': current_user.email,
-            'position': current_user.position,
-            'location': current_user.location,
-            'phone': current_user.phone
-        },
-        timestamp=datetime.now(),
+        hub_id=current_user['hub_id'],
+        initiative_id=current_user['id'],
+        initiative=current_user,
+        timestamp=datetime.now(tz=timezone.utc),
         products=df.to_dict(orient='records'),
         status=TenderStatus.new
     )
@@ -108,14 +101,16 @@ def post_tender():
 @token_auth.login_required(role=['admin', 'purchaser', 'vendor'])
 def put_tender(tender_id):
     current_user = token_auth.current_user()
-    if current_user.hub_id is None:
+    if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
-    tender = Tender.query.filter_by(id=tender_id, hub_id=current_user.hub_id).first()
-    data = request.json or {}
+    tender = Tender.query.filter_by(id=tender_id, hub_id=current_user['hub_id']).first()
     if tender is None:
         return error_response(404, 'Тендер не существует.')
-    if data.get('vendors') is not None and current_user.role['name'] in ('admin', 'purchaser'):
+    data = request.json or {}
+    if data.get('vendors') is not None and current_user['role']['name'] in ('admin', 'purchaser'):
         for vendor in data['vendors']:
+            if vendor.get('email') is None or vendor.get('name') is None:
+                return error_response(400, 'Необходимые поля отсутствуют.')
             tender_vendor = TenderVendor.query.filter_by(tender_id=tender_id, vendor_id=vendor['email'].lower()).first()
             if tender_vendor is not None:
                 continue
@@ -127,12 +122,12 @@ def put_tender(tender_id):
             db.session.add(tender_vendor)
             db.session.commit()
     if data.get('products') is not None:
-        if current_user.role['name'] in ('admin', 'purchaser'):
+        if current_user['role']['name'] in ('admin', 'purchaser'):
             vendor_id = data.get('vendor_id')
             if vendor_id is None:
                 return error_response(400, 'Необходимые поля отсутствуют.')
         else:
-            vendor_id = current_user.email
+            vendor_id = current_user['email']
         tender_vendor = TenderVendor.query.filter_by(tender_id=tender_id, vendor_id=vendor_id.lower()).first()
         if tender_vendor is None:
             return error_response(404, 'Тендер не существует.')

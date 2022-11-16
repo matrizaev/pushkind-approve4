@@ -1,5 +1,5 @@
 <p>
-    Пользователь {{ current_user.name }} ({{ current_user.location }}) уведомляет о заявке #{{ order.number }}.
+    Пользователь {{ current_user.name or current_user.email }} ({{ current_user.location }}) уведомляет о заявке #{{ order.number }}.
 </p>
 {% if data %}
 <p>

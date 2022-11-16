@@ -65,6 +65,9 @@
 		</div>
 	</div>
 
+	<form id="removeUserForm" class="d-none" method="POST" action="{{url_for('main.remove_user')}}">
+		<input type="hidden" name="user_id" required id="removeUserId">
+	</form>
 {% else %}
 
 	<div class="container my-2">
@@ -160,10 +163,10 @@
 						$("#about_user-email_disapproved").prop("checked", user["email_disapproved"]);
 						$("#about_user-email_approved").prop("checked", user["email_approved"]);
 						$("#about_user-email_comment").prop("checked", user["email_comment"]);
-						$("#role").val(user["role"]['id']);
+						$("#role").val(user["role"]['name']);
 						$("#note").val(user["note"]);
 						$("#birthday").val(user["birthday"]);
-						$("#removeUserButton").attr("href", "{{ url_for('main.remove_user', user_id='0') }}".replace("0", user_id));
+						$("#removeUserId").val(user_id);
 						if (user["role"]['name'] == "validator" || user["role"]['name'] == "purchaser") {
 							$("#userDataWrapper").show();
 							selectizeCategories.setValue(user["categories"]);
@@ -178,6 +181,10 @@
 				userModal.show();
 			});
 			$("#role").change(HideUserData);
+			$('#removeUserFormSubmit').on('click',()=>{
+				if (confirm('Удалить пользователя?'))
+					$('#removeUserForm').submit();
+			});
 		{% endif %}
 	});
 </script>

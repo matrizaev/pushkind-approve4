@@ -13,6 +13,10 @@ from app.main.forms import LeaveCommentForm, OrderApprovalForm, ChangeQuantityFo
 from app.main.forms import ApproverForm, SplitOrderForm
 from app.utils import role_required, role_forbidden
 from app.main.utils import SendEmail1C, GetNewOrderNumber, send_email_notification
+from app.api.order import OrderApi
+from app.api.project import IncomeApi, CashflowApi, ProjectApi
+from app.api.hub import CategoryApi
+from app.utils import first
 
 
 ################################################################################
@@ -53,21 +57,19 @@ def GetOrder(order_id):
 @login_required
 @role_forbidden(['default'])
 def show_order(order_id):
-    return '<p>show_order</p>'
-    # order = GetOrder(order_id)
-    # if order is None:
-    #     flash('Заявка с таким номером не найдена.')
-    #     return redirect(url_for('main.show_index'))
+    order = first(OrderApi.get_entities(id=order_id))
+    if order is None:
+        flash('Заявка с таким номером не найдена.')
+        return redirect(url_for('main.show_index'))
 
-    # approval_form = OrderApprovalForm()
-    # quantity_form = ChangeQuantityForm()
-    # comment_form = LeaveCommentForm()
-    # initiative_form = InitiativeForm()
-    # approver_form = ApproverForm()
+    comment_form = LeaveCommentForm()
+    initiative_form = InitiativeForm()
+    approver_form = ApproverForm()
 
-    # comment_form.notify_reviewers.choices = [
-    #     (r.id, r.name) for r in order.reviewers
-    # ]
+    incomes = IncomeApi.get_entities()
+    cashflows = CashflowApi.get_entities()
+    projects = ProjectApi.get_entities()
+    categories = CategoryApi.get_entities()
 
     # incomes = IncomeStatement.query.filter(IncomeStatement.hub_id == current_user.hub_id)
     # incomes = incomes.order_by(IncomeStatement.name).all()
@@ -117,19 +119,17 @@ def show_order(order_id):
     #     initiative_form.site.default = order.site_id
     # initiative_form.process()
 
-    # split_form = SplitOrderForm()
-
-    # return render_template(
-    #     'approve.html',
-    #     order=order,
-    #     projects=projects,
-    #     comment_form=comment_form,
-    #     approval_form=approval_form,
-    #     quantity_form=quantity_form,
-    #     initiative_form=initiative_form,
-    #     approver_form=approver_form,
-    #     split_form=split_form
-    # )
+    return render_template(
+        'approve.html',
+        order=order,
+        projects=projects,
+        comment_form=comment_form,
+        approval_form=OrderApprovalForm(),
+        quantity_form=ChangeQuantityForm(),
+        initiative_form=initiative_form,
+        approver_form=approver_form,
+        split_form=SplitOrderForm()
+    )
 
 
 @bp.route('/orders/split/<int:order_id>', methods=['POST'])

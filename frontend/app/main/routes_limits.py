@@ -32,7 +32,7 @@ def show_limits():
     form = AddLimitForm()
     form.project.choices = [(p['id'], p['name']) for p in projects]
     form.cashflow.choices = [(c['id'], c['name']) for c in cashflows]
-    form.interval.choices = [(i['id'], i['pretty']) for i in intervals]
+    form.interval.choices = [(i['name'], i['pretty']) for i in intervals]
     form.process()
 
     return render_template(
@@ -55,13 +55,12 @@ def add_limit():
     form = AddLimitForm()
     form.project.choices = [(p['id'], p['name']) for p in projects]
     form.cashflow.choices = [(c['id'], c['name']) for c in cashflows]
-    form.interval.choices = [(i['id'], i['pretty']) for i in intervals]
+    form.interval.choices = [(i['name'], i['pretty']) for i in intervals]
 
     if form.validate_on_submit():
-        interval = next(filter(lambda x: x['id']==form.interval.data, intervals))
         limit = OrderLimitApi.post_entity(
             value = float(form.value.data),
-            interval = interval['name'],
+            interval = form.interval.data,
             cashflow_id = form.cashflow.data,
             project_id = form.project.data
         )

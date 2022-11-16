@@ -9,6 +9,7 @@ from app.utils import role_required
 from app.api.tender import TenderApi
 from app.api.hub import VendorApi
 from app.api.event import EventApi
+from app.utils import first
 
 
 ################################################################################
@@ -56,7 +57,7 @@ def show_tender(tender_id):
         vendor_id = current_user.email
     else:
         vendor_id=request.args.get('vendor_id', False)
-    tender = next(iter(TenderApi.get_entities(id=tender_id, vendor_id=vendor_id)) or []) or None
+    tender = first(TenderApi.get_entities(id=tender_id, vendor_id=vendor_id))
     if tender is None:
         flash('Тендер не найден')
         return redirect(url_for('main.show_tenders'))
@@ -86,7 +87,7 @@ def show_tender(tender_id):
 @login_required
 @role_required(['admin', 'purchaser'])
 def invite_tender(tender_id):
-    tender = next(iter(TenderApi.get_entities(id=tender_id)) or []) or None
+    tender = first(TenderApi.get_entities(id=tender_id))
     if tender is None:
         flash('Тендер не найден')
         return redirect(url_for('main.show_tenders'))
@@ -106,7 +107,9 @@ def invite_tender(tender_id):
         if response:
             comment = form.comment.data.strip()
             response = EventApi.post_entity(
-                entity_id=tender_id,
+                entity={
+                    'id': tender_id
+                },
                 entity_type='tender',
                 event_type='invited',
                 data=comment
@@ -147,7 +150,7 @@ def propose_tender(tender_id):
         flash('Поставщик не найден.')
         return redirect(url_for('main.show_tender', tender_id=tender_id))
 
-    tender = next(iter(TenderApi.get_entities(id=tender_id, vendor_id=vendor_id)) or []) or None
+    tender = first(TenderApi.get_entities(id=tender_id, vendor_id=vendor_id))
     if tender is None:
         flash('Тендер не найден')
         return redirect(url_for('main.show_tenders'))

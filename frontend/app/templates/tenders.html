@@ -63,7 +63,7 @@
                 <div class="col">
                     {% set user = tender.initiative %}
                     {% include '_user.popover.html' %}
-                    {{ user.name }}
+                    {{ user.name or user.email }}
                 </div>
                 <div class="col">
                     {% for tv in tender.vendors %}

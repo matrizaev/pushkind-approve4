@@ -25,7 +25,7 @@
 		<a class="text-decoration-none" href="{{ url_for('main.show_order', order_id=order.id) }}">{{ order.number }}</a>
 		<br>
 		<span class="text-muted">
-			{{ moment(order.create_date).format() }}
+			{{ order.timestamp }}
 		</span>
 	</div>
 {% else %}
@@ -35,14 +35,14 @@
 			<a class="text-decoration-none" href="{{ url_for('main.show_order', order_id=order.id) }}">{{ order.number }}</a>
 			<br>
 			<span class="text-muted">
-				{{ moment(order.create_date).format() }}
+				{{ order.timestamp }}
 			</span>
 		</div>
 {% endif %}
 	<div class="col-sm-2 overflow-hidden">
 		<span class="d-sm-none fw-bold">Категории:</span>
-		{% for cat in order.categories %}		
-			{{ cat.code or '' }}<br>
+		{% for cat in order.categories %}
+			{{ cat[1] or cat[0] }}<br>
 		{% endfor %}
 	</div>
 	<div class="col-sm-3 overflow-hidden">
@@ -51,22 +51,23 @@
 			{{ order.site.name if order.site else 'объект не указан' }}
 		</span>
 		<br>
-		<small>{{ order.initiative.name }}</small>
+		<small>{{ order.initiative.name or order.initiative.email}}</small>
 	</div>
 	<div class="col-sm overflow-hidden">
 		<span class="d-sm-none fw-bold">Согласен:</span>
 		{% for appr in order.approvals %}
 			{% if appr.approved is sameas true %}
-				{{ appr.position.name }}<br>
+				{{ appr.position }}<br>
 			{% endif %}
 		{% endfor %}
 	</div>
 	<div class="col-sm overflow-hidden">
 		<span class="d-sm-none fw-bold">Не согласен:</span>
 		<span class="text-danger">
-			{% set positions = order.user_approvals|rejectattr('product_id','none')|map(attribute='user')|map(attribute='position')|map(attribute='name')|unique %}
-			{% for position in positions %}
-				{{ position }}<br>
+			{% for appr in order.approvals %}
+				{% if appr.approved is sameas false %}
+					{{ appr.position }}<br>
+				{% endif %}
 			{% endfor %}
 		</span>
 	</div>
@@ -78,8 +79,8 @@
 			замечания
 		{% else %}
 			{% for appr in order.approvals %}
-				{% if appr.approved is sameas false %}
-					{{ appr.position.name }}<br>
+				{% if appr.approved is sameas none %}
+					{{ appr.position }}<br>
 				{% endif %}
 			{% endfor %}
 		{% endif %}

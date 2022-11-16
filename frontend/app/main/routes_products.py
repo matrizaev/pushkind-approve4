@@ -16,6 +16,7 @@ from app.main.forms import AddHubForm, AddVendorForm, EditHubForm, EditVendorFor
 from app.api.hub import HubApi, ProductApi, CategoryApi, VendorApi
 from app.api.user import UserApi
 from app.producer import post_upload_images, get_upload_image_queue_size
+from app.utils import first
 
 
 ################################################################################
@@ -85,10 +86,10 @@ def show_vendors():
 def upload_products():
 
     if current_user.role.name == 'vendor':
-        vendor = next(iter(VendorApi.get_entities() or []), None)
+        vendor = first(VendorApi.get_entities())
     else:
         vendor_id = request.args.get('vendor_id', type=int)
-        vendor = next(iter(VendorApi.get_entities(id=vendor_id) or []), None)
+        vendor = first(VendorApi.get_entities(id=vendor_id))
 
     if not vendor:
         flash('Такой поставщик не найден.')
@@ -123,10 +124,10 @@ def upload_products():
 def upload_images():
 
     if current_user.role.name == 'vendor':
-        vendor = next(iter(VendorApi.get_entities() or []), None)
+        vendor = first(VendorApi.get_entities())
     else:
         vendor_id = request.args.get('vendor_id', type=int)
-        vendor = next(iter(VendorApi.get_entities(id=vendor_id) or []), None)
+        vendor = first(VendorApi.get_entities(id=vendor_id))
 
     if not vendor:
         flash('Такой поставщик не найден.')
@@ -170,10 +171,10 @@ def upload_images():
 def download_products():
 
     if current_user.role.name == 'vendor':
-        vendor = next(iter(VendorApi.get_entities() or []), None)
+        vendor = first(VendorApi.get_entities())
     else:
         vendor_id = request.args.get('vendor_id', type=int)
-        vendor = next(iter(VendorApi.get_entities(id=vendor_id) or []), None)
+        vendor = first(VendorApi.get_entities(id=vendor_id))
 
     if not vendor:
         flash('Такой поставщик не найден.')
@@ -200,10 +201,10 @@ def download_products():
 @role_forbidden(['default', 'initiative', 'supervisor'])
 def upload_product_image(product_id):
     if current_user.role.name == 'vendor':
-        vendor = next(iter(VendorApi.get_entities() or []), None)
+        vendor = first(VendorApi.get_entities())
     else:
         vendor_id = request.args.get('vendor_id', type=int)
-        vendor = next(iter(VendorApi.get_entities(id=vendor_id) or []), None)
+        vendor = first(VendorApi.get_entities(id=vendor_id))
 
     if not vendor:
         flash('Такой поставщик не найден.')
@@ -211,7 +212,7 @@ def upload_product_image(product_id):
 
     vendor_id = vendor['id']
 
-    product = next(iter(ProductApi.get_entities(id=product_id, vendor_id=vendor_id) or []), None)
+    product = first(ProductApi.get_entities(id=product_id, vendor_id=vendor_id))
 
     if not product:
         flash('Такой товар не найден.')
@@ -392,7 +393,7 @@ def edit_vendor():
 @login_required
 @role_required(['admin', 'supervisor'])
 def switch_hub():
-    hub_id = request.form.get('hub_id')
+    hub_id = request.form.get('hub_id', type=int)
     hubs = HubApi.get_entities(id=hub_id)
     if len(hubs) == 0:
         flash('Этот хаб не зарегистрован в системе.')

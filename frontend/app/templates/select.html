@@ -85,7 +85,7 @@
             <span class="fw-bold">Закупщик:</span>
             {% set user = tender.initiative %}
             {% include '_user.popover.html' %}
-            {{ user.name }}
+            {{ user.name or user.email }}
         </div>
     </div>
     <div class="row">
