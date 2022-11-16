@@ -4,10 +4,10 @@ from flask_login import current_user, login_required
 from flask import render_template, redirect, url_for, flash
 
 from app.main import bp
-from app.main.forms import AddCategoryForm, AddProjectForm, AddSiteForm, EditProjectForm
-from app.main.forms import EditSiteForm, EditCategoryForm
+from app.main.forms import AddCategoryForm, ProjectForm, SiteForm, ProjectForm
+from app.main.forms import EditCategoryForm
 from app.main.forms import AppSettingsForm, BudgetHolderForm
-from app.main.forms import AddIncomeForm, AddCashflowForm, EditIncomeForm, EditCashflowForm
+from app.main.forms import IncomeForm, CashflowForm
 from app.utils import role_required
 from app.api.hub import CategoryApi, AppSettingsApi
 from app.api.project import ProjectApi, IncomeApi, CashflowApi, SiteApi, BudgetHolderApi
@@ -23,15 +23,11 @@ def show_admin_page():
     forms = {
         'add_category': AddCategoryForm(),
         'edit_category': EditCategoryForm(),
-        'add_project': AddProjectForm(),
-        'edit_project': EditProjectForm(),
-        'add_site': AddSiteForm(),
-        'edit_site': EditSiteForm(),
-        'add_income': AddIncomeForm(),
-        'add_cashflow': AddCashflowForm(),
-        'budget_holder': BudgetHolderForm(),
-        'edit_income': EditIncomeForm(),
-        'edit_cashflow': EditCashflowForm()
+        'project': ProjectForm(),
+        'site': SiteForm(),
+        'income': IncomeForm(),
+        'cashflow': CashflowForm(),
+        'budget_holder': BudgetHolderForm()
     }
 
     app_data = AppSettingsApi.get_entities()
@@ -165,11 +161,12 @@ def edit_category():
 @login_required
 @role_required(['admin'])
 def add_project():
-    form = AddProjectForm()
+    form = ProjectForm()
     if form.validate_on_submit():
         response = ProjectApi.post_entity(
             name=form.project_name.data.strip(),
-            uid=form.uid.data.strip() if form.uid.data is not None else None
+            uid=form.uid.data.strip() if form.uid.data is not None else None,
+            enabled=form.enabled.data
         )
         if response is not None:
             flash('Проект добавлен.')
@@ -185,7 +182,7 @@ def add_project():
 @login_required
 @role_required(['admin'])
 def add_site():
-    form = AddSiteForm()
+    form = SiteForm()
     if form.validate_on_submit():
         response = SiteApi.post_entity(
             name=form.site_name.data.strip(),
@@ -214,14 +211,14 @@ def remove_project(project_id):
     return redirect(url_for('main.show_admin_page'))
 
 
-@bp.route('/admin/project/edit/', methods=['POST'])
+@bp.route('/admin/project/edit/<int:project_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
-def edit_project():
-    form = EditProjectForm()
+def edit_project(project_id):
+    form = ProjectForm()
     if form.validate_on_submit():
         response = ProjectApi.put_entity(
-            entity_id=form.project_id.data,
+            entity_id=project_id,
             name=form.project_name.data.strip(),
             uid=form.uid.data.strip() if form.uid.data is not None else None,
             enabled=form.enabled.data
@@ -231,7 +228,7 @@ def edit_project():
         else:
             flash('Не удалось изменить проект.')
     else:
-        for error in form.project_id.errors + form.project_name.errors + form.uid.errors:
+        for error in form.project_name.errors + form.uid.errors:
             flash(error)
     return redirect(url_for('main.show_admin_page'))
 
@@ -248,14 +245,14 @@ def remove_site(site_id):
     return redirect(url_for('main.show_admin_page'))
 
 
-@bp.route('/admin/site/edit/', methods=['POST'])
+@bp.route('/admin/site/edit/<int:site_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
-def edit_site():
-    form = EditSiteForm()
+def edit_site(site_id):
+    form = SiteForm()
     if form.validate_on_submit():
         response = SiteApi.put_entity(
-            entity_id=form.site_id.data,
+            entity_id=site_id,
             name=form.site_name.data.strip(),
             uid=form.uid.data.strip() if form.uid.data is not None else None
         )
@@ -273,7 +270,7 @@ def edit_site():
 @login_required
 @role_required(['admin'])
 def add_income():
-    form = AddIncomeForm()
+    form = IncomeForm()
     if form.validate_on_submit():
         response = IncomeApi.post_entity(
             name=form.income_name.data.strip()
@@ -311,7 +308,7 @@ def add_budget_holder():
 @login_required
 @role_required(['admin'])
 def add_cashflow():
-    form = AddCashflowForm()
+    form = CashflowForm()
     if form.validate_on_submit():
         response = CashflowApi.post_entity(
             name=form.cashflow_name.data.strip()
@@ -362,14 +359,14 @@ def remove_cashflow(cashflow_id):
     return redirect(url_for('main.show_admin_page'))
 
 
-@bp.route('/admin/income/edit/', methods=['POST'])
+@bp.route('/admin/income/edit/<int:income_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
-def edit_income():
-    form = EditIncomeForm()
+def edit_income(income_id):
+    form = IncomeForm()
     if form.validate_on_submit():
         response = IncomeApi.put_entity(
-            entity_id=form.income_id.data,
+            entity_id=income_id,
             name=form.income_name.data.strip()
         )
         if response is not None:
@@ -377,7 +374,7 @@ def edit_income():
         else:
             flash('Не удалось изменить БДР.')
     else:
-        for error in form.income_id.errors + form.income_name.errors:
+        for error in form.income_name.errors:
             flash(error)
     return redirect(url_for('main.show_admin_page'))
 
@@ -402,14 +399,14 @@ def edit_budget_holder(budget_holder_id):
     return redirect(url_for('main.show_admin_page'))
 
 
-@bp.route('/admin/cashflow/edit/', methods=['POST'])
+@bp.route('/admin/cashflow/edit/<int:cashflow_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
-def edit_cashflow():
-    form = EditCashflowForm()
+def edit_cashflow(cashflow_id):
+    form = CashflowForm()
     if form.validate_on_submit():
         response = CashflowApi.put_entity(
-            entity_id=form.cashflow_id.data,
+            entity_id=cashflow_id,
             name=form.cashflow_name.data.strip()
         )
         if response is not None:

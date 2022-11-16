@@ -3,8 +3,6 @@ from io import BytesIO
 from flask_login import current_user, login_required
 from flask import render_template, redirect, url_for, flash, send_file, request
 import pandas as pd
-from openpyxl import Workbook
-from openpyxl.writer.excel import save_virtual_workbook
 
 from app.main import bp
 from app.main.forms import UserRolesForm, UserSettingsForm
@@ -196,86 +194,12 @@ def download_users():
         axis=1,
         inplace=True
     )
-    # users = User.query.filter(
-    #     or_(User.role == UserRoles.default, User.hub_id == current_user.hub_id)
-    # ).order_by(User.name, User.email).all()
-    # wb = Workbook()
-    # ws = wb.active
-    # for i, header in enumerate([
-    #     'Имя',
-    #     'Телефон',
-    #     'Email',
-    #     'Роль',
-    #     'Площадка',
-    #     'Права',
-    #     'Заметка',
-    #     'Активность',
-    #     'Регистрация',
-    #     'Согласованных заявок пользователя',
-    #     'Сумма согласованных заявок пользователя',
-    #     'Согласовал заявок',
-    #     'Должен согласовать заявок',
-    #     'Номер для согласования',
-    #     'День рождения'
-    # ], start=1):
-    #     ws.cell(1, i).value = header
+    df['Согласованных заявок пользователя'] = ''
+    df['Сумма согласованных заявок пользователя'] = ''
+    df['Согласовал заявок'] = ''
+    df['Должен согласовать заявок'] = ''
+    df['Номер для согласования'] = ''
 
-    # for i, user in enumerate(users, start=2):
-    #     ws.cell(i, 1).value = user.name
-    #     ws.cell(i, 2).value = user.phone
-    #     ws.cell(i, 3).value = user.email
-    #     ws.cell(i, 4).value = user.position.name if user.position is not None else ''
-    #     ws.cell(i, 5).value = user.location
-    #     ws.cell(i, 6).value = user.role
-    #     ws.cell(i, 7).value = user.note
-    #     ws.cell(i, 8).value = user.last_seen
-    #     ws.cell(i, 9).value = user.registered
-    #     ws.cell(i, 15).value = user.birthday
-
-    #     # Orders which user is initiative for
-    #     orders = Order.query.filter_by(
-    #         initiative_id=user.id,
-    #         status=OrderStatus.approved
-    #     ).all()
-    #     ws.cell(i, 10).value = len(orders)
-    #     ws.cell(i, 11).value = sum([o.total for o in orders])
-
-    #     if user.role in [UserRoles.purchaser, UserRoles.validator]:
-    #         # Orders approved by user
-    #         orders = Order.query.filter_by(
-    #             hub_id=current_user.hub_id
-    #         ).join(OrderApproval).filter_by(
-    #             user_id=user.id,
-    #             product_id=None
-    #         ).all()
-    #         ws.cell(i, 12).value = len(orders)
-
-    #         # Orders to be approved
-    #         orders = Order.query.filter(
-    #             Order.hub_id == current_user.hub_id,
-    #             or_(
-    #                 Order.status == OrderStatus.new,
-    #                 Order.status == OrderStatus.partly_approved,
-    #                 Order.status == OrderStatus.modified
-    #             ),
-    #             ~Order.user_approvals.any(OrderApproval.user_id == user.id),
-    #             ~Order.children.any()
-    #         )
-    #         orders = orders.join(OrderPosition)
-    #         orders = orders.filter_by(position_id=user.position_id)
-    #         orders = orders.join(OrderCategory)
-    #         orders = orders.filter(
-    #             OrderCategory.category_id.in_([cat.id for cat in user.categories])
-    #         )
-    #         orders = orders.join(Site)
-    #         orders = orders.filter(Site.project_id.in_([p.id for p in user.projects]))
-    #         orders = orders.all()
-    #         ws.cell(i, 13).value = len(orders)
-    #         ws.cell(i, 14).value = ', '.join([o.number for o in orders])
-    #     else:
-    #         ws.cell(i, 12).value = 0
-    #         ws.cell(i, 13).value = 0
-    # data = save_virtual_workbook(wb)
     buf = BytesIO()
     df.to_excel(buf, index=False)
     buf.seek(0)

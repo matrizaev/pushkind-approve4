@@ -141,7 +141,7 @@
                             <input class="form-control" id="projectFilter" type="text" placeholder="Фильтр..">
                         </div>
                         <div class="col-auto">
-                            <a class="btn btn-primary text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addProjectModal"><i class="bi bi-plus-square"></i></a>
+                            <a class="btn btn-primary text-white addProjectButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#projectModal"><i class="bi bi-plus-square"></i></a>
                         </div>
                     </div>
                     <div class="row d-none d-sm-flex fw-bold">
@@ -163,12 +163,12 @@
                                         <div class="row">
                                             <div class="col">
                                                 <span class="d-sm-none fw-bold">Название:</span>
-                                                <a class="editProjectButton" href="#" data-bs-toggle="modal" data-bs-target="#editProjectModal" data-id="{{ project.id }}">
+                                                <a class="editProjectButton" href="#" data-bs-toggle="modal" data-bs-target="#projectModal" data-id="{{ project.id }}">
                                                     {{ project.name }}
                                                 </a>
                                             </div>
                                             <div class="col-auto">
-                                                <a class="addSiteButton btn btn-sm btn-primary" href="#" data-bs-toggle="modal" data-bs-target="#addSiteModal" data-id="{{ project.id }}">
+                                                <a class="addSiteButton btn btn-sm btn-primary" href="#" data-bs-toggle="modal" data-bs-target="#siteModal" data-id="{{ project.id }}">
                                                     <i class="bi bi-plus-square"></i>
                                                 </a>
                                                 <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
@@ -188,7 +188,7 @@
                                             <div class="row">
                                                 <div class="col">
                                                     <span class="d-sm-none fw-bold">(Код) Объект:</span>
-                                                    <a class="editSiteButton" href="#" data-bs-toggle="modal" data-bs-target="#editSiteModal" data-id="{{ site.id }}">
+                                                    <a class="editSiteButton" href="#" data-bs-toggle="modal" data-bs-target="#siteModal" data-id="{{ site.id }}">
                                                         ({{ site.uid or ' ' }})
                                                         {{ site.name }}
                                                     </a>
@@ -222,10 +222,10 @@
                             <input class="form-control" id="statementsFilter" type="text" placeholder="Фильтр..">
                         </div>
                         <div class="col-auto">
-                            <a class="btn btn-primary text-white addIncomeButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addIncomeModal"><i class="bi bi-plus"></i>БДР</a>
+                            <a class="btn btn-primary text-white addIncomeButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#incomeModal"><i class="bi bi-plus"></i>БДР</a>
                         </div>
                         <div class="col-auto">
-                            <a class="btn btn-primary text-white addCashflowButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addCashflowModal"><i class="bi bi-plus"></i>БДДС</a>
+                            <a class="btn btn-primary text-white addCashflowButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#cashflowModal"><i class="bi bi-plus"></i>БДДС</a>
                         </div>
                         <div class="col-auto">
                             <a class="btn btn-primary text-white addBudgetHolderButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#budgetHolderModal"><i class="bi bi-plus"></i>ФДБ</a>
@@ -246,7 +246,7 @@
                         <div class="col">
                             {% for income in incomes %}
                                 <form action="{{url_for('main.remove_income', income_id=income.id)}}" method="POST" class="my-1">
-                                    <div class="row">
+                                    <div class="row statement">
                                         <div class="col-auto">
                                             <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
                                                 <i class="bi bi-x-lg"></i>
@@ -254,7 +254,7 @@
                                         </div>
                                         <div class="col">
                                             <span class="d-sm-none fw-bold">БДР:</span>
-                                            <a class="editIncomeButton" href="#" data-bs-toggle="modal" data-bs-target="#editIncomeModal" data-id="{{ income.id }}">
+                                            <a class="editIncomeButton" href="#" data-bs-toggle="modal" data-bs-target="#incomeModal" data-id="{{ income.id }}">
                                                 {{ income.name }}
                                             </a>
                                         </div>
@@ -265,7 +265,7 @@
                         <div class="col">
                             {% for cashflow in cashflows %}
                                 <form action="{{url_for('main.remove_cashflow', cashflow_id=cashflow.id)}}" method="POST" class="my-1">
-                                    <div class="row">
+                                    <div class="row statement">
                                         <div class="col-auto">
                                             <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
                                                 <i class="bi bi-x-lg"></i>
@@ -273,7 +273,7 @@
                                         </div>
                                         <div class="col">
                                             <span class="d-sm-none fw-bold">БДДС:</span>
-                                            <a class="editCashflowButton" href="#" data-bs-toggle="modal" data-bs-target="#editCashflowModal" data-id="{{ cashflow.id }}">
+                                            <a class="editCashflowButton" href="#" data-bs-toggle="modal" data-bs-target="#cashflowModal" data-id="{{ cashflow.id }}">
                                                 {{ cashflow.name }}
                                             </a>
                                         </div>
@@ -284,7 +284,7 @@
                         <div class="col">
                             {% for budget_holder in budget_holders %}
                                 <form action="{{url_for('main.remove_budget_holder', budget_holder_id=budget_holder.id)}}" method="POST" class="my-1">
-                                    <div class="row">
+                                    <div class="row statement">
                                         <div class="col-auto">
                                             <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
                                                 <i class="bi bi-x-lg"></i>
@@ -331,27 +331,31 @@
     </div>
 </div>
 
-<div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+<div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addProjectModalLabel">ДОБАВИТЬ ПРОЕКТ</h5>
+                <h5 class="modal-title" id="projectModalLabel">ДОБАВИТЬ ПРОЕКТ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('main.add_project') }}">
+            <form method="POST" action="{{ url_for('main.add_project') }}" id="projectForm">
                 <div class="modal-body">
-                    {{ forms['add_project'].csrf_token(id=False) }}
+                    {{ forms['project'].csrf_token(id=False) }}
                     <div class="mb-3">
-                        {{ forms['add_project'].project_name.label(id=False, class_='form-label', for='addProjectName') }}
-                        {{ forms['add_project'].project_name(id='addProjectName', class_='form-control') }}
+                        {{ forms['project'].project_name.label(id=False, class_='form-label', for='projectFormName') }}
+                        {{ forms['project'].project_name(id='projectFormName', class_='form-control') }}
                     </div>
                     <div class="mb-3">
-                        {{ forms['add_project'].uid.label(id=False, class_='form-label', for='addProjectUid') }}
-                        {{ forms['add_project'].uid(id='addProjectUid',class_='form-control') }}
+                        {{ forms['project'].uid.label(id=False, class_='form-label', for='projectFormUid') }}
+                        {{ forms['project'].uid(id='projectFormUid', class_='form-control') }}
+                    </div>
+                    <div class="form-check">
+                        {{ forms['project'].enabled(id='projectFormEnabled', class_='form-check-input') }}
+                        {{ forms['project'].enabled.label(id=False, class_='form-check-label', for='projectFormEnabled') }}
                     </div>
                 </div>
                 <div class="modal-footer">
-                    {{ forms['add_project'].submit(id=False, class_='btn btn-primary text-white') }}
+                    {{ forms['project'].submit(id=False, class_='btn btn-primary text-white') }}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 </div>
             </form>
@@ -359,28 +363,28 @@
     </div>
 </div>
 
-<div class="modal fade" id="addSiteModal" tabindex="-1" aria-labelledby="addSiteModalLabel" aria-hidden="true">
+<div class="modal fade" id="siteModal" tabindex="-1" aria-labelledby="siteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addSiteModalLabel">ДОБАВИТЬ ОБЪЕКТ</h5>
+                <h5 class="modal-title" id="siteModalLabel">ДОБАВИТЬ ОБЪЕКТ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('main.add_site') }}">
+            <form method="POST" action="{{ url_for('main.add_site') }}" id="siteForm">
                 <div class="modal-body">
-                    {{ forms['add_site'].csrf_token(id=False) }}
-                    {{ forms['add_site'].project_id(id='addSiteProjectId', hidden='', class_='d-none') }}
+                    {{ forms['site'].csrf_token(id=False) }}
+                    {{ forms['site'].project_id(id='siteFormProjectId', hidden='', class_='d-none') }}
                     <div class="mb-3">
-                        {{ forms['add_site'].site_name.label(id=False, class_='form-label', for='addSiteName') }}
-                        {{ forms['add_site'].site_name(id='addSiteName', class_='form-control') }}
+                        {{ forms['site'].site_name.label(id=False, class_='form-label', for='siteFormName') }}
+                        {{ forms['site'].site_name(id='siteFormName', class_='form-control') }}
                     </div>
                     <div class="mb-3">
-                        {{ forms['add_site'].uid.label(id=False, class_='form-label', for='addSiteUid') }}
-                        {{ forms['add_site'].uid(id='addSiteUid',class_='form-control') }}
+                        {{ forms['site'].uid.label(id=False, class_='form-label', for='siteFormUid') }}
+                        {{ forms['site'].uid(id='siteFormUid',class_='form-control') }}
                     </div>
                 </div>
                 <div class="modal-footer">
-                    {{ forms['add_site'].submit(id=False, class_='btn btn-primary text-white') }}
+                    {{ forms['site'].submit(id=False, class_='btn btn-primary text-white') }}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 </div>
             </form>
@@ -388,85 +392,23 @@
     </div>
 </div>
 
-<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+<div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editProjectModalLabel">РЕДАКТИРОВАТЬ ПРОЕКТ</h5>
+                <h5 class="modal-title" id="incomeModalLabel">ДОБАВИТЬ БДР</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('main.edit_project') }}">
+            <form method="POST" action="{{ url_for('main.add_income') }}" id="incomeForm">
                 <div class="modal-body">
-                    {{ forms['edit_project'].csrf_token(id=False) }}
-                    {{ forms['edit_project'].project_id(id='editProjectId', hidden='', class_='d-none') }}
+                    {{ forms['income'].csrf_token(id=False) }}
                     <div class="mb-3">
-                        {{ forms['edit_project'].project_name.label(id=False, class_='form-label', for='editProjectName') }}
-                        {{ forms['edit_project'].project_name(id='editProjectName', class_='form-control') }}
-                    </div>
-                    <div class="mb-3">
-                        {{ forms['edit_project'].uid.label(id=False, class_='form-label', for='editProjectUid') }}
-                        {{ forms['edit_project'].uid(id='editProjectUid',class_='form-control') }}
-                    </div>
-                    <div class="mb-3 form-check">
-                        {{ forms['edit_project'].enabled(id='editProjectEnabled',class_='form-check-input') }}
-                        {{ forms['edit_project'].enabled.label(id=False, class_='form-check-label', for='editProjectEnabled') }}
+                        {{ forms['income'].income_name.label(id=False, class_='form-label', for='incomeFormName') }}
+                        {{ forms['income'].income_name(id='incomeFormName', class_='form-control') }}
                     </div>
                 </div>
                 <div class="modal-footer">
-                    {{ forms['edit_project'].submit(id=False, class_='btn btn-primary text-white') }}
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="editSiteModal" tabindex="-1" aria-labelledby="editSiteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editSiteModalLabel">РЕДАКТИРОВАТЬ ОБЪЕКТ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('main.edit_site') }}">
-                <div class="modal-body">
-                    {{ forms['edit_site'].csrf_token(id=False) }}
-                    {{ forms['edit_site'].site_id(id='editSiteId', hidden='', class_='d-none') }}
-                    <div class="mb-3">
-                        {{ forms['edit_site'].site_name.label(id=False, class_='form-label', for='editSiteName') }}
-                        {{ forms['edit_site'].site_name(id='editSiteName', class_='form-control') }}
-                    </div>
-                    <div class="mb-3">
-                        {{ forms['edit_site'].uid.label(id=False, class_='form-label', for='editSiteUid') }}
-                        {{ forms['edit_site'].uid(id='editSiteUid',class_='form-control') }}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    {{ forms['edit_site'].submit(id=False, class_='btn btn-primary text-white') }}
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addIncomeModal" tabindex="-1" aria-labelledby="addIncomeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addIncomeModalLabel">ДОБАВИТЬ БДР</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('main.add_income') }}">
-                <div class="modal-body">
-                    {{ forms['add_income'].csrf_token(id=False) }}
-                    <div class="mb-3">
-                        {{ forms['add_income'].income_name.label(id=False, class_='form-label', for='addIncomeName') }}
-                        {{ forms['add_income'].income_name(id='addIncomeName', class_='form-control') }}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    {{ forms['add_income'].submit(id=False, class_='btn btn-primary text-white') }}
+                    {{ forms['income'].submit(id=False, class_='btn btn-primary text-white') }}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 </div>
             </form>
@@ -485,8 +427,8 @@
                 <div class="modal-body">
                     {{ forms['budget_holder'].csrf_token(id=False) }}
                     <div class="mb-3">
-                        {{ forms['budget_holder'].budget_holder_name.label(id=False, class_='form-label', for='budgetHolderName') }}
-                        {{ forms['budget_holder'].budget_holder_name(id='budgetHolderName', class_='form-control') }}
+                        {{ forms['budget_holder'].budget_holder_name.label(id=False, class_='form-label', for='budgetHolderFormName') }}
+                        {{ forms['budget_holder'].budget_holder_name(id='budgetHolderFormName', class_='form-control') }}
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -498,75 +440,23 @@
     </div>
 </div>
 
-<div class="modal fade" id="addCashflowModal" tabindex="-1" aria-labelledby="addCashflowModalLabel" aria-hidden="true">
+<div class="modal fade" id="cashflowModal" tabindex="-1" aria-labelledby="cashflowModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addCashflowModalLabel">ДОБАВИТЬ БДДС</h5>
+                <h5 class="modal-title" id="cashflowModalLabel">ДОБАВИТЬ БДДС</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('main.add_cashflow') }}">
+            <form method="POST" action="{{ url_for('main.add_cashflow') }}" id="cashflowForm">
                 <div class="modal-body">
-                    {{ forms['add_cashflow'].csrf_token(id=False) }}
+                    {{ forms['cashflow'].csrf_token(id=False) }}
                     <div class="mb-3">
-                        {{ forms['add_cashflow'].cashflow_name.label(id=False, class_='form-label', for='addCashflowName') }}
-                        {{ forms['add_cashflow'].cashflow_name(id='addCashflowName', class_='form-control') }}
+                        {{ forms['cashflow'].cashflow_name.label(id=False, class_='form-label', for='cashflowFormName') }}
+                        {{ forms['cashflow'].cashflow_name(id='cashflowFormName', class_='form-control') }}
                     </div>
                 </div>
                 <div class="modal-footer">
-                    {{ forms['add_cashflow'].submit(id=False, class_='btn btn-primary text-white') }}
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="editIncomeModal" tabindex="-1" aria-labelledby="editIncomeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editIncomeModalLabel">РЕДАКТИРОВАТЬ БДР</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('main.edit_income') }}">
-                <div class="modal-body">
-                    {{ forms['edit_income'].csrf_token(id=False) }}
-                    {{ forms['edit_income'].income_id(id='editIncomeId', hidden='', class_='d-none') }}
-                    <div class="mb-3">
-                        {{ forms['edit_income'].income_name.label(id=False, class_='form-label', for='editIncomeName') }}
-                        {{ forms['edit_income'].income_name(id='editIncomeName', class_='form-control') }}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    {{ forms['edit_income'].submit(id=False, class_='btn btn-primary text-white') }}
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="editCashflowModal" tabindex="-1" aria-labelledby="editCashflowModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editCashflowModalLabel">РЕДАКТИРОВАТЬ БДДС</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('main.edit_cashflow') }}">
-                <div class="modal-body">
-                    {{ forms['edit_cashflow'].csrf_token(id=False) }}
-                    {{ forms['edit_cashflow'].cashflow_id(id='editCashflowId', hidden='', class_='d-none') }}
-                    <div class="mb-3">
-                        {{ forms['edit_cashflow'].cashflow_name.label(id=False, class_='form-label', for='editCashflowName') }}
-                        {{ forms['edit_cashflow'].cashflow_name(id='editCashflowName', class_='form-control') }}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    {{ forms['edit_cashflow'].submit(id=False, class_='btn btn-primary text-white') }}
+                    {{ forms['cashflow'].submit(id=False, class_='btn btn-primary text-white') }}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 </div>
             </form>
@@ -610,10 +500,35 @@
         }
 
 
+        $(".addProjectButton").click(function () {
+            $('#projectModalLabel').text('ДОБАВИТЬ ПРОЕКТ');
+            $("#projectForm").prop("action", "{{ url_for('main.add_project') }}");
+            $("#projectFormName").val(null);
+            $("#projectFormUid").val(null);
+            $("#projectFormEnabled").prop('checked', true);
+        });
+        $(".addSiteButton").click(function () {
+            $('#siteModalLabel').text('ДОБАВИТЬ ОБЪЕКТ');
+            $("#siteForm").prop("action", "{{ url_for('main.add_site') }}");
+            $("#siteFormName").val(null);
+            $("#siteFormUid").val(null);
+            let projectId = Number($(this).data("id"));
+            $("#siteFormProjectId").val(projectId);
+        });
+        $(".addIncomeButton").click(function () {
+            $('#incomeModalLabel').text('ДОБАВИТЬ БДР');
+            $("#incomeForm").prop("action", "{{ url_for('main.add_income') }}");
+            $("#incomeFormName").val(null);
+        });
+        $(".addCashflowButton").click(function () {
+            $('#cashflowModalLabel').text('ДОБАВИТЬ ФДБ');
+            $("#cashflowForm").prop("action", "{{ url_for('main.add_cashflow') }}");
+            $("#cashflowFormName").val(null);
+        });
         $(".addBudgetHolderButton").click(function () {
             $('#budgetHolderModalLabel').text('ДОБАВИТЬ ФДБ');
             $("#budgetHolderForm").prop("action", "{{ url_for('main.add_budget_holder') }}");
-            $("#budgetHolderName").val(null);
+            $("#budgetHolderFormName").val(null);
         });
 
         $(".editBudgetHolderButton").click(function () {
@@ -622,7 +537,7 @@
             $("#budgetHolderForm").prop("action", "{{ url_for('main.edit_budget_holder', budget_holder_id=0) }}".replace(0, budgetHolderId));
             budget_holders.some(function (budget_holder) {
                 if (budget_holder["id"] == budgetHolderId) {
-                    $("#budgetHolderName").val(budget_holder["name"]);
+                    $("#budgetHolderFormName").val(budget_holder["name"]);
                     return true;
                 }
             });
@@ -630,11 +545,11 @@
 
         $(".editIncomeButton").click(function () {
             let incomeId = Number($(this).data("id"));
-            $("#editIncomeId").val(incomeId);
-            $("#removeIncomeButton").prop("href", "{{ url_for('main.remove_income', income_id=0) }}".replace(0, incomeId));
+            $('#incomeModalLabel').text('РЕДАКТИРОВАТЬ БДР');
+            $("#incomeForm").prop("action", "{{ url_for('main.edit_income', income_id=0) }}".replace(0, incomeId));
             incomes.some(function (income) {
                 if (income["id"] == incomeId) {
-                    $("#editIncomeName").val(income["name"]);
+                    $("#incomeFormName").val(income["name"]);
                     return true;
                 }
             });
@@ -642,11 +557,11 @@
 
         $(".editCashflowButton").click(function () {
             let cashflowId = Number($(this).data("id"));
-            $("#editCashflowId").val(cashflowId);
-            $("#removeCashflowButton").prop("href", "{{ url_for('main.remove_cashflow', cashflow_id=0) }}".replace(0, cashflowId));
+            $('#cashflowModalLabel').text('РЕДАКТИРОВАТЬ БДДС');
+            $("#cashflowForm").prop("action", "{{ url_for('main.edit_cashflow', cashflow_id=0) }}".replace(0, cashflowId));
             cashflows.some(function (cashflow) {
                 if (cashflow["id"] == cashflowId) {
-                    $("#editCashflowName").val(cashflow["name"]);
+                    $("#cashflowFormName").val(cashflow["name"]);
                     return true;
                 }
             });
@@ -655,24 +570,13 @@
 
         $(".editProjectButton").click(function () {
             let projectId = Number($(this).data("id"));
-            $("#editProjectId").val(projectId);
-            $("#removeProjectButton").prop("href", "{{ url_for('main.remove_project', project_id=0) }}".replace(0, projectId));
+            $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ПРОЕКТ');
+            $("#projectForm").prop("action", "{{ url_for('main.edit_project', project_id=0) }}".replace(0, projectId));
             projects.some(function (project) {
                 if (project["id"] == projectId) {
-                    $("#editProjectName").val(project["name"]);
-                    $("#editProjectUid").val(project["uid"]);
-                    $("#editProjectEnabled").prop('checked', project["enabled"]);
-                    return true;
-                }
-            });
-        });
-
-        $(".addSiteButton").click(function () {
-            let projectId = Number($(this).data("id"));
-            $("#addSiteProjectId").val(projectId);
-            projects.some(function (project) {
-                if (project["id"] == projectId) {
-                    $("#addSiteModalLabel").text("ДОБАВИТЬ ОБЪЕКТ В \"" + project["name"] + "\"");
+                    $("#projectFormName").val(project["name"]);
+                    $("#projectFormUid").val(project["uid"]);
+                    $("#projectFormEnabled").prop('checked', project["enabled"]);
                     return true;
                 }
             });
@@ -680,14 +584,15 @@
 
         $(".editSiteButton").click(function () {
             let siteId = Number($(this).data("id"));
-            $("#editSiteId").val(siteId);
-            $("#removeSiteButton").prop("href", "{{ url_for('main.remove_site', site_id=0) }}".replace(0, siteId));
+            $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ОБЪЕКТ');
+            $("#removeSiteButton").prop("href", "{{ url_for('main.edit_site', site_id=0) }}".replace(0, siteId));
             projects.some(function (project) {
                 let found = false;
                 project["sites"].some(function (site) {
                     if (site["id"] == siteId) {
-                        $("#editSiteName").val(site["name"]);
-                        $("#editSiteUid").val(site["uid"]);
+                        $("#siteFormProjectId").val(project["id"]);
+                        $("#siteFormName").val(site["name"]);
+                        $("#siteFormUid").val(site["uid"]);
                         found = true;
                         return true;
                     }
@@ -699,13 +604,13 @@
 
         $("#projectFilter").on("keyup", function () {
             let value = $(this).val().toLowerCase();
-            $("#projectList .row").filter(function () {
+            $("#projectList > .row").filter(function () {
                 $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
             });
         });
         $("#categoryFilter").on("keyup", function () {
             let value = $(this).val().toLowerCase();
-            $("#categoryList .row").filter(function () {
+            $("#categoryList > .row").filter(function () {
                 $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
             });
         });

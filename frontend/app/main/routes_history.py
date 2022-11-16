@@ -17,13 +17,7 @@ from app.api.event import EventApi
 def show_history():
     dates = get_filter_timestamps()
     filter_from = request.args.get('from', default=dates['recently'], type=int)
-    dates['сегодня'] = dates.pop('daily')
-    dates['неделя'] = dates.pop('weekly')
-    dates['месяц'] = dates.pop('monthly')
-    dates['квартал'] = dates.pop('quarterly')
-    dates['год'] = dates.pop('annually')
-    dates['недавно'] = dates.pop('recently')
-    events = EventApi.get_entities(timestamp=filter_from) or []
+    events = EventApi.get_entities(timestamp=filter_from['value']) or []
     return render_template(
         'history.html',
         events=events,

@@ -330,7 +330,7 @@ class AppSettingsForm(FlaskForm):
     submit = SubmitField('Сохранить')
 
 
-class AddProjectForm(FlaskForm):
+class ProjectForm(FlaskForm):
     project_name = StringField(
         'Название',
         validators=[
@@ -345,10 +345,11 @@ class AddProjectForm(FlaskForm):
             Length(max=128, message='Слишком длинный код.')
         ]
     )
-    submit = SubmitField('Добавить')
+    enabled = BooleanField('Включить проект')
+    submit = SubmitField('Сохранить')
 
 
-class AddSiteForm(FlaskForm):
+class SiteForm(FlaskForm):
     project_id = IntegerField(
         'ID проекта',
         [
@@ -369,54 +370,7 @@ class AddSiteForm(FlaskForm):
             Length(max=128, message='Слишком длинный код.')
         ]
     )
-    submit = SubmitField('Добавить')
-
-
-class EditProjectForm(FlaskForm):
-    project_id = IntegerField(
-        'ID проекта',
-        validators=[DataRequired(message='ID проекта - обязательное поле.')]
-    )
-    project_name = StringField(
-        'Название',
-        validators=[
-            DataRequired(message='Название проекта - обязательное поле.'),
-            Length(max=128, message='Слишком длинное название.')
-        ]
-    )
-    uid = StringField(
-        'Код',
-        validators=[
-            Optional(),
-            Length(max=128, message='Слишком длинный код.')
-        ]
-    )
-    enabled = BooleanField('Включить проект')
-    submit = SubmitField('Изменить')
-
-
-class EditSiteForm(FlaskForm):
-    site_id = IntegerField(
-        'ID объекта',
-        validators=[
-            DataRequired(message='ID объекта - обязательное поле.')
-        ]
-    )
-    site_name = StringField(
-        'Название',
-        validators=[
-            DataRequired(message='Название объекта - обязательное поле.'),
-            Length(max=128, message='Слишком длинное название.')
-        ]
-    )
-    uid = StringField(
-        'Код',
-        validators=[
-            Optional(),
-            Length(max=128, message='Слишком длинный код.')
-        ]
-    )
-    submit = SubmitField('Изменить')
+    submit = SubmitField('Сохранить')
 
 
 class AddCategoryForm(FlaskForm):
@@ -427,7 +381,7 @@ class AddCategoryForm(FlaskForm):
             Length(max=128, message='Слишком длинное название.')
         ]
     )
-    submit = SubmitField('Создать')
+    submit = SubmitField('Сохранить')
 
 
 class EditCategoryForm(FlaskForm):
@@ -473,7 +427,7 @@ class EditCategoryForm(FlaskForm):
     submit = SubmitField('Сохранить')
 
 
-class AddIncomeForm(FlaskForm):
+class IncomeForm(FlaskForm):
     income_name = StringField(
         'БДР',
         validators=[
@@ -481,7 +435,7 @@ class AddIncomeForm(FlaskForm):
             Length(max=128, message='Слишком длинное название.')
         ]
     )
-    submit = SubmitField('Добавить')
+    submit = SubmitField('Сохранить')
 
 
 class BudgetHolderForm(FlaskForm):
@@ -495,7 +449,7 @@ class BudgetHolderForm(FlaskForm):
     submit = SubmitField('Сохранить')
 
 
-class AddCashflowForm(FlaskForm):
+class CashflowForm(FlaskForm):
     cashflow_name = StringField(
         'БДДС',
         validators=[
@@ -503,36 +457,7 @@ class AddCashflowForm(FlaskForm):
             Length(max=128, message='Слишком длинное название.')
         ]
     )
-    submit = SubmitField('Добавить')
-
-
-class EditIncomeForm(FlaskForm):
-    income_id = IntegerField(
-        'ID БДР', [DataRequired(message='ID БДР - обязательное поле.')]
-    )
-    income_name = StringField(
-        'БДР',
-        validators=[
-            DataRequired(message='БДР - обязательное поле.'),
-            Length(max=128, message='Слишком длинное название.')
-        ]
-    )
-    submit = SubmitField('Изменить')
-
-
-class EditCashflowForm(FlaskForm):
-    cashflow_id = IntegerField(
-        'ID БДДС',
-        validators=[DataRequired(message='ID БДДС - обязательное поле.')]
-    )
-    cashflow_name = StringField(
-        'БДДС',
-        validators=[
-            DataRequired(message='БДДС - обязательное поле.'),
-            Length(max=128, message='Слишком длинное название.')
-        ]
-    )
-    submit = SubmitField('Изменить')
+    submit = SubmitField('Сохранить')
 
 
 ################################################################################
