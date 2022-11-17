@@ -54,12 +54,12 @@ def callback_project_changed(ch, method, properties, body):
         removed = data.get('removed')
         renamed = data.get('renamed')
         if removed:
-            project = UserProject.query.filter(func.lower(UserProject.project)==removed.lower()).join(User).filter_by(hub_id=hub_id).first()
-            if project:
+            projects = UserProject.query.filter(func.lower(UserProject.project)==removed.lower()).join(User).filter_by(hub_id=hub_id).all()
+            for project in projects:
                 db.session.delete(project)
         if renamed:
-            project = UserProject.query.filter(func.lower(UserProject.project)==renamed[0].lower()).join(User).filter_by(hub_id=hub_id).first()
-            if project:
+            projects = UserProject.query.filter(func.lower(UserProject.project)==renamed[0].lower()).join(User).filter_by(hub_id=hub_id).all()
+            for project in projects:
                 project.project = renamed[1]
         db.session.commit()
     ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -78,12 +78,12 @@ def callback_category_changed(ch, method, properties, body):
         removed = data.get('removed')
         renamed = data.get('renamed')
         if removed:
-            category = UserCategory.query.filter(func.lower(UserCategory.category)==removed.lower()).join(User).filter_by(hub_id=hub_id).first()
-            if category:
+            categories = UserCategory.query.filter(func.lower(UserCategory.category)==removed.lower()).join(User).filter_by(hub_id=hub_id).all()
+            for category in categories:
                 db.session.delete(category)
         if renamed:
-            category = UserCategory.query.filter(func.lower(UserCategory.category)==renamed[0].lower()).join(User).filter_by(hub_id=hub_id).first()
-            if category:
+            category = UserCategory.query.filter(func.lower(UserCategory.category)==renamed[0].lower()).join(User).filter_by(hub_id=hub_id).all()
+            for category in categories:
                 category.category = renamed[1]
         db.session.commit()
     ch.basic_ack(delivery_tag=method.delivery_tag)

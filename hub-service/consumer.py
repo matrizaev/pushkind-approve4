@@ -114,7 +114,7 @@ def main():
 
     channel.basic_consume(queue='income_changed_hub', on_message_callback=callback_income_changed)
     channel.basic_consume(queue='cashflow_changed_hub', on_message_callback=callback_cashflow_changed)
-    channel.basic_consume(queue='cashflow_changed_hub', on_message_callback=callback_budget_holder_changed)
+    channel.basic_consume(queue='budget_holder_changed_hub', on_message_callback=callback_budget_holder_changed)
 
     channel.start_consuming()
 
