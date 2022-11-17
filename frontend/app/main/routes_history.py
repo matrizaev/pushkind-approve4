@@ -16,8 +16,8 @@ from app.api.event import EventApi
 @role_forbidden(['default', 'vendor'])
 def show_history():
     dates = get_filter_timestamps()
-    filter_from = request.args.get('from', default=dates['recently'], type=int)
-    events = EventApi.get_entities(timestamp=filter_from['value']) or []
+    filter_from = request.args.get('from', default=dates['recently']['value'], type=int)
+    events = EventApi.get_entities(timestamp=filter_from) or []
     return render_template(
         'history.html',
         events=events,

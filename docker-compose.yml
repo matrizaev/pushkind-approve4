@@ -24,6 +24,7 @@ services:
     environment:
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - APPLICATION_TITLE
 
   hub-service:
     depends_on:

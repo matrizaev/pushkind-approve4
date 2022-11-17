@@ -26,12 +26,7 @@
 	{% endif %}
 	{% if current_user.role.name not in ['vendor', 'default'] %}
 		<li class="nav-item">
-			<a class="nav-link {% if request.endpoint == 'main.show_users' %} active {% endif %}" href="{{ url_for('main.show_users') }}">Настройки</a>
-		</li>
-	{% endif %}
-	{% if current_user.role.name in ['admin'] %}
-		<li class="nav-item">
-			<a class="nav-link {% if request.endpoint == 'main.show_admin_page' %} active {% endif %}" href="{{ url_for('main.show_admin_page') }}">Администрирование</a>
+			<a class="nav-link {% if request.endpoint == 'main.show_settings' %} active {% endif %}" href="{{ url_for('main.show_settings') }}">Настройки</a>
 		</li>
 	{% endif %}
 	{% if current_user.role.name not in ['default', 'vendor'] %}

@@ -10,7 +10,7 @@
 	<div class="row justify-content-center">
 		<div class="col-md-8">
 			{% for d in dates %}
-				<a href="{{ url_for('main.show_index', from=dates[d], focus=filter_focus, disapproved=filter_disapproved) }}" class="text-decoration-none badge {% if filter_from == dates[d] %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{ d }}</a>
+				<a href="{{ url_for('main.show_index', from=dates[d]['value'], focus=filter_focus, disapproved=filter_disapproved) }}" class="text-decoration-none badge {% if filter_from == dates[d]['value'] %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{ dates[d]['pretty'] }}</a>
 			{% endfor %}
 			<a href="{{ url_for('main.show_index', from=0, focus=filter_focus, disapproved=filter_disapproved) }}" class="text-decoration-none badge {% if filter_from == 0 %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
 		</div>

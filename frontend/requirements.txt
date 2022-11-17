@@ -5,7 +5,6 @@ Flask-Migrate
 Flask-SQLAlchemy
 Flask-Mail
 Flask-Login
-Flask-Moment
 Flask-WTF
 Flask-HTTPAuth
 email_validator

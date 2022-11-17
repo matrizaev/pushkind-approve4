@@ -3,7 +3,6 @@ import json
 from flask import Flask, session
 from flask_mail import Mail
 from flask_login import LoginManager
-from flask_moment import Moment
 
 from config import Config
 from app.api.user import User, UserApi
@@ -11,7 +10,6 @@ from app.api.user import User, UserApi
 
 login = LoginManager()
 mail = Mail()
-moment = Moment()
 
 
 def to_json(value):
@@ -32,7 +30,6 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     login.init_app(app)
     mail.init_app(app)
-    moment.init_app(app)
 
     login.login_view = 'auth.login'
     login.login_message = 'Пожалуйста, авторизуйтесь, чтобы увидеть эту страницу.'

@@ -28,7 +28,7 @@ from app.api.hub import CategoryApi
 def show_index():
 
     dates = get_filter_timestamps()
-    filter_from = request.args.get('from', default=dates['recently'], type=int)
+    filter_from = request.args.get('from', default=dates['recently']['value'], type=int)
     filter_disapproved = request.args.get('disapproved', default=None, type=str)
     if filter_disapproved is not None:
         filter_disapproved = True

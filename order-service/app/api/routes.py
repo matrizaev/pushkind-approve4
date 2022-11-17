@@ -17,6 +17,7 @@ def get_orders():
         return error_response(404, 'Хаб не существует.')
     args = request.args.copy()
     with_products = args.pop('with_products', False)
+    filters = args.pop('filters', None)
     orders = (
         Order
         .query

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from flask_login import current_user, login_required
-from flask import render_template, redirect, url_for, flash
+from flask import redirect, url_for, flash
 
 from app.main import bp
 from app.main.forms import AddCategoryForm, ProjectForm, SiteForm, ProjectForm
@@ -15,60 +15,7 @@ from app.api.user import UserApi
 from app.utils import first
 
 
-@bp.route('/admin/', methods=['GET'])
-@login_required
-@role_required(['admin'])
-def show_admin_page():
-
-    forms = {
-        'add_category': AddCategoryForm(),
-        'edit_category': EditCategoryForm(),
-        'project': ProjectForm(),
-        'site': SiteForm(),
-        'income': IncomeForm(),
-        'cashflow': CashflowForm(),
-        'budget_holder': BudgetHolderForm()
-    }
-
-    app_data = AppSettingsApi.get_entities()
-    if app_data is not None:
-        forms['app'] = AppSettingsForm(
-            enable=app_data['notify_1C'],
-            email=app_data['email_1C'],
-            order_id_bias=app_data['order_id_bias']
-        )
-    else:
-        forms['app'] = AppSettingsForm()
-
-    projects = ProjectApi.get_entities() or []
-    categories = CategoryApi.get_entities() or []
-    incomes = IncomeApi.get_entities() or []
-    cashflows = CashflowApi.get_entities() or []
-    responsibles = UserApi.get_entities(role='purchaser') or []
-    budget_holders = BudgetHolderApi.get_entities() or []
-
-    forms['edit_category'].income.choices = [(i['name'], i['name']) for i in incomes]
-    forms['edit_category'].cashflow.choices = [(c['name'], c['name']) for c in cashflows]
-    forms['edit_category'].budget_holder.choices = [(b['name'], b['name']) for b in budget_holders]
-    forms['edit_category'].responsible.choices = [(u['id'], u['name']) for u in responsibles]
-    forms['edit_category'].income.choices.append((0, 'БДР...'))
-    forms['edit_category'].cashflow.choices.append((0, 'БДДС...'))
-    forms['edit_category'].budget_holder.choices.append((0, 'ФДБ...'))
-    forms['edit_category'].responsible.choices.append((0, 'Ответственный...'))
-
-    return render_template(
-        'admin.html',
-        forms=forms,
-        projects=projects,
-        categories=categories,
-        incomes=incomes,
-        cashflows=cashflows,
-        budget_holders=budget_holders,
-        responsibles=responsibles
-    )
-
-
-@bp.route('/admin/app/save', methods=['POST'])
+@bp.route('/app_settings/save', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def save_app_settings():
@@ -100,10 +47,10 @@ def save_app_settings():
         )
         for error in errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/category/edit/', methods=['POST'])
+@bp.route('/category/edit/', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def edit_category():
@@ -154,10 +101,10 @@ def edit_category():
         )
         for error in errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/project/add', methods=['POST'])
+@bp.route('/project/add', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def add_project():
@@ -175,10 +122,10 @@ def add_project():
     else:
         for error in form.project_name.errors + form.uid.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/site/add', methods=['POST'])
+@bp.route('/site/add', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def add_site():
@@ -196,10 +143,10 @@ def add_site():
     else:
         for error in form.site_name.errors + form.uid.errors + form.project_id.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/project/remove/<int:project_id>', methods=['POST'])
+@bp.route('/project/remove/<int:project_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def remove_project(project_id):
@@ -208,10 +155,10 @@ def remove_project(project_id):
         flash('Проект удален.')
     else:
         flash('Не удалось удалить проект.')
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/project/edit/<int:project_id>', methods=['POST'])
+@bp.route('/project/edit/<int:project_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def edit_project(project_id):
@@ -230,10 +177,10 @@ def edit_project(project_id):
     else:
         for error in form.project_name.errors + form.uid.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/site/remove/<int:site_id>', methods=['POST'])
+@bp.route('/site/remove/<int:site_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def remove_site(site_id):
@@ -242,10 +189,10 @@ def remove_site(site_id):
         flash('Объект удален.')
     else:
         flash('Не удалось удалить объект.')
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/site/edit/<int:site_id>', methods=['POST'])
+@bp.route('/site/edit/<int:site_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def edit_site(site_id):
@@ -263,10 +210,10 @@ def edit_site(site_id):
     else:
         for error in form.site_id.errors + form.site_name.errors + form.uid.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/income/add', methods=['POST'])
+@bp.route('/income/add', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def add_income():
@@ -282,10 +229,10 @@ def add_income():
     else:
         for error in form.income_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/budget_holder/add', methods=['POST'])
+@bp.route('/budget_holder/add', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def add_budget_holder():
@@ -301,10 +248,10 @@ def add_budget_holder():
     else:
         for error in form.budget_holder_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/cashflow/add', methods=['POST'])
+@bp.route('/cashflow/add', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def add_cashflow():
@@ -320,10 +267,10 @@ def add_cashflow():
     else:
         for error in form.cashflow_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/income/remove/<int:income_id>', methods=['POST'])
+@bp.route('/income/remove/<int:income_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def remove_income(income_id):
@@ -332,10 +279,10 @@ def remove_income(income_id):
         flash('БДР удален.')
     else:
         flash('Не удалось удалить БДР.')
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/budget_holder/remove/<int:budget_holder_id>', methods=['POST'])
+@bp.route('/budget_holder/remove/<int:budget_holder_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def remove_budget_holder(budget_holder_id):
@@ -344,10 +291,10 @@ def remove_budget_holder(budget_holder_id):
         flash('ФДБ удален.')
     else:
         flash('Не удалось удалить ФДБ.')
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/cashflow/remove/<int:cashflow_id>', methods=['POST'])
+@bp.route('/cashflow/remove/<int:cashflow_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def remove_cashflow(cashflow_id):
@@ -356,10 +303,10 @@ def remove_cashflow(cashflow_id):
         flash('БДДС удален.')
     else:
         flash('Не удалось удалить БДДС.')
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/income/edit/<int:income_id>', methods=['POST'])
+@bp.route('/income/edit/<int:income_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def edit_income(income_id):
@@ -376,10 +323,10 @@ def edit_income(income_id):
     else:
         for error in form.income_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/budget_holder/edit/<int:budget_holder_id>', methods=['POST'])
+@bp.route('/budget_holder/edit/<int:budget_holder_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def edit_budget_holder(budget_holder_id):
@@ -396,10 +343,10 @@ def edit_budget_holder(budget_holder_id):
     else:
         for error in form.budget_holder_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/cashflow/edit/<int:cashflow_id>', methods=['POST'])
+@bp.route('/cashflow/edit/<int:cashflow_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def edit_cashflow(cashflow_id):
@@ -416,10 +363,10 @@ def edit_cashflow(cashflow_id):
     else:
         for error in form.cashflow_id.errors + form.cashflow_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/category/add/', methods=['POST'])
+@bp.route('/category/add/', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def add_category():
@@ -434,10 +381,10 @@ def add_category():
     else:
         for error in form.category_name.errors:
             flash(error)
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))
 
 
-@bp.route('/admin/category/remove/<int:category_id>', methods=['POST'])
+@bp.route('/category/remove/<int:category_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def remove_category(category_id):
@@ -446,4 +393,4 @@ def remove_category(category_id):
         flash('Категория удалена.')
     else:
         flash('Не удалось удалить категорию')
-    return redirect(url_for('main.show_admin_page'))
+    return redirect(url_for('main.show_settings'))

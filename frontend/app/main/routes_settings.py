@@ -6,10 +6,14 @@ import pandas as pd
 
 from app.main import bp
 from app.main.forms import UserRolesForm, UserSettingsForm
+from app.main.forms import AddCategoryForm, ProjectForm, SiteForm, ProjectForm
+from app.main.forms import EditCategoryForm
+from app.main.forms import AppSettingsForm, BudgetHolderForm
+from app.main.forms import IncomeForm, CashflowForm
 from app.utils import role_required, role_forbidden
-from app.api.project import ProjectApi
-from app.api.hub import CategoryApi
 from app.api.user import RoleApi, UserApi
+from app.api.hub import CategoryApi, AppSettingsApi
+from app.api.project import ProjectApi, IncomeApi, CashflowApi, BudgetHolderApi
 from app.utils import first
 
 
@@ -18,44 +22,94 @@ from app.utils import first
 ################################################################################
 
 
-@bp.route('/users/show', methods=['GET'])
+@bp.route('/settings/show', methods=['GET'])
 @login_required
 @role_forbidden(['default', 'vendor'])
-def show_users():
+def show_settings():
+
+    forms = {
+        'add_category': AddCategoryForm(),
+        'edit_category': EditCategoryForm(),
+        'project': ProjectForm(),
+        'site': SiteForm(),
+        'income': IncomeForm(),
+        'cashflow': CashflowForm(),
+        'budget_holder': BudgetHolderForm()
+    }
+
+    app_data = AppSettingsApi.get_entities()
+    if app_data is not None:
+        forms['app'] = AppSettingsForm(
+            enable=app_data['notify_1C'],
+            email=app_data['email_1C'],
+            order_id_bias=app_data['order_id_bias']
+        )
+    else:
+        forms['app'] = AppSettingsForm()
+
+    projects = ProjectApi.get_entities() or []
+    categories = CategoryApi.get_entities() or []
+    incomes = IncomeApi.get_entities() or []
+    cashflows = CashflowApi.get_entities() or []
+    responsibles = UserApi.get_entities(role='purchaser') or []
+    budget_holders = BudgetHolderApi.get_entities() or []
+    roles = RoleApi.get_entities() or []
+
+    forms['edit_category'].income.choices = [(i['name'], i['name']) for i in incomes]
+    forms['edit_category'].cashflow.choices = [(c['name'], c['name']) for c in cashflows]
+    forms['edit_category'].budget_holder.choices = [(b['name'], b['name']) for b in budget_holders]
+    forms['edit_category'].responsible.choices = [(u['id'], u['name']) for u in responsibles]
+    forms['edit_category'].income.choices.append((0, 'БДР...'))
+    forms['edit_category'].cashflow.choices.append((0, 'БДДС...'))
+    forms['edit_category'].budget_holder.choices.append((0, 'ФДБ...'))
+    forms['edit_category'].responsible.choices.append((0, 'Ответственный...'))
+
 
     projects = ProjectApi.get_entities(enabled=1) or []
     categories = CategoryApi.get_entities() or []
-    roles = RoleApi.get_entities() or []
+
 
     if current_user.role.name == 'admin':
-        user_form = UserRolesForm()
-        user_form.role.choices = [
+        forms['user'] = UserRolesForm()
+        forms['user'].role.choices = [
             (r['name'], r['pretty']) for r in roles
         ]
     else:
-        user_form = UserSettingsForm()
+        forms['user'] = UserSettingsForm()
 
     if current_user.role.name in ('admin', 'purchaser', 'validator'):
-        user_form.about_user.categories.choices = [
+        forms['user'].about_user.categories.choices = [
             c['name'] for c in categories
         ]
-        user_form.about_user.projects.choices = [
+        forms['user'].about_user.projects.choices = [
             p['name'] for p in projects
         ]
     else:
-        user_form.about_user.categories.choices = []
-        user_form.about_user.projects.choices = []
+        forms['user'].about_user.categories.choices = []
+        forms['user'].about_user.projects.choices = []
 
     user = first(UserApi.get_entities(id=current_user.id))
 
     if current_user.role.name == 'admin':
         users = UserApi.get_entities() or []
-        return render_template('settings.html', user_form=user_form, users=users, user=user)
+    else:
+        users = []
 
-    return render_template('settings.html', user_form=user_form, user=user)
+    return render_template(
+        'settings.html',
+        forms=forms,
+        user=user,
+        users=users,
+        projects=projects,
+        categories=categories,
+        incomes=incomes,
+        cashflows=cashflows,
+        budget_holders=budget_holders,
+        responsibles=responsibles
+    )
 
 
-@bp.route('/user/edit.', methods=['POST'])
+@bp.route('/user/edit', methods=['POST'])
 @login_required
 @role_forbidden(['default', 'vendor'])
 def edit_user():
@@ -139,20 +193,26 @@ def edit_user():
                 )
             for error in errors:
                 flash(error)
-        return redirect(url_for('main.show_users'))
+        return redirect(url_for('main.show_settings'))
 
 
 @bp.route('/users/remove', methods=['POST'])
 @login_required
-@role_required(['admin'])
+@role_required
 def remove_user():
-    user_id = request.form.get('user_id', type=int)
+    if current_user.role.name == 'admin':
+        user_id = request.form.get('user_id', type=int)
+    else:
+        user_id = current_user.id
     response = UserApi.delete_entity(user_id)
     if response is None:
         flash('Не удалось удалить пользователя.')
     else:
         flash('Пользователь успешно удалён.')
-    return redirect(url_for('main.show_users'))
+    if user_id != current_user.id:
+        return redirect(url_for('main.show_settings'))
+    else:
+        return redirect(url_for('auth.logout'))
 
 
 @bp.route('/users/download')

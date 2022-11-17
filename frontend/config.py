@@ -7,6 +7,7 @@ basedir = Path(__file__).parent.resolve()
 load_dotenv(basedir / '.env')
 
 class Config:
+    APPLICATION_TITLE = os.environ.get('APPLICATION_TITLE') or ''
     SECRET_KEY = os.environ.get('SECRET_KEY')
     WTF_CSRF_SECRET_KEY = os.environ.get('SECRET_KEY')
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
