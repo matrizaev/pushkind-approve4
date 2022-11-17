@@ -198,7 +198,6 @@ def edit_user():
 
 @bp.route('/users/remove', methods=['POST'])
 @login_required
-@role_required
 def remove_user():
     if current_user.role.name == 'admin':
         user_id = request.form.get('user_id', type=int)
