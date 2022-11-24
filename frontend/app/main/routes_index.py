@@ -40,22 +40,7 @@ def show_index():
     else:
         filter_focus = None
 
-    orders = OrderApi.get_entities(filters={
-        'from': filter_from,
-        'focus': filter_focus,
-        'disapproved': filter_disapproved
-    }) or []
-
-    # if filter_disapproved is None:
-    #     orders = orders.filter(
-    #         ~Order.status.in_([OrderStatus.not_approved, OrderStatus.cancelled])
-    #     )
-
-    # if current_user.role == UserRoles.initiative:
-    #     orders = orders.filter(Order.initiative_id == current_user.id)
-
-    # if filter_from > 0:
-    #     orders = orders.filter(Order.create_timestamp > filter_from)
+    orders = OrderApi.get_entities() or []
 
     # if current_user.role in [UserRoles.purchaser, UserRoles.validator]:
 

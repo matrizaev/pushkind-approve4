@@ -95,6 +95,7 @@ services:
       - mq:/var/lib/rabbitmq/
     ports:
         - 127.0.0.1:15672:15672
+    restart: unless-stopped
 
 volumes:
   db:

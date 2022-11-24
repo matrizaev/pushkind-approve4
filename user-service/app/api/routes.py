@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from collections import Counter
 
 from flask import request, jsonify
 from sqlalchemy import or_
@@ -8,6 +9,7 @@ from app.api import bp
 from app.api.errors import error_response
 from app.models import User, UserCategory, UserProject, UserRoles, Position
 from app.api.auth import token_auth, multi_auth
+from app.producer import post_entity_changed
 
 
 @bp.route('/token', methods=['GET'])
@@ -23,6 +25,8 @@ def get_token():
 @token_auth.login_required
 def get_users():
     current_user = token_auth.current_user()
+    args = request.args.copy()
+    emails = args.poplist('emails')
     if current_user.hub_id is None:
         return error_response(404, 'Хаб не существует.')
     users = User.query
@@ -30,7 +34,10 @@ def get_users():
         users = users.filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
     else:
         users = users.filter_by(hub_id=current_user.hub_id)
-    users = users.filter_by(**request.args).order_by(User.name).all()
+    users = users.filter_by(**args)
+    if emails:
+        users = users.filter(User.email.in_(emails))
+    users = users.order_by(User.name).all()
     return jsonify([u.to_dict() for u in users]), 200
 
 
@@ -52,6 +59,13 @@ def delete_user(user_id):
     if user is not None:
         db.session.delete(user)
         db.session.commit()
+        if user.role in (UserRoles.validator, UserRoles.purchaser):
+            post_entity_changed(
+                user.hub_id,
+                'user',
+                user.to_dict(),
+                'removed'
+            )
         return jsonify({'status': 'success'}), 200
     else:
         return error_response(404, 'Пользователь не существует.')
@@ -119,10 +133,25 @@ def put_user(user_id):
         return error_response(404, 'Пользователь не существует.')
     if current_user.role in (UserRoles.admin, UserRoles.supervisor):
         user.hub_id = data.get('hub_id', current_user.hub_id)
+
+    responsibility_changed = (
+        user.role == UserRoles.validator and user.position is not None and (
+            Counter(user.categories) != Counter(data.get('categories', user.categories)) or
+            Counter(user.projects) != Counter(data.get('projects', user.projects)) or
+            user.position.name != data.get('position', user.position.name)
+        )
+    )
     user.from_dict(data)
     db.session.commit()
     Position.cleanup_unused()
     UserCategory.cleanup_unused()
     UserProject.cleanup_unused()
     db.session.commit()
+    if responsibility_changed:
+        post_entity_changed(
+            user.hub_id,
+            'user',
+            user.to_dict(),
+            'changed'
+        )
     return jsonify(user.to_dict()), 200

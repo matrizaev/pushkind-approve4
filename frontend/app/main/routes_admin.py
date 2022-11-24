@@ -62,7 +62,7 @@ def edit_category():
     form.income.choices = [(i['name'], i['name']) for i in incomes]
     form.cashflow.choices = [(c['name'], c['name']) for c in cashflows]
     form.budget_holder.choices = [(b['name'], b['name']) for b in budget_holders]
-    form.responsible.choices = [(u['id'], u['name']) for u in responsibles]
+    form.responsible.choices = [(u['email'], u['name']) for u in responsibles]
     if form.validate_on_submit():
         if form.image.data:
             f = form.image.data
@@ -78,12 +78,12 @@ def edit_category():
 
         response = CategoryApi.put_entity(
             entity_id=form.category_id.data,
-            responsible = first(filter(lambda x: x['id'] == form.responsible.data, responsibles)),
+            responsible = first(filter(lambda x: x['email'] == form.responsible.data, responsibles)),
             budget_holder = form.budget_holder.data,
             code = form.code.data.strip(),
             income = form.income.data,
             cashflow = form.cashflow.data,
-            image=url_for('static', filename=file_name) if file_name else None
+            **({'image': url_for('static', filename=file_name)} if file_name else {})
         )
         if response is not None:
             flash("Категория успешно отредактирована.")

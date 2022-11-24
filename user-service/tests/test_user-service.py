@@ -105,4 +105,4 @@ def test_manage_entities(client):
 
     delete_entity(client, token, 'user', user['id'])
     users = get_entities(client, token, 'users')
-    assert len(users) == 0
+    assert len(users) == 1

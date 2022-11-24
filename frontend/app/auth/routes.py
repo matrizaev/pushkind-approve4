@@ -60,7 +60,7 @@ def signup():
         flash('Теперь пользователь может войти.')
         current_app.logger.info('%s registered', email)
         if current_user.is_authenticated and current_user.role.name == 'admin':
-            return redirect(url_for('main.show_users'))
+            return redirect(url_for('main.show_settings'))
         return redirect(url_for('auth.login'))
     for error in form.email.errors + form.password.errors + form.password2.errors:
         flash(error)

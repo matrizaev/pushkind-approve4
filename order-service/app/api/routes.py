@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 
 from flask import request, jsonify
+from sqlalchemy import func
 
 from app import db
 from app.api import bp
-from app.models import Order, OrderStatus
+from app.models import Order, OrderStatus, OrderPosition, OrderPurchaser, OrderPositionValidator
 from app.api.auth import token_auth
 from app.api.errors import error_response
 
@@ -16,17 +17,27 @@ def get_orders():
     if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     args = request.args.copy()
-    with_products = args.pop('with_products', False)
-    filters = args.pop('filters', None)
+    filters = args.pop('filters', {})
     orders = (
         Order
         .query
         .filter_by(hub_id=current_user['hub_id'])
         .filter_by(**args)
-        .order_by(Order.timestamp.desc())
-        .all()
     )
-    return jsonify([o.to_dict(bool(with_products)) for o in orders]), 200
+    # if not filters.get('disapproved', None):
+    #     orders = orders.filter(
+    #         ~Order.status.in_([OrderStatus.not_approved, OrderStatus.cancelled])
+    #     )
+    # if filters.get('from', 0) > 0:
+    #     orders = orders.filter(Order.timestamp > datetime.fromtimestamp(filters['from'], tz=timezone.utc))
+    if current_user['role']['name'] == 'initiative':
+        orders = orders.filter(Order.email == current_user['email'])
+    elif current_user['role']['name'] == 'purchaser':
+        orders = orders.join(OrderPurchaser).filter(OrderPurchaser.email == current_user['email'])
+    elif current_user['role']['name'] == 'validator':
+        orders = orders.join(OrderPositionValidator).filter(OrderPositionValidator.email == current_user['email'])
+    orders = orders.order_by(Order.timestamp.desc()).all()
+    return jsonify([o.to_dict('id' in args) for o in orders]), 200
 
 
 @bp.route('/order_statuses', methods=['GET'])
@@ -46,20 +57,23 @@ def post_order():
         return error_response(404, 'Хаб не существует.')
     orders_count = db.session.query(Order.id).count()
     data = request.json or {}
+    if not all([data.get(key) is not None for key in ('products',)]):
+        return error_response(400, 'Необходимые поля отсутствуют.')
     order = Order(
         hub_id=current_user['hub_id'],
-        initiative_id=current_user['id'],
+        email=current_user['email'],
         initiative=current_user,
         number = orders_count + data.pop('order_id_bias', 0) + 1,
         timestamp = datetime.now(tz=timezone.utc),
         status=OrderStatus.new,
-        total=0.0,
+        total=sum(p['price']*p['quantity'] for p in data.get('products', [])),
         products=data.get('products', [])
     )
     db.session.add(order)
     db.session.commit()
 
     order.from_dict(data)
+    print(order.to_dict())
     db.session.add(order)
     db.session.commit()
     return jsonify(order.to_dict()), 201

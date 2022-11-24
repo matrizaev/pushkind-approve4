@@ -1,5 +1,6 @@
 import enum
 
+from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.sql import expression
 
 from app import db
@@ -54,7 +55,7 @@ OrderRelationship = db.Table(
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     number = db.Column(db.String(128), nullable=False)
-    initiative_id = db.Column(db.Integer, nullable=False, index=True)
+    email = db.Column(db.String(128), nullable=False)
     initiative = db.Column(db.JSON(), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     products = db.Column(db.JSON(), nullable=False)
@@ -90,22 +91,17 @@ class Order(db.Model):
         default=False,
         server_default=expression.false()
     )
-    dealdone_responsible = db.Column(db.JSON(), nullable=True)
+    dealdone_responsible = db.Column(db.String(128), nullable=True)
     dealdone_comment = db.Column(db.String(512), nullable=True)
-    project = db.Column(db.JSON(), nullable=True)
-    site = db.Column(db.JSON(), nullable=True)
-    income = db.Column(db.JSON(), nullable=True)
-    cashflow = db.Column(db.JSON(), nullable=True)
-    budget_holder = db.Column(db.JSON(), nullable=True)
+    project = db.Column(db.String(128), nullable=True)
+    site = db.Column(db.String(128), nullable=True)
+    income = db.Column(db.String(128), nullable=True)
+    cashflow = db.Column(db.String(128), nullable=True)
+    budget_holder = db.Column(db.String(128), nullable=True)
     responsible = db.Column(db.JSON(), nullable=True)
 
-    categories = db.relationship(
-        'OrderCategory',
-        cascade="save-update, merge, delete, delete-orphan",
-        passive_deletes=True
-    )
-    vendors = db.relationship(
-        'OrderVendor',
+    purchasers = db.relationship(
+        'OrderPurchaser',
         cascade="save-update, merge, delete, delete-orphan",
         passive_deletes=True
     )
@@ -132,8 +128,9 @@ class Order(db.Model):
         data = {
             'id': self.id,
             'number': self.number,
+            'email': self.email,
             'initiative': self.initiative,
-            'timestamp': self.timestamp.isoformat(),
+            'timestamp': self.timestamp.date().isoformat(),
             'total': self.total,
             'status': self.status.to_dict(),
             'project': self.project,
@@ -146,11 +143,12 @@ class Order(db.Model):
             'over_limit': self.over_limit,
             'dealdone_responsible': self.dealdone_responsible,
             'dealdone_comment': self.dealdone_comment,
-            'categories': [(c.category, c.code) for c in self.categories],
-            'vendors': [v.vendor for v in self.vendors],
+            'categories': {p['category']['name']:p['category']['code'] for p in self.products},
+            'vendors': list(set(p['vendor']['name'] for p in self.products)),
             'approvals': [a.to_dict() for a in self.approvals],
             'children': [(o.id, o.number) for o in self.children],
-            'parents': [(o.id, o.number) for o in self.parents]
+            'parents': [(o.id, o.number) for o in self.parents],
+            'purchasers': [p.user for p in self.purchasers]
         }
         if with_products:
             data['products'] = self.products
@@ -160,94 +158,96 @@ class Order(db.Model):
     def from_dict(self, data):
         data.pop('id', None)
         data.pop('hub_id', None)
-        data.pop('initiative_id', None)
-        data.pop('initiative', None)
+        data.pop('email', None)
         data.pop('number', None)
-        data.pop('categories', None)
-        data.pop('vendors', None)
-        data.pop('income', None)
-        data.pop('cashflow', None)
-        data.pop('budget_holder', None)
-        data.pop('responsible', None)
         data.pop('status', None)
 
-        data.pop('children', [])
+        data.pop('children', None)
         parents = data.pop('parents', [])
-        products = data.pop('products', [])
-        responsibilities = data.pop('responsibilities', {})
+        products = data.pop('products', None)
+        responsibilities = data.pop('responsibilities', None)
         if products:
-            total = 0
-            categories = {}
-            vendors = set()
-            income = None
-            cashflow = None
-            responsible = None
-            budget_holder = None
-            for product in products:
-                total += product['price']*product['quantity']
-                categories[product['category']['name']] = product['category']['code']
-                vendors.add(product['vendor']['name'])
-                income = product['category']['income'] if income is None else income
-                cashflow = product['category']['cashflow'] if cashflow is None else cashflow
-                budget_holder = product['category']['budget_holder'] if budget_holder is None else budget_holder
-                responsible = product['category']['responsible'] if responsible is None else responsible
-            self.responsible = responsible
-            self.cashflow = cashflow
-            self.responsible = responsible
-            self.budget_holder = budget_holder
-            self.vendors = [OrderVendor(order_id=self.id, vendor=v) for v in vendors]
-            self.categories = [OrderCategory(order_id=self.id, category=k, code=c) for k, c in categories.items()]
             self.products = products
-            self.total = total
+            self.total = sum(p['price']*p['quantity'] for p in products)
 
         if parents:
             self.parents = Order.query.filter(Order.id.in_(parents)).all()
 
         if responsibilities:
+            self.purchasers = [
+                OrderPurchaser(
+                    order_id=self.id,
+                    email=p['email'],
+                    user=p
+                )
+                for p in responsibilities['purchasers']
+            ]
             old_approvals = {
                 appr.position:appr.to_dict() for appr in self.approvals
             }
             self.approvals = [OrderPosition(
                 order_id=self.id,
                 position=k,
-                users=v,
+                validators=[
+                    OrderPositionValidator(
+                        order_id=self.id,
+                        position=k,
+                        email=u['email'],
+                        user=u
+                    )
+                    for u in v
+                ],
                 approved = old_approvals.get(k, {'approved': None})['approved'],
                 timestamp = old_approvals.get(k, {'timestamp': None})['timestamp'],
-                user = old_approvals.get(k, {'user': None})['user'],
-            ) for k,v in responsibilities.items()]
+                email = old_approvals.get(k, {'email': None})['email'],
+                user =  old_approvals.get(k, {'user': None})['user'],
+            ) for k,v in responsibilities['validators'].items()]
 
         for k, v in data.items():
             setattr(self, k, v)
-
-
-
-class OrderCategory(db.Model):
-    __tablename__ = 'order_category'
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
-    category = db.Column(db.String(128), primary_key=True)
-    code = db.Column(db.String(128))
-
-
-class OrderVendor(db.Model):
-    __tablename__ = 'order_vendor'
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
-    vendor = db.Column(db.String(128), primary_key=True)
 
 
 class OrderPosition(db.Model):
     __tablename__ = 'order_position'
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
     position = db.Column(db.String(128), primary_key=True)
-    users = db.Column(db.JSON(), nullable=False)
     approved = db.Column(db.Boolean, nullable=True)
+    email = db.Column(db.String(128), nullable=True)
     user = db.Column(db.JSON(), nullable=True)
     timestamp = db.Column(db.DateTime, nullable=True)
+    validators = db.relationship(
+        'OrderPositionValidator',
+        cascade="save-update, merge, delete, delete-orphan",
+        passive_deletes=True
+    )
 
     def to_dict(self):
         return {
             'position': self.position,
-            'users': self.users,
+            'validators': [v.user for v in self.validators],
             'approved': self.approved,
             'user': self.user,
-            'timestamp': self.timestamp.isoformat() if self.timestamp is not None else None
+            'timestamp': self.timestamp.date().isoformat() if self.timestamp is not None else None
         }
+
+
+class OrderPositionValidator(db.Model):
+    __tablename__ = 'order_position_validator'
+    order_id = db.Column(db.Integer, primary_key=True)
+    position = db.Column(db.String(128), primary_key=True)
+    email = db.Column(db.String(128), nullable=False)
+    user = db.Column(db.JSON(), nullable=False)
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['order_id', 'position'],
+            [OrderPosition.order_id, OrderPosition.position]
+        ),
+        {}
+    )
+
+
+class OrderPurchaser(db.Model):
+    __tablename__ = 'order_purchaser'
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
+    email = db.Column(db.String(128), primary_key=True)
+    user = db.Column(db.JSON(), nullable=False)

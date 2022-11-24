@@ -7,7 +7,6 @@ from config import Config
 
 
 db = SQLAlchemy()
-
 mail = Mail()
 migrate = Migrate()
 

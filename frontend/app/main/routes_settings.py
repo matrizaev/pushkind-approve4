@@ -51,14 +51,18 @@ def show_settings():
     categories = CategoryApi.get_entities() or []
     incomes = IncomeApi.get_entities() or []
     cashflows = CashflowApi.get_entities() or []
-    responsibles = UserApi.get_entities(role='purchaser') or []
     budget_holders = BudgetHolderApi.get_entities() or []
     roles = RoleApi.get_entities() or []
+
+    if current_user.role.name == 'admin':
+        users = UserApi.get_entities() or []
+    else:
+        users = []
 
     forms['edit_category'].income.choices = [(i['name'], i['name']) for i in incomes]
     forms['edit_category'].cashflow.choices = [(c['name'], c['name']) for c in cashflows]
     forms['edit_category'].budget_holder.choices = [(b['name'], b['name']) for b in budget_holders]
-    forms['edit_category'].responsible.choices = [(u['id'], u['name']) for u in responsibles]
+    forms['edit_category'].responsible.choices = [(u['email'], u['name']) for u in users if u['role']['name'] == 'purchaser']
     forms['edit_category'].income.choices.append((0, 'БДР...'))
     forms['edit_category'].cashflow.choices.append((0, 'БДДС...'))
     forms['edit_category'].budget_holder.choices.append((0, 'ФДБ...'))
@@ -90,11 +94,6 @@ def show_settings():
 
     user = first(UserApi.get_entities(id=current_user.id))
 
-    if current_user.role.name == 'admin':
-        users = UserApi.get_entities() or []
-    else:
-        users = []
-
     return render_template(
         'settings.html',
         forms=forms,
@@ -104,8 +103,7 @@ def show_settings():
         categories=categories,
         incomes=incomes,
         cashflows=cashflows,
-        budget_holders=budget_holders,
-        responsibles=responsibles
+        budget_holders=budget_holders
     )
 
 

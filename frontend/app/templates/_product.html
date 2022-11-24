@@ -1,33 +1,20 @@
-{% if 'selectedOptions' not in product %}
-    {% set _ = glob.update({'no_measurements':True}) %}
-{% endif %}
 <div class="row my-1 py-1 bg-white rounded selectable {% if product['id'] in order.user_approvals|map(attribute='product_id')|list %}border border-danger{%endif%}" data-id="{{ product.id }}">
     <div class="col-auto">
-        <img src="{{ product['imageUrl'] or config['PLACEHOLDER_IMAGE'] }}" height="96" width="96" alt="thumbnail">
+        <img src="{{ product['image'] or config['PLACEHOLDER_IMAGE'] }}" height="96" width="96" alt="thumbnail">
     </div>
-    <div class="col overflow-hidden">
+    <div class="col-6 overflow-hidden">
         <h5>{{ product['name'] }}</h5>
-        <small>Артикул: {{ product['sku'] }}</small>
-        {% if 'selectedOptions' in product %}
-            <br>
-            <span class="bg-yellow fs-7">
-                {% for option in product['selectedOptions'][1:] %}
-                    {{ option['value'] }}
-                {% endfor %}
-            <span>
-        {% endif %}
+        <small>Артикул: {{ product['sku'] }}</small><br>
+        {{ product.text }}
     </div>
-    <div class="col-sm-2 overflow-hidden pt-sm-4">
-        {{ product['vendor'] }}
+    <div class="col-sm overflow-hidden pt-sm-4">
+        {{ product.vendor.name }}
     </div>
-    <div class="col-sm-2 overflow-hidden pt-sm-4">
-        <strong>{{ '{:,.2f}'.format(product['price']) }}</strong> ₽
+    <div class="col overflow-hidden pt-sm-4">
+        <strong>{{ '{:,.2f}'.format(product['price']) }}</strong>₽/<strong>{{ product.measurement }}</strong>
     </div>
-    <div class="col-sm-1 overflow-hidden pt-sm-4">
-        <strong>{{product['selectedOptions'][0]['value'] if 'selectedOptions' in product else ''}}</strong>
-    </div>
-    <div class="col-sm-2 overflow-hidden pt-sm-3 text-end">
-        {% if current_user.role.name == 'admin' or current_user.id == order.initiative_id %}
+    <div class="col overflow-hidden pt-sm-3 text-end">
+        {% if current_user.role.name == 'admin' or current_user.id == order.initiative.id %}
             <form class="changeQuantityForm" action="{{ url_for('main.SaveQuantity', order_id=order.id) }}" method="POST">
                 {{ quantity_form.csrf_token(id=False) }}
                 {{ quantity_form.product_id(class_='d-none', hidden='', value=product['id'], id=False) }}
@@ -58,10 +45,10 @@
                 <div id="carouselControls{{product.id}}" class="carousel carousel-dark slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
                         <div class="carousel-item active">
-                            <img src="{{ product['imageUrl'] or config['PLACEHOLDER_IMAGE'] }}" class="d-block w-100" alt="Main image">
+                            <img src="{{ product['image'] or config['PLACEHOLDER_IMAGE'] }}" class="d-block w-100" alt="Main image">
                         </div>
                         <div class="carousel-item">
-                            <img src="{{ product['imageUrl'] or config['PLACEHOLDER_IMAGE'] }}" class="d-block w-100" alt="Media image">
+                            <img src="{{ product['image'] or config['PLACEHOLDER_IMAGE'] }}" class="d-block w-100" alt="Media image">
                         </div>
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls{{product.id}}" data-bs-slide="prev">

@@ -44,17 +44,17 @@ class InitiativeForm(FlaskForm):
     project = SelectField(
         'Проект',
         validators=[DataRequired(message='Название проекта - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     site = SelectField(
         'Объект',
         validators=[DataRequired(message='Название объекта - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     categories = SelectMultipleField(
         'Категории',
         validators=[DataRequired(message='Категории заявки - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     submit = SubmitField('Сохранить')
 
@@ -63,12 +63,12 @@ class ApproverForm(FlaskForm):
     income_statement = SelectField(
         'Статья БДР',
         validators=[DataRequired(message='Статья БДР - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     cashflow_statement = SelectField(
         'Статья БДДС',
         validators=[DataRequired(message='Статья БДДС - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     submit = SubmitField('Сохранить')
 
@@ -394,7 +394,7 @@ class EditCategoryForm(FlaskForm):
         validators=[
             DataRequired(message='Ответственный - обязательное поле.')
         ],
-        coerce=int
+        coerce=str
     )
     budget_holder = SelectField(
         'ФДБ',
@@ -477,12 +477,12 @@ class AddLimitForm(FlaskForm):
     project = SelectField(
         'Проект',
         validators=[DataRequired(message='Проект - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     cashflow = SelectField(
         'БДДС',
         validators=[DataRequired(message='БДДС - обязательное поле.')],
-        coerce=int
+        coerce=str
     )
     submit = SubmitField('Создать')
 

@@ -22,11 +22,13 @@ class Config:
 
 class DevelopmentConfig(Config):
     ENV='development'
-    DEBUG=True
+
     SQLALCHEMY_ECHO=True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + str(basedir / 'app.db')
 
 
 class ProductionConfig(Config):
     ENV='production'
+    DEBUG=True
+    SQLALCHEMY_ECHO=True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URL')

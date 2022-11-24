@@ -126,7 +126,10 @@ class Product(db.Model):
     def to_dict(self):
         data = {
             'id': self.id,
-            'vendor': self.vendor.to_dict(),
+            'vendor': {
+                'name': self.vendor.name,
+                'email': self.vendor.email
+            },
             'name': self.name,
             'sku': self.sku,
             'price': self.price,
@@ -134,7 +137,10 @@ class Product(db.Model):
             'measurement': self.measurement,
             'description': self.description,
             'input_required': self.input_required,
-            'category': self.category.to_dict(with_products=False)
+            'category': {
+                'name': self.category.name,
+                'code': self.category.code
+            }
         }
         return data
 

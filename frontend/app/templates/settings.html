@@ -666,15 +666,13 @@
 
             var categories = {{categories|to_json|safe}};
 
-            var responsibles = {{responsibles|to_json|safe}};
-
 
             for (let i = 0; i < categories.length; i++) {
                 let cat = categories[i];
                 let form = $("#categoryForm"+cat["id"]);
                 let income_id = cat?.income || 0;
                 let cashflow_id = cat?.cashflow || 0;
-                let responsible_id = cat?.responsible?.id || 0;
+                let responsible_id = cat?.responsible?.email || 0;
                 let budget_holder_id = cat?.budget_holder || 0;
 
                 form.find(".income option[value='"+income_id+"']").prop("selected", true);

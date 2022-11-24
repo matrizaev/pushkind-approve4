@@ -105,7 +105,7 @@ class Event(db.Model):
     hub_id = db.Column(db.Integer, nullable=False, index=True)
     entity_id = db.Column(db.Integer, nullable=True, index=True)
     entity = db.Column(db.JSON(), nullable=True)
-    user_id = db.Column(db.Integer, nullable=False, index=True)
+    email = db.Column(db.String(128), nullable=False, index=True)
     user = db.Column(db.JSON(), nullable=False)
     timestamp = db.Column(
         db.DateTime,
@@ -121,7 +121,7 @@ class Event(db.Model):
             'id': self.id,
             'entity': self.entity,
             'user': self.user,
-            'timestamp': self.timestamp.isoformat(),
+            'timestamp': self.timestamp.date().isoformat(),
             'event_type': self.event_type.to_dict(),
             'entity_type': self.entity_type.to_dict(),
             'data': self.data
@@ -132,6 +132,7 @@ class Event(db.Model):
         data.pop('hub_id', None)
         data.pop('user_id', None)
         data.pop('entity_id', None)
+        data.pop('email', None)
         data.pop('user', None)
         event_type = data.pop('event_type', 'commented')
         try:

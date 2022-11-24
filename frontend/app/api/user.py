@@ -13,22 +13,24 @@ USER_SERVICE_HOST = 'user-service:5000'
 
 class User(UserMixin):
     __slots__ = (
+        'id',
+        'email',
         'name',
         'phone',
-        'position',
         'location',
-        'email_new',
-        'email_modified',
-        'email_disapproved',
-        'email_approved',
-        'projects',
-        'categories'
+        'position',
+        'role',
+        'hub_id',
+        'token'
     )
     def __init__(self, json_data):
-        self.id = json_data['id']
         self.token = json_data['token']
+        self.id = json_data['id']
         self.email = json_data['email']
         self.name = json_data['name']
+        self.phone = json_data['phone']
+        self.location = json_data['location']
+        self.position = json_data['position']
         self.role = SimpleNamespace(**json_data['role'])
         self.hub_id = json_data['hub_id']
 

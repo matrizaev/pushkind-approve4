@@ -201,8 +201,8 @@ class OrderLimit(db.Model):
             'id': self.id,
             'value': self.value,
             'current': self.current,
-            'cashflow': self.cashflow_statement.to_dict(),
-            'project': self.project.to_dict(),
+            'cashflow': self.cashflow_statement.name,
+            'project': self.project.name,
             'interval': self.interval.to_dict()
         }
 

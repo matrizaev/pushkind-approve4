@@ -61,7 +61,7 @@ def post_event():
     data = request.get_json() or {}
     event = Event(
         hub_id=current_user['hub_id'],
-        user_id=current_user['id'],
+        email=current_user['email'],
         user=current_user
     )
     event.from_dict(data)

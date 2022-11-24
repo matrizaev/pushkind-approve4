@@ -92,17 +92,26 @@ def shop_order():
             flash('Список товаров не может быть пустым.')
             return redirect(url_for('main.shop_cart'))
 
-        categories = [p['category']['id'] for p in cart]
-        responsibilities = ResponsibilityApi.get_entities(project_id=project['id'], categories=categories)
+        categories = [p['category']['name'] for p in cart]
+        responsibilities = ResponsibilityApi.get_entities(project=project['name'], categories=categories)
 
         app_settings = AppSettingsApi.get_entities()
+        category = first(CategoryApi.get_entities(name=first(categories)))
 
         order = OrderApi.post_entity(
-            project=project,
-            site=site,
+            project=project['name'],
+            site=site['name'],
             products=cart,
             responsibilities=responsibilities,
-            order_id_bias=app_settings.get('order_id_bias', 0)
+            order_id_bias=app_settings.get('order_id_bias', 0),
+            **(
+                {
+                    'income': category['income'],
+                    'cashflow': category['cashflow'],
+                    'budget_holder': category['budget_holder'],
+                    'responsible': category['responsible']
+                } if category else {}
+            )
         )
 
         if order is None:

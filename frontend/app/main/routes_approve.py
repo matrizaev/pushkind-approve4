@@ -16,6 +16,7 @@ from app.main.utils import SendEmail1C, GetNewOrderNumber, send_email_notificati
 from app.api.order import OrderApi
 from app.api.project import IncomeApi, CashflowApi, ProjectApi
 from app.api.hub import CategoryApi
+from app.api.user import UserApi
 from app.utils import first
 
 
@@ -62,6 +63,13 @@ def show_order(order_id):
         flash('Заявка с таким номером не найдена.')
         return redirect(url_for('main.show_index'))
 
+    reviewers = [order['initiative']]
+    reviewers.extend(order['purchasers'])
+    for appr in order['approvals']:
+        reviewers.extend(appr['validators'])
+
+    print(reviewers)
+
     comment_form = LeaveCommentForm()
     initiative_form = InitiativeForm()
     approver_form = ApproverForm()
@@ -71,53 +79,36 @@ def show_order(order_id):
     projects = ProjectApi.get_entities()
     categories = CategoryApi.get_entities()
 
-    # incomes = IncomeStatement.query.filter(IncomeStatement.hub_id == current_user.hub_id)
-    # incomes = incomes.order_by(IncomeStatement.name).all()
-    # cashflows = CashflowStatement.query.filter(CashflowStatement.hub_id == current_user.hub_id)
-    # cashflows = cashflows.order_by(CashflowStatement.name).all()
+    comment_form.notify_reviewers.choices = [(u['email'], u['name'] or u['email']) for u in reviewers]
 
-    # projects = Project.query
-    # if current_user.role != UserRoles.admin:
-    #     projects = projects.filter_by(enabled=True)
-    # projects = projects.filter_by(hub_id=current_user.hub_id)
-    # projects = projects.order_by(Project.name).all()
+    initiative_form.categories.choices = [c['name'] for c in categories]
+    initiative_form.categories.default = order['categories']
 
-    # categories = Category.query.filter(
-    #     Category.hub_id == current_user.hub_id
-    # ).all()
+    approver_form.income_statement.choices = [(i['name'], i['name']) for i in incomes]
+    approver_form.cashflow_statement.choices = [(c['name'], c['name']) for c in cashflows]
 
-    # initiative_form.categories.choices = [(c.id, c.name) for c in categories]
-    # initiative_form.categories.default = order.categories_list
+    if order['income'] is None:
+        approver_form.income_statement.choices.append((0, 'Выберите БДР...'))
+        approver_form.income_statement.default = 0
+    else:
+        approver_form.income_statement.default = order['income']
 
-    # approver_form.income_statement.choices = [(i.id, i.name) for i in incomes]
-    # approver_form.cashflow_statement.choices = [(c.id, c.name) for c in cashflows]
+    if order['cashflow'] is None:
+        approver_form.cashflow_statement.choices.append((0, 'Выберите БДДС...'))
+        approver_form.cashflow_statement.default = 0
+    else:
+        approver_form.cashflow_statement.default = order['cashflow']
 
-    # if order.income_statement is None:
-    #     approver_form.income_statement.choices.append((0, 'Выберите БДР...'))
-    #     approver_form.income_statement.default = 0
-    # else:
-    #     approver_form.income_statement.default = order.income_statement.id
-
-    # if order.cashflow_statement is None:
-    #     approver_form.cashflow_statement.choices.append((0, 'Выберите БДДС...'))
-    #     approver_form.cashflow_statement.default = 0
-    # else:
-    #     approver_form.cashflow_statement.default = order.cashflow_statement.id
-
-    # approver_form.process()
-
-    # initiative_form.project.choices = [(p.id, p.name) for p in projects]
-    # if order.site is None:
-    #     initiative_form.project.choices.append((0, 'Выберите проект...'))
-    #     initiative_form.project.default = 0
-    #     initiative_form.site.choices = [(0, 'Выберите объект...')]
-    #     initiative_form.site.default = 0
-    # else:
-    #     initiative_form.project.default = order.site.project_id
-    #     initiative_form.site.choices = [
-    #         (s.id, s.name) for s in order.site.project.sites]
-    #     initiative_form.site.default = order.site_id
-    # initiative_form.process()
+    initiative_form.project.choices = [(p['name'], p['name']) for p in projects]
+    if order['site'] is None:
+        initiative_form.project.choices.append((0, 'Выберите проект...'))
+        initiative_form.project.default = 0
+        initiative_form.site.choices = [(0, 'Выберите объект...')]
+        initiative_form.site.default = 0
+    else:
+        initiative_form.project.default = order['project']
+        initiative_form.site.choices = [order['site']]
+        initiative_form.site.default = order['site']
 
     return render_template(
         'approve.html',

@@ -39,7 +39,7 @@ class TenderStatus(enum.IntEnum):
 class Tender(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     initiative_id = db.Column(db.Integer, nullable=False, index=True)
-    initiative = db.Column(db.JSON(), nullable=False)
+    initiative = db.Column(db.String(128), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     products = db.Column(db.JSON(), nullable=False)
     status = db.Column(
@@ -59,7 +59,7 @@ class Tender(db.Model):
         data = {
             'id': self.id,
             'initiative': self.initiative,
-            'timestamp': self.timestamp.isoformat(),
+            'timestamp': self.timestamp.date().isoformat(),
             'status': self.status.to_dict(),
             'vendors': [v.to_dict(vendor_id==v.vendor_id) for v in self.vendors]
         }
@@ -72,7 +72,6 @@ class TenderVendor(db.Model):
     __tablename__ = 'tender_vendor'
     tender_id = db.Column(db.Integer, db.ForeignKey('tender.id', ondelete="CASCADE"), primary_key=True)
     vendor_id = db.Column(db.String(128), primary_key=True)
-    vendor = db.Column(db.JSON(), nullable=False)
     products = db.Column(db.JSON(), nullable=False, default=[])
     delivery_all = db.Column(db.Boolean, nullable=False, default=True)
     delivery_type =  db.Column(db.String(128))

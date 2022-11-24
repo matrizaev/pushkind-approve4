@@ -111,17 +111,8 @@ class User(db.Model):
         return f'https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}'
 
     def get_token(self, expires_in=60):
-        token = {
-            'id': self.id,
-            'email': self.email,
-            'name': self.name,
-            'phone': self.phone,
-            'location': self.location,
-            'position': self.position.name if self.position is not None else None,
-            'role': self.role.to_dict(),
-            'hub_id': self.hub_id,
-            'exp': time() + expires_in
-        }
+        token = self.to_dict(brief=True)
+        token['exp'] = time() + expires_in
         return jwt.encode(
             token,
             current_app.config['SECRET_KEY'],
@@ -181,27 +172,31 @@ class User(db.Model):
         for key, value in data.items():
             setattr(self, key, value)
 
-    def to_dict(self):
+    def to_dict(self, brief=False):
         data = {
             'id': self.id,
             'email': self.email,
-            'phone': self.phone if self.phone is not None else None,
-            'note': self.note,
-            'birthday': self.birthday.isoformat() if self.birthday is not None else None,
-            'role': self.role.to_dict(),
+            'name': self.name,
+            'phone': self.phone,
+            'location': self.location,
             'position': self.position.name if self.position is not None else None,
-            'name': self.name if self.name is not None else None,
-            'location': self.location if self.location is not None else None,
-            'email_new': self.email_new,
-            'email_modified': self.email_modified,
-            'email_disapproved': self.email_disapproved,
-            'email_approved': self.email_approved,
-            'email_comment': self.email_comment,
-            'projects': [p.project for p in self.projects],
-            'categories': [c.category for c in self.categories],
-            'last_seen': self.last_seen.isoformat() if self.last_seen is not None else None,
-            'registered': self.registered.isoformat() if self.registered is not None else None
+            'role': self.role.to_dict(),
+            'hub_id': self.hub_id
         }
+        if brief is False:
+            data |= {
+                'projects': [p.project for p in self.projects],
+                'categories': [c.category for c in self.categories],
+                'email_new': self.email_new,
+                'email_modified': self.email_modified,
+                'email_disapproved': self.email_disapproved,
+                'email_approved': self.email_approved,
+                'email_comment': self.email_comment,
+                'note': self.note,
+                'birthday': self.birthday.isoformat() if self.birthday is not None else None,
+                'last_seen': self.last_seen.isoformat() if self.last_seen is not None else None,
+                'registered': self.registered.date().isoformat() if self.registered is not None else None
+            }
         return data
 
 
@@ -229,20 +224,30 @@ class Position(db.Model):
     @staticmethod
     def get_responsibility(hub_id, project, categories):
 
-        responsibility = {}
+        responsibility = {
+            'purchasers': [],
+            'validators': {}
+        }
         categories = [str(c).lower() for c in categories]
         project = str(project).lower()
-        users = (
+        validators = (
             User.query.filter_by(hub_id=hub_id, role=UserRoles.validator)
             .filter(User.position != None)
             .join(UserCategory).filter(func.lower(UserCategory.category).in_(categories))
             .join(UserProject).filter(func.lower(UserProject.project) == project)
             .all()
         )
-        for user in users:
-            if user.position.name not in responsibility:
-                responsibility[user.position.name] = []
-            responsibility[user.position.name].append(user.to_dict())
+        purchasers = (
+            User.query.filter_by(hub_id=hub_id, role=UserRoles.purchaser)
+            .join(UserCategory).filter(func.lower(UserCategory.category).in_(categories))
+            .join(UserProject).filter(func.lower(UserProject.project) == project)
+            .all()
+        )
+        responsibility['purchasers'] = [u.to_dict(brief=True) for u in purchasers]
+        for user in validators:
+            if user.position.name not in responsibility['validators']:
+                responsibility['validators'][user.position.name] = []
+            responsibility['validators'][user.position.name].append(user.to_dict(brief=True))
         return responsibility
 
 
