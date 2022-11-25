@@ -42,6 +42,7 @@ services:
       - database
       - mq-service
     build: ./order-service
+    restart: unless-stopped
     environment:
       - DB_URL
       - SECRET_KEY
