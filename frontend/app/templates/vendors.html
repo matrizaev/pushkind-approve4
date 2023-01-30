@@ -261,7 +261,6 @@
             <form method="POST" action="{{ url_for('main.add_vendor') }}">
                 <div class="modal-body">
                     {{ forms['add_vendor'].csrf_token(id=False) }}
-                    {{ forms['add_vendor'].hub_id(id='addVendorHubId', hidden='', class_='d-none', value=current_user.hub_id) }}
                     <div class="mb-3">
                         {{ forms['add_vendor'].vendor_name.label(id=False, class_='form-label', for='addVendorName') }}
                         {{ forms['add_vendor'].vendor_name(id='addVendorName', class_='form-control') }}

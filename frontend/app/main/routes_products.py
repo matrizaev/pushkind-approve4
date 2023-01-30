@@ -279,20 +279,22 @@ def add_vendor():
 
         response = VendorApi.post_entity(
             name=vendor_name,
-            email=vendor_email,
-            hub_id=form.hub_id.data
+            email=vendor_email
         )
         if response is not None:
             response = UserApi.post_entity(
                 email=vendor_email,
                 password=form.password.data,
                 name=vendor_name,
-                hub_id=form.hub_id.data,
                 role='vendor'
             )
             if response is None:
                 flash('Не удалось создать пользователя поставщика.')
-            flash('Поставщик успешно создан.')
+            else:
+                response = UserApi.put_entity(
+                    entity_id=response['id']
+                )
+                flash('Поставщик успешно создан.')
         else:
             flash('Не удалось создать поставщика.')
     else:

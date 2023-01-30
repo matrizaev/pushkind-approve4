@@ -187,10 +187,6 @@ class EditHubForm(FlaskForm):
 
 
 class AddVendorForm(FlaskForm):
-    hub_id = IntegerField(
-        'ID хаба',
-        validators=[DataRequired(message='ID хаба - обязательное поле.')]
-    )
     vendor_name = StringField(
         'Поставщик',
         validators=[

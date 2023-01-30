@@ -1,3 +1,5 @@
+from json.decoder import JSONDecodeError
+
 from flask import abort, flash
 from flask_login import current_user
 import requests
@@ -17,7 +19,10 @@ class EntityApi():
             response = requests.get(f'http://{cls.__service_host__}/api/{cls.__entities_name__}', params=params, headers=headers)
         except requests.exceptions.ConnectionError:
             abort(503)
-        json_response = response.json()
+        try:
+            json_response = response.json()
+        except JSONDecodeError:
+            abort(500)
         if response.status_code != 200:
             if 'message' in json_response:
                 flash(json_response['message'])
@@ -40,7 +45,10 @@ class EntityApi():
             response = requests.post(f'http://{cls.__service_host__}/api/{cls.__entity_name__}', json=params, headers=headers)
         except requests.exceptions.ConnectionError:
             abort(503)
-        json_response = response.json()
+        try:
+            json_response = response.json()
+        except JSONDecodeError:
+            abort(500)
         if response.status_code != 201:
             if 'message' in json_response:
                 flash(json_response['message'])
@@ -60,7 +68,10 @@ class EntityApi():
             response = requests.put(f'http://{cls.__service_host__}/api/{cls.__entity_name__}/{entity_id}', json=params, headers=headers)
         except requests.exceptions.ConnectionError:
             abort(503)
-        json_response = response.json()
+        try:
+            json_response = response.json()
+        except JSONDecodeError:
+            abort(500)
         if response.status_code != 200:
             if 'message' in json_response:
                 flash(json_response['message'])
@@ -80,7 +91,10 @@ class EntityApi():
             response = requests.delete(f'http://{cls.__service_host__}/api/{cls.__entity_name__}/{entity_id}', headers=headers)
         except requests.exceptions.ConnectionError:
             abort(503)
-        json_response = response.json()
+        try:
+            json_response = response.json()
+        except JSONDecodeError:
+            abort(500)
         if response.status_code != 200:
             if 'message' in json_response:
                 flash(json_response['message'])

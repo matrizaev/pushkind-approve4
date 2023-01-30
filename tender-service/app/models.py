@@ -39,7 +39,7 @@ class TenderStatus(enum.IntEnum):
 class Tender(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     initiative_id = db.Column(db.Integer, nullable=False, index=True)
-    initiative = db.Column(db.String(128), nullable=False)
+    initiative = db.Column(db.JSON(), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     products = db.Column(db.JSON(), nullable=False)
     status = db.Column(

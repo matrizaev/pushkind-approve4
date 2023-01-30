@@ -28,19 +28,25 @@ from app.api.hub import CategoryApi
 def show_index():
 
     dates = get_filter_timestamps()
+    filters = {}
     filter_from = request.args.get('from', default=dates['recently']['value'], type=int)
+    filters['timestamp'] = filter_from
     filter_disapproved = request.args.get('disapproved', default=None, type=str)
     if filter_disapproved is not None:
         filter_disapproved = True
+        filters['disapproved'] = 'true'
 
     if current_user.role.name in ['purchaser', 'validator']:
         filter_focus = request.args.get('focus', default=None, type=str)
         if filter_focus is not None:
             filter_focus = True
+            filters['focus'] = 'true'
     else:
         filter_focus = None
 
-    orders = OrderApi.get_entities() or []
+    orders = OrderApi.get_entities(
+        **filters
+    ) or []
 
     # if current_user.role in [UserRoles.purchaser, UserRoles.validator]:
 
