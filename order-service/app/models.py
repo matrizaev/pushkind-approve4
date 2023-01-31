@@ -105,6 +105,16 @@ class Order(db.Model):
         cascade="save-update, merge, delete, delete-orphan",
         passive_deletes=True
     )
+    categories = db.relationship(
+        'OrderCategory',
+        cascade="save-update, merge, delete, delete-orphan",
+        passive_deletes=True
+    )
+    vendors = db.relationship(
+        'OrderVendor',
+        cascade="save-update, merge, delete, delete-orphan",
+        passive_deletes=True
+    )
     approvals = db.relationship(
         'OrderPosition',
         cascade="save-update, merge, delete, delete-orphan",
@@ -143,8 +153,8 @@ class Order(db.Model):
             'over_limit': self.over_limit,
             'dealdone_responsible': self.dealdone_responsible,
             'dealdone_comment': self.dealdone_comment,
-            'categories': {p['category']['name']:p['category']['code'] for p in self.products},
-            'vendors': list(set(p['vendor']['name'] for p in self.products)),
+            'categories': {c.name:c.code for c in self.categories},
+            'vendors': [v.name for v in self.vendors],
             'approvals': [a.to_dict() for a in self.approvals],
             'children': [(o.id, o.number) for o in self.children],
             'parents': [(o.id, o.number) for o in self.parents],
@@ -159,16 +169,47 @@ class Order(db.Model):
         data.pop('id', None)
         data.pop('hub_id', None)
         data.pop('email', None)
+        data.pop('initiative', None)
         data.pop('number', None)
         data.pop('status', None)
+        data.pop('vendors', None)
+        data.pop('purchasers', None)
+        data.pop('approvals', None)
 
         data.pop('children', None)
         parents = data.pop('parents', [])
         products = data.pop('products', None)
+        categories = data.pop('categories', None)
         responsibilities = data.pop('responsibilities', None)
         if products:
             self.products = products
             self.total = sum(p['price']*p['quantity'] for p in products)
+            self.vendors = [
+                OrderVendor(
+                    order_id=self.id,
+                    email=k,
+                    name=v
+                )
+                for k,v in {p['vendor']['email']: p['vendor']['name'] for p in products}.items()
+            ]
+            self.category = [
+                OrderCategory(
+                    order_id=self.id,
+                    name=k,
+                    code=c
+                )
+                for k,c in {p['category']['name']: p['category']['code'] for p in products}.items()
+            ]
+
+        if categories:
+            self.category = [
+                OrderCategory(
+                    order_id=self.id,
+                    name=k,
+                    code=c
+                )
+                for k,c in {p['name']: p['code'] for p in categories}.items()
+            ]
 
         if parents:
             self.parents = Order.query.filter(Order.id.in_(parents)).all()
@@ -251,3 +292,17 @@ class OrderPurchaser(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
     email = db.Column(db.String(128), primary_key=True)
     user = db.Column(db.JSON(), nullable=False)
+
+
+class OrderVendor(db.Model):
+    __tablename__ = 'order_vendor'
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
+    email = db.Column(db.String(128), primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+
+
+class OrderCategory(db.Model):
+    __tablename__ = 'order_category'
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), primary_key=True)
+    name = db.Column(db.String(128), primary_key=True)
+    code = db.Column(db.String(128), nullable=False)

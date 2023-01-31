@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from app import db
 from app.api import bp
-from app.models import Order, OrderStatus, OrderPosition, OrderPurchaser, OrderPositionValidator
+from app.models import Order, OrderStatus, OrderVendor, OrderPurchaser, OrderPositionValidator
 from app.api.auth import token_auth
 from app.api.errors import error_response
 
@@ -17,25 +17,28 @@ def get_orders():
     if current_user['hub_id'] is None:
         return error_response(404, 'Хаб не существует.')
     args = request.args.copy()
-    filters = args.pop('filters', {})
+    timestamp = args.pop('timestamp', None)
+    disapproved = args.pop('disapproved', None)
     orders = (
         Order
         .query
         .filter_by(hub_id=current_user['hub_id'])
         .filter_by(**args)
     )
-    # if not filters.get('disapproved', None):
-    #     orders = orders.filter(
-    #         ~Order.status.in_([OrderStatus.not_approved, OrderStatus.cancelled])
-    #     )
-    # if filters.get('from', 0) > 0:
-    #     orders = orders.filter(Order.timestamp > datetime.fromtimestamp(filters['from'], tz=timezone.utc))
+    if disapproved is None:
+        orders = orders.filter(
+            ~Order.status.in_([OrderStatus.not_approved, OrderStatus.cancelled])
+        )
+    if timestamp is not None:
+        orders = orders.filter(Order.timestamp > datetime.fromtimestamp(float(timestamp), tz=timezone.utc))
     if current_user['role']['name'] == 'initiative':
         orders = orders.filter(Order.email == current_user['email'])
     elif current_user['role']['name'] == 'purchaser':
         orders = orders.join(OrderPurchaser).filter(OrderPurchaser.email == current_user['email'])
     elif current_user['role']['name'] == 'validator':
         orders = orders.join(OrderPositionValidator).filter(OrderPositionValidator.email == current_user['email'])
+    elif current_user['role']['name'] == 'vendor':
+        orders = orders.join(OrderVendor).filter(OrderVendor.email == current_user['email'])
     orders = orders.order_by(Order.timestamp.desc()).all()
     return jsonify([o.to_dict('id' in args) for o in orders]), 200
 
@@ -73,7 +76,6 @@ def post_order():
     db.session.commit()
 
     order.from_dict(data)
-    print(order.to_dict())
     db.session.add(order)
     db.session.commit()
     return jsonify(order.to_dict()), 201

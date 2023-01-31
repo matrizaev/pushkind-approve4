@@ -73,6 +73,7 @@ class TenderVendor(db.Model):
     tender_id = db.Column(db.Integer, db.ForeignKey('tender.id', ondelete="CASCADE"), primary_key=True)
     vendor_id = db.Column(db.String(128), primary_key=True)
     products = db.Column(db.JSON(), nullable=False, default=[])
+    vendor = db.Column(db.JSON(), nullable=False, default={})
     delivery_all = db.Column(db.Boolean, nullable=False, default=True)
     delivery_type =  db.Column(db.String(128))
     shipment_days =  db.Column(db.Integer)
