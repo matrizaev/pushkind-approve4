@@ -1,4 +1,4 @@
-FROM python:slim
+FROM python:3.11-slim
 
 ENV FLASK_APP run.py
 
