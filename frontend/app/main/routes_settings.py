@@ -1,21 +1,25 @@
 from io import BytesIO
 
-from flask_login import current_user, login_required
-from flask import render_template, redirect, url_for, flash, send_file, request
 import pandas as pd
-
-from app.main import bp
-from app.main.forms import UserRolesForm, UserSettingsForm
-from app.main.forms import AddCategoryForm, ProjectForm, SiteForm, ProjectForm
-from app.main.forms import EditCategoryForm
-from app.main.forms import AppSettingsForm, BudgetHolderForm
-from app.main.forms import IncomeForm, CashflowForm
-from app.utils import role_required, role_forbidden
+from app.api.hub import AppSettingsApi, CategoryApi
+from app.api.project import BudgetHolderApi, CashflowApi, IncomeApi, ProjectApi
 from app.api.user import RoleApi, UserApi
-from app.api.hub import CategoryApi, AppSettingsApi
-from app.api.project import ProjectApi, IncomeApi, CashflowApi, BudgetHolderApi
-from app.utils import first
-
+from app.main import bp
+from app.main.forms import (
+    AddCategoryForm,
+    AppSettingsForm,
+    BudgetHolderForm,
+    CashflowForm,
+    EditCategoryForm,
+    IncomeForm,
+    ProjectForm,
+    SiteForm,
+    UserRolesForm,
+    UserSettingsForm,
+)
+from app.utils import first, role_forbidden, role_required
+from flask import flash, redirect, render_template, request, send_file, url_for
+from flask_login import current_user, login_required
 
 ################################################################################
 # Settings page
@@ -42,7 +46,8 @@ def show_settings():
         forms['app'] = AppSettingsForm(
             enable=app_data['notify_1C'],
             email=app_data['email_1C'],
-            order_id_bias=app_data['order_id_bias']
+            order_id_bias=app_data['order_id_bias'],
+            single_category_orders=app_data['single_category_orders']
         )
     else:
         forms['app'] = AppSettingsForm()

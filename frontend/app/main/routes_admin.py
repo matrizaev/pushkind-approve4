@@ -1,18 +1,22 @@
 from pathlib import Path
 
-from flask_login import current_user, login_required
-from flask import redirect, url_for, flash
-
-from app.main import bp
-from app.main.forms import AddCategoryForm, ProjectForm, SiteForm, ProjectForm
-from app.main.forms import EditCategoryForm
-from app.main.forms import AppSettingsForm, BudgetHolderForm
-from app.main.forms import IncomeForm, CashflowForm
-from app.utils import role_required
-from app.api.hub import CategoryApi, AppSettingsApi
-from app.api.project import ProjectApi, IncomeApi, CashflowApi, SiteApi, BudgetHolderApi
+from app.api.hub import AppSettingsApi, CategoryApi
+from app.api.project import BudgetHolderApi, CashflowApi, IncomeApi, ProjectApi, SiteApi
 from app.api.user import UserApi
-from app.utils import first
+from app.main import bp
+from app.main.forms import (
+    AddCategoryForm,
+    AppSettingsForm,
+    BudgetHolderForm,
+    CashflowForm,
+    EditCategoryForm,
+    IncomeForm,
+    ProjectForm,
+    SiteForm,
+)
+from app.utils import first, role_required
+from flask import flash, redirect, url_for
+from flask_login import current_user, login_required
 
 
 @bp.route('/app_settings/save', methods=['POST'])
@@ -23,9 +27,10 @@ def save_app_settings():
     if form.validate_on_submit():
         response = AppSettingsApi.put_entity(
             current_user.hub_id,
-            notify_1C = form.enable.data,
-            email_1C = form.email.data,
-            order_id_bias = form.order_id_bias.data
+            notify_1C=form.enable.data,
+            email_1C=form.email.data,
+            order_id_bias=form.order_id_bias.data,
+            single_category_orders=form.single_category_orders.data
         )
         if response is not None:
             flash('Настройки успешно сохранены.')

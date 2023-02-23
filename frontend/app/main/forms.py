@@ -1,16 +1,33 @@
 import json
 from datetime import datetime
 
-from flask_wtf import FlaskForm
-from wtforms import SubmitField, IntegerField, StringField, SelectField, TextAreaField, FieldList
-from wtforms import FormField, Form, PasswordField, BooleanField, SelectMultipleField, DecimalField
-from wtforms.fields import EmailField
-from wtforms.validators import DataRequired, Length, ValidationError, Email, InputRequired, Optional
-from wtforms.fields import DateField
-from flask_wtf.file import FileField, FileRequired, FileAllowed, FileSize
-
-from app.main.utils import send_email_notification
 from app.api.event import EventApi
+from app.main.utils import send_email_notification
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField, FileRequired, FileSize
+from wtforms import (
+    BooleanField,
+    DecimalField,
+    FieldList,
+    Form,
+    FormField,
+    IntegerField,
+    PasswordField,
+    SelectField,
+    SelectMultipleField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+)
+from wtforms.fields import DateField, EmailField
+from wtforms.validators import (
+    DataRequired,
+    Email,
+    InputRequired,
+    Length,
+    Optional,
+    ValidationError,
+)
 
 
 class JSONField(StringField):
@@ -323,6 +340,7 @@ class AppSettingsForm(FlaskForm):
         FileAllowed(['png'], 'Разрешены только изображения PNG!'),
         FileSize(16000000)
     ])
+    single_category_orders = BooleanField('Заявки с одной категорией')
     submit = SubmitField('Сохранить')
 
 

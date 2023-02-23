@@ -3,546 +3,608 @@
 {% block content %}
 {% if current_user.role.name == "admin" %}
 
-    <div class="container my-2">
-        <div class="accordion" id="settingsFormsAccordion">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="oneSFormHeading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#oneSFormCollapse" aria-expanded="false" aria-controls="oneSFormCollapse">
-                        Настройка приложения
-                    </button>
-                </h2>
-                <div id="oneSFormCollapse" class="accordion-collapse collapse" aria-labelledby="oneSFormHeading" data-bs-parent="#settingsFormsAccordion">
-                    <div class="accordion-body">
-                        <form method="POST" action="{{ url_for('main.save_app_settings') }}" enctype="multipart/form-data">
-                            <div class="row my-3">
-                                {{ forms['app'].csrf_token(id=False) }}
-                                {{ forms['app'].email.label(class_ = 'col-md-2 form-label') }}
-                                <div class="col-md-10">
-                                    {{ forms['app'].email(class_ = 'form-control') }}
+<div class="container my-2">
+    <div class="accordion" id="settingsFormsAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="oneSFormHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#oneSFormCollapse" aria-expanded="false" aria-controls="oneSFormCollapse">
+                    Настройка приложения
+                </button>
+            </h2>
+            <div id="oneSFormCollapse" class="accordion-collapse collapse" aria-labelledby="oneSFormHeading"
+                data-bs-parent="#settingsFormsAccordion">
+                <div class="accordion-body">
+                    <form method="POST" action="{{ url_for('main.save_app_settings') }}" enctype="multipart/form-data">
+                        <div class="row my-3">
+                            {{ forms['app'].csrf_token(id=False) }}
+                            {{ forms['app'].email.label(class_ = 'col-md-2 form-label') }}
+                            <div class="col-md-10">
+                                {{ forms['app'].email(class_ = 'form-control') }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-10 offset-md-2">
+                                <div class="form-check">
+                                    {{ forms['app'].enable(class_ = 'form-check-input') }}
+                                    {{ forms['app'].enable.label(class_ = 'form-check-label') }}
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-md-10 offset-md-2">
-                                    <div class="form-check">
-                                        {{ forms['app'].enable(class_ = 'form-check-input') }}
-                                        {{ forms['app'].enable.label(class_ = 'form-check-label') }}
-                                    </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-10 offset-md-2">
+                                <div class="form-check">
+                                    {{ forms['app'].single_category_orders(class_ = 'form-check-input') }}
+                                    {{ forms['app'].single_category_orders.label(class_ = 'form-check-label') }}
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                {{ forms['app'].order_id_bias.label(class_ = 'col-md-2 form-label') }}
-                                <div class="col-md-10">
-                                    {{ forms['app'].order_id_bias(class_ = 'form-control') }}
-                                </div>
+                        </div>
+                        <div class="row mb-3">
+                            {{ forms['app'].order_id_bias.label(class_ = 'col-md-2 form-label') }}
+                            <div class="col-md-10">
+                                {{ forms['app'].order_id_bias(class_ = 'form-control') }}
                             </div>
-                            <div class="row mb-3">
-                                {{ forms['app'].image.label(class_ = 'col-md-2 form-label') }}
-                                <div class="col-md-10">
-                                    {{forms['app'].image(class_='form-control', accept='image/png', id=False)}}
-                                </div>
+                        </div>
+                        <div class="row mb-3">
+                            {{ forms['app'].image.label(class_ = 'col-md-2 form-label') }}
+                            <div class="col-md-10">
+                                {{forms['app'].image(class_='form-control', accept='image/png', id=False)}}
                             </div>
-                            <div class="row mb-3">
-                                <div class="col">
-                                    {{ forms['app'].submit(id=False, class_ = 'btn btn-primary text-white') }}
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-    
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="categoriesFormHeading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#categoriesFormCollapse" aria-expanded="false" aria-controls="categoriesFormCollapse">
-                        Категории
-                    </button>
-                </h2>
-                <div id="categoriesFormCollapse" class="accordion-collapse collapse" aria-labelledby="categoriesFormHeading" data-bs-parent="#settingsFormsAccordion">
-                    <div class="accordion-body">
-                        <div class="row">
+                        </div>
+                        <div class="row mb-3">
                             <div class="col">
-                                <input class="form-control" id="categoryFilter" type="text" placeholder="Фильтр..">
-                            </div>
-                            <div class="col-auto">
-                                <a class="btn btn-primary text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addCategoryModal"><i class="bi bi-plus-square"></i></a>
+                                {{ forms['app'].submit(id=False, class_ = 'btn btn-primary text-white') }}
                             </div>
                         </div>
-                        <div class="row d-none d-sm-flex fw-bold">
-                            <div class="col overflow-hidden">
-                                Название
-                            </div>
-                            <div class="col overflow-hidden">
-                                Ответственный/ФДБ/БДР/БДДС/Код
-                            </div>
-                        </div>
-                        <div id="categoryList">
-                            {% for category in categories %}
-                                <div class="row my-1 py-1 border-bottom">
-                                    <div class="col-sm">
-                                        <span class="d-sm-none fw-bold">Название:</span>
-                                        {{ category.name }}
-                                    </div>
-                                    <div class="col-sm">
-                                        <form class="categoryForm" action="{{ url_for('main.edit_category') }}" method="POST" id="categoryForm{{category.id}}"  enctype="multipart/form-data">
-                                            <div class="row py-1">
-                                                <div class="col">
-                                                    {{ forms['edit_category'].csrf_token(id=False) }}
-                                                    {{ forms['edit_category'].category_id(class_ = 'd-none', hidden = '', value=category.id, id=False) }}
-                                                    {{ forms['edit_category'].responsible(class_ = 'form-select responsible', id=False) }}
-                                                </div>
-                                                <div class="col">
-                                                    {{ forms['edit_category'].budget_holder(class_ = 'form-select budget_holder', id=False) }}
-                                                </div>
-                                                <div class="col">
-                                                    {{ forms['edit_category'].code(class_ = 'form-control code', id=False, placeholder='Код', value = category.code or '') }}
-                                                </div>
-                                            </div>
-                                            <div class="row py-1">
-                                                <div class="col">
-                                                    {{ forms['edit_category'].income(class_ = 'form-select income', id=False) }}
-                                                </div>
-                                                <div class="col">
-                                                    {{ forms['edit_category'].cashflow(class_ = 'form-select cashflow', id=False) }}
-                                                </div>
-                                            </div>
-                                            <div class="row py-1">
-                                                <div class="col">
-                                                    {{forms['edit_category'].image(class_='form-control', accept='image/*', id=False)}}
-                                                </div>
-                                                <div class="col-auto text-end">
-                                                    {{ forms['edit_category'].submit(id=False, class_='btn btn-primary text-white') }}
-                                                </div>
-                                            </div>
-                                        </form>
-                                        <form action="{{url_for('main.remove_category', category_id=category.id)}}" method="POST">
-                                            <div class="row">
-                                                <div class="col text-end">
-                                                    <button class="btn btn-danger text-white" onclick="return confirm('Вы действительно хотите удалить?')">Удалить</button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="projectsFormHeading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#projectsFormCollapse" aria-expanded="false" aria-controls="projectsFormCollapse">
-                        Проекты
-                    </button>
-                </h2>
-                <div id="projectsFormCollapse" class="accordion-collapse collapse" aria-labelledby="projectsFormHeading" data-bs-parent="#settingsFormsAccordion">
-                    <div class="accordion-body">
-                        <div class="row">
-                            <div class="col">
-                                <input class="form-control" id="projectFilter" type="text" placeholder="Фильтр..">
-                            </div>
-                            <div class="col-auto">
-                                <a class="btn btn-primary text-white addProjectButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#projectModal"><i class="bi bi-plus-square"></i></a>
-                            </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="categoriesFormHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#categoriesFormCollapse" aria-expanded="false"
+                    aria-controls="categoriesFormCollapse">
+                    Категории
+                </button>
+            </h2>
+            <div id="categoriesFormCollapse" class="accordion-collapse collapse" aria-labelledby="categoriesFormHeading"
+                data-bs-parent="#settingsFormsAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control" id="categoryFilter" type="text" placeholder="Фильтр..">
                         </div>
-                        <div class="row d-none d-sm-flex fw-bold">
-                            <div class="col overflow-hidden">
-                                Название
-                            </div>
-                            <div class="col overflow-hidden">
-                                Код
-                            </div>
-                            <div class="col overflow-hidden">
-                                (Код) Объекты
-                            </div>
-                        </div>
-                        <div id="projectList">
-                            {% for project in projects %}
-                                <div class="row my-1 py-1 border-bottom">
-                                    <div class="col-sm">
-                                        <form action="{{url_for('main.remove_project', project_id=project.id)}}" method="POST">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <span class="d-sm-none fw-bold">Название:</span>
-                                                    <a class="editProjectButton" href="#" data-bs-toggle="modal" data-bs-target="#projectModal" data-id="{{ project.id }}">
-                                                        {{ project.name }}
-                                                    </a>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <a class="addSiteButton btn btn-sm btn-primary" href="#" data-bs-toggle="modal" data-bs-target="#siteModal" data-id="{{ project.id }}">
-                                                        <i class="bi bi-plus-square"></i>
-                                                    </a>
-                                                    <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                                                        <i class="bi bi-x-lg"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="col-sm">
-                                        <span class="d-sm-none fw-bold">Код:</span>
-                                        {{ project.uid or '' }}
-                                    </div>
-                                    <div class="col-sm">
-                                        {% for site in project.sites %}
-                                            <form action="{{url_for('main.remove_site', site_id=site.id)}}" method="POST" class="my-1">
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <span class="d-sm-none fw-bold">(Код) Объект:</span>
-                                                        <a class="editSiteButton" href="#" data-bs-toggle="modal" data-bs-target="#siteModal" data-id="{{ site.id }}">
-                                                            ({{ site.uid or ' ' }})
-                                                            {{ site.name }}
-                                                        </a>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                                                            <i class="bi bi-x-lg"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endfor %}
+                        <div class="col-auto">
+                            <a class="btn btn-primary text-white" href="#" role="button" data-bs-toggle="modal"
+                                data-bs-target="#addCategoryModal"><i class="bi bi-plus-square"></i></a>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="statementsFormHeading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#statementsFormCollapse" aria-expanded="false" aria-controls="statementsFormCollapse">
-                        БДР, БДДС, ФДБ
-                    </button>
-                </h2>
-                <div id="statementsFormCollapse" class="accordion-collapse collapse" aria-labelledby="statementsFormHeading" data-bs-parent="#settingsFormsAccordion">
-                    <div class="accordion-body">
-                        <div class="row">
-                            <div class="col">
-                                <input class="form-control" id="statementsFilter" type="text" placeholder="Фильтр..">
-                            </div>
-                            <div class="col-auto">
-                                <a class="btn btn-primary text-white addIncomeButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#incomeModal"><i class="bi bi-plus"></i>БДР</a>
-                            </div>
-                            <div class="col-auto">
-                                <a class="btn btn-primary text-white addCashflowButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#cashflowModal"><i class="bi bi-plus"></i>БДДС</a>
-                            </div>
-                            <div class="col-auto">
-                                <a class="btn btn-primary text-white addBudgetHolderButton" href="#" role="button" data-bs-toggle="modal" data-bs-target="#budgetHolderModal"><i class="bi bi-plus"></i>ФДБ</a>
-                            </div>
+                    <div class="row d-none d-sm-flex fw-bold">
+                        <div class="col overflow-hidden">
+                            Название
                         </div>
-                        <div class="row d-none d-sm-flex fw-bold">
-                            <div class="col overflow-hidden">
-                                БДР
-                            </div>
-                            <div class="col overflow-hidden">
-                                БДДС
-                            </div>
-                            <div class="col overflow-hidden">
-                                ФДБ
-                            </div>
+                        <div class="col overflow-hidden">
+                            Ответственный/ФДБ/БДР/БДДС/Код
                         </div>
+                    </div>
+                    <div id="categoryList">
+                        {% for category in categories %}
                         <div class="row my-1 py-1 border-bottom">
-                            <div class="col">
-                                {% for income in incomes %}
-                                    <form action="{{url_for('main.remove_income', income_id=income.id)}}" method="POST" class="my-1">
-                                        <div class="row statement">
-                                            <div class="col-auto">
-                                                <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            </div>
-                                            <div class="col">
-                                                <span class="d-sm-none fw-bold">БДР:</span>
-                                                <a class="editIncomeButton" href="#" data-bs-toggle="modal" data-bs-target="#incomeModal" data-id="{{ income.id }}">
-                                                    {{ income.name }}
-                                                </a>
-                                            </div>
+                            <div class="col-sm">
+                                <span class="d-sm-none fw-bold">Название:</span>
+                                {{ category.name }}
+                            </div>
+                            <div class="col-sm">
+                                <form class="categoryForm" action="{{ url_for('main.edit_category') }}" method="POST"
+                                    id="categoryForm{{category.id}}" enctype="multipart/form-data">
+                                    <div class="row py-1">
+                                        <div class="col">
+                                            {{ forms['edit_category'].csrf_token(id=False) }}
+                                            {{ forms['edit_category'].category_id(class_ = 'd-none', hidden = '',
+                                            value=category.id, id=False) }}
+                                            {{ forms['edit_category'].responsible(class_ = 'form-select responsible',
+                                            id=False) }}
                                         </div>
-                                    </form>
-                                {% endfor %}
-                            </div>
-                            <div class="col">
-                                {% for cashflow in cashflows %}
-                                    <form action="{{url_for('main.remove_cashflow', cashflow_id=cashflow.id)}}" method="POST" class="my-1">
-                                        <div class="row statement">
-                                            <div class="col-auto">
-                                                <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            </div>
-                                            <div class="col">
-                                                <span class="d-sm-none fw-bold">БДДС:</span>
-                                                <a class="editCashflowButton" href="#" data-bs-toggle="modal" data-bs-target="#cashflowModal" data-id="{{ cashflow.id }}">
-                                                    {{ cashflow.name }}
-                                                </a>
-                                            </div>
+                                        <div class="col">
+                                            {{ forms['edit_category'].budget_holder(class_ = 'form-select
+                                            budget_holder', id=False) }}
                                         </div>
-                                    </form>
-                                {% endfor %}
-                            </div>
-                            <div class="col">
-                                {% for budget_holder in budget_holders %}
-                                    <form action="{{url_for('main.remove_budget_holder', budget_holder_id=budget_holder.id)}}" method="POST" class="my-1">
-                                        <div class="row statement">
-                                            <div class="col-auto">
-                                                <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            </div>
-                                            <div class="col">
-                                                <span class="d-sm-none fw-bold">ФДБ:</span>
-                                                <a class="editBudgetHolderButton" href="#" data-bs-toggle="modal" data-bs-target="#budgetHolderModal" data-id="{{ budget_holder.id }}">
-                                                    {{ budget_holder.name }}
-                                                </a>
-                                            </div>
+                                        <div class="col">
+                                            {{ forms['edit_category'].code(class_ = 'form-control code', id=False,
+                                            placeholder='Код', value = category.code or '') }}
                                         </div>
-                                    </form>
-                                {% endfor %}
+                                    </div>
+                                    <div class="row py-1">
+                                        <div class="col">
+                                            {{ forms['edit_category'].income(class_ = 'form-select income', id=False) }}
+                                        </div>
+                                        <div class="col">
+                                            {{ forms['edit_category'].cashflow(class_ = 'form-select cashflow',
+                                            id=False) }}
+                                        </div>
+                                    </div>
+                                    <div class="row py-1">
+                                        <div class="col">
+                                            {{forms['edit_category'].image(class_='form-control', accept='image/*',
+                                            id=False)}}
+                                        </div>
+                                        <div class="col-auto text-end">
+                                            {{ forms['edit_category'].submit(id=False, class_='btn btn-primary
+                                            text-white') }}
+                                        </div>
+                                    </div>
+                                </form>
+                                <form action="{{url_for('main.remove_category', category_id=category.id)}}"
+                                    method="POST">
+                                    <div class="row">
+                                        <div class="col text-end">
+                                            <button class="btn btn-danger text-white"
+                                                onclick="return confirm('Вы действительно хотите удалить?')">Удалить</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="userFormHeading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#userFormCollapse" aria-expanded="false" aria-controls="userFormCollapse">
-                        Настройки пользователей
-                    </button>
-                </h2>
-                <div id="userFormCollapse" class="accordion-collapse collapse" aria-labelledby="userFormHeading" data-bs-parent="#settingsFormsAccordion">
-                    <div class="accordion-body">
-                        <div class="row">
-                            <div class="col">
-                                <a href="{{ url_for('auth.signup') }}">Новый пользователь</a>
-                            </div>
-                            <div class="col text-end">
-                                <a href="{{ url_for('static', filename = 'app.log') }}">Лог файл</a>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <input class="form-control" id="usersFilter" type="text" placeholder="Фильтр..">
-                            </div>
-                            <div class="col-auto">
-                                <a href="{{ url_for('main.download_users') }}" class="btn btn-primary"><i class="bi bi-download"></i></a>
-                            </div>
-                        </div>
-                        <div class="row d-none d-sm-flex fw-bold px-3">
-                            <div class="col overflow-hidden">
-                                ФИО
-                            </div>
-                            <div class="col overflow-hidden">
-                                Телефон
-                            </div>
-                            <div class="col overflow-hidden">
-                                Email
-                            </div>
-                            <div class="col overflow-hidden">
-                                Роль
-                            </div>
-                            <div class="col overflow-hidden">
-                                Площадка
-                            </div>
-                            <div class="col overflow-hidden">
-                                Права
-                            </div>
-                            <div class="col overflow-hidden">
-                                Заметка
-                            </div>
-                            <div class="col overflow-hidden">
-                                Активность
-                            </div>
-                        </div>
-                        {% for user in users %}
-                        {% include '_user.html' %}
                         {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userModalLabel">НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ <span id="about_user-email"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="projectsFormHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#projectsFormCollapse" aria-expanded="false" aria-controls="projectsFormCollapse">
+                    Проекты
+                </button>
+            </h2>
+            <div id="projectsFormCollapse" class="accordion-collapse collapse" aria-labelledby="projectsFormHeading"
+                data-bs-parent="#settingsFormsAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control" id="projectFilter" type="text" placeholder="Фильтр..">
+                        </div>
+                        <div class="col-auto">
+                            <a class="btn btn-primary text-white addProjectButton" href="#" role="button"
+                                data-bs-toggle="modal" data-bs-target="#projectModal"><i
+                                    class="bi bi-plus-square"></i></a>
+                        </div>
+                    </div>
+                    <div class="row d-none d-sm-flex fw-bold">
+                        <div class="col overflow-hidden">
+                            Название
+                        </div>
+                        <div class="col overflow-hidden">
+                            Код
+                        </div>
+                        <div class="col overflow-hidden">
+                            (Код) Объекты
+                        </div>
+                    </div>
+                    <div id="projectList">
+                        {% for project in projects %}
+                        <div class="row my-1 py-1 border-bottom">
+                            <div class="col-sm">
+                                <form action="{{url_for('main.remove_project', project_id=project.id)}}" method="POST">
+                                    <div class="row">
+                                        <div class="col">
+                                            <span class="d-sm-none fw-bold">Название:</span>
+                                            <a class="editProjectButton" href="#" data-bs-toggle="modal"
+                                                data-bs-target="#projectModal" data-id="{{ project.id }}">
+                                                {{ project.name }}
+                                            </a>
+                                        </div>
+                                        <div class="col-auto">
+                                            <a class="addSiteButton btn btn-sm btn-primary" href="#"
+                                                data-bs-toggle="modal" data-bs-target="#siteModal"
+                                                data-id="{{ project.id }}">
+                                                <i class="bi bi-plus-square"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                                                onclick="return confirm('Вы действительно хотите удалить?')">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-sm">
+                                <span class="d-sm-none fw-bold">Код:</span>
+                                {{ project.uid or '' }}
+                            </div>
+                            <div class="col-sm">
+                                {% for site in project.sites %}
+                                <form action="{{url_for('main.remove_site', site_id=site.id)}}" method="POST"
+                                    class="my-1">
+                                    <div class="row">
+                                        <div class="col">
+                                            <span class="d-sm-none fw-bold">(Код) Объект:</span>
+                                            <a class="editSiteButton" href="#" data-bs-toggle="modal"
+                                                data-bs-target="#siteModal" data-id="{{ site.id }}">
+                                                ({{ site.uid or ' ' }})
+                                                {{ site.name }}
+                                            </a>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                                                onclick="return confirm('Вы действительно хотите удалить?')">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                {% include '_user.settings.form.html' %}
             </div>
         </div>
-    </div>
 
-    <form id="removeUserForm" class="d-none" method="POST" action="{{url_for('main.remove_user')}}">
-        <input type="hidden" name="user_id" id="removeFormUserId">
-    </form>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="statementsFormHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#statementsFormCollapse" aria-expanded="false"
+                    aria-controls="statementsFormCollapse">
+                    БДР, БДДС, ФДБ
+                </button>
+            </h2>
+            <div id="statementsFormCollapse" class="accordion-collapse collapse" aria-labelledby="statementsFormHeading"
+                data-bs-parent="#settingsFormsAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control" id="statementsFilter" type="text" placeholder="Фильтр..">
+                        </div>
+                        <div class="col-auto">
+                            <a class="btn btn-primary text-white addIncomeButton" href="#" role="button"
+                                data-bs-toggle="modal" data-bs-target="#incomeModal"><i class="bi bi-plus"></i>БДР</a>
+                        </div>
+                        <div class="col-auto">
+                            <a class="btn btn-primary text-white addCashflowButton" href="#" role="button"
+                                data-bs-toggle="modal" data-bs-target="#cashflowModal"><i
+                                    class="bi bi-plus"></i>БДДС</a>
+                        </div>
+                        <div class="col-auto">
+                            <a class="btn btn-primary text-white addBudgetHolderButton" href="#" role="button"
+                                data-bs-toggle="modal" data-bs-target="#budgetHolderModal"><i
+                                    class="bi bi-plus"></i>ФДБ</a>
+                        </div>
+                    </div>
+                    <div class="row d-none d-sm-flex fw-bold">
+                        <div class="col overflow-hidden">
+                            БДР
+                        </div>
+                        <div class="col overflow-hidden">
+                            БДДС
+                        </div>
+                        <div class="col overflow-hidden">
+                            ФДБ
+                        </div>
+                    </div>
+                    <div class="row my-1 py-1 border-bottom">
+                        <div class="col">
+                            {% for income in incomes %}
+                            <form action="{{url_for('main.remove_income', income_id=income.id)}}" method="POST"
+                                class="my-1">
+                                <div class="row statement">
+                                    <div class="col-auto">
+                                        <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                                            onclick="return confirm('Вы действительно хотите удалить?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col">
+                                        <span class="d-sm-none fw-bold">БДР:</span>
+                                        <a class="editIncomeButton" href="#" data-bs-toggle="modal"
+                                            data-bs-target="#incomeModal" data-id="{{ income.id }}">
+                                            {{ income.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                            {% endfor %}
+                        </div>
+                        <div class="col">
+                            {% for cashflow in cashflows %}
+                            <form action="{{url_for('main.remove_cashflow', cashflow_id=cashflow.id)}}" method="POST"
+                                class="my-1">
+                                <div class="row statement">
+                                    <div class="col-auto">
+                                        <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                                            onclick="return confirm('Вы действительно хотите удалить?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col">
+                                        <span class="d-sm-none fw-bold">БДДС:</span>
+                                        <a class="editCashflowButton" href="#" data-bs-toggle="modal"
+                                            data-bs-target="#cashflowModal" data-id="{{ cashflow.id }}">
+                                            {{ cashflow.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                            {% endfor %}
+                        </div>
+                        <div class="col">
+                            {% for budget_holder in budget_holders %}
+                            <form action="{{url_for('main.remove_budget_holder', budget_holder_id=budget_holder.id)}}"
+                                method="POST" class="my-1">
+                                <div class="row statement">
+                                    <div class="col-auto">
+                                        <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                                            onclick="return confirm('Вы действительно хотите удалить?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col">
+                                        <span class="d-sm-none fw-bold">ФДБ:</span>
+                                        <a class="editBudgetHolderButton" href="#" data-bs-toggle="modal"
+                                            data-bs-target="#budgetHolderModal" data-id="{{ budget_holder.id }}">
+                                            {{ budget_holder.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addCategoryModalLabel">ДОБАВИТЬ КАТЕГОРИЮ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ url_for('main.add_category') }}">
-                    <div class="modal-body">
-                        {{ forms['add_category'].csrf_token(id=False) }}
-                        <div class="mb-3">
-                            {{ forms['add_category'].category_name.label(id=False, class_='form-label', for='addCategoryName') }}
-                            {{ forms['add_category'].category_name(id='addCategoryName', class_='form-control') }}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="userFormHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#userFormCollapse" aria-expanded="false" aria-controls="userFormCollapse">
+                    Настройки пользователей
+                </button>
+            </h2>
+            <div id="userFormCollapse" class="accordion-collapse collapse" aria-labelledby="userFormHeading"
+                data-bs-parent="#settingsFormsAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col">
+                            <a href="{{ url_for('auth.signup') }}">Новый пользователь</a>
+                        </div>
+                        <div class="col text-end">
+                            <a href="{{ url_for('static', filename = 'app.log') }}">Лог файл</a>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        {{ forms['add_category'].submit(id=False, class_='btn btn-primary text-white') }}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control" id="usersFilter" type="text" placeholder="Фильтр..">
+                        </div>
+                        <div class="col-auto">
+                            <a href="{{ url_for('main.download_users') }}" class="btn btn-primary"><i
+                                    class="bi bi-download"></i></a>
+                        </div>
                     </div>
-                </form>
+                    <div class="row d-none d-sm-flex fw-bold px-3">
+                        <div class="col overflow-hidden">
+                            ФИО
+                        </div>
+                        <div class="col overflow-hidden">
+                            Телефон
+                        </div>
+                        <div class="col overflow-hidden">
+                            Email
+                        </div>
+                        <div class="col overflow-hidden">
+                            Роль
+                        </div>
+                        <div class="col overflow-hidden">
+                            Площадка
+                        </div>
+                        <div class="col overflow-hidden">
+                            Права
+                        </div>
+                        <div class="col overflow-hidden">
+                            Заметка
+                        </div>
+                        <div class="col overflow-hidden">
+                            Активность
+                        </div>
+                    </div>
+                    {% for user in users %}
+                    {% include '_user.html' %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="projectModalLabel">ДОБАВИТЬ ПРОЕКТ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ url_for('main.add_project') }}" id="projectForm">
-                    <div class="modal-body">
-                        {{ forms['project'].csrf_token(id=False) }}
-                        <div class="mb-3">
-                            {{ forms['project'].project_name.label(id=False, class_='form-label', for='projectFormName') }}
-                            {{ forms['project'].project_name(id='projectFormName', class_='form-control') }}
-                        </div>
-                        <div class="mb-3">
-                            {{ forms['project'].uid.label(id=False, class_='form-label', for='projectFormUid') }}
-                            {{ forms['project'].uid(id='projectFormUid', class_='form-control') }}
-                        </div>
-                        <div class="form-check">
-                            {{ forms['project'].enabled(id='projectFormEnabled', class_='form-check-input') }}
-                            {{ forms['project'].enabled.label(id=False, class_='form-check-label', for='projectFormEnabled') }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        {{ forms['project'].submit(id=False, class_='btn btn-primary text-white') }}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    </div>
-                </form>
+</div>
+
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ <span id="about_user-email"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            {% include '_user.settings.form.html' %}
         </div>
     </div>
-    
-    <div class="modal fade" id="siteModal" tabindex="-1" aria-labelledby="siteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="siteModalLabel">ДОБАВИТЬ ОБЪЕКТ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ url_for('main.add_site') }}" id="siteForm">
-                    <div class="modal-body">
-                        {{ forms['site'].csrf_token(id=False) }}
-                        {{ forms['site'].project_id(id='siteFormProjectId', hidden='', class_='d-none') }}
-                        <div class="mb-3">
-                            {{ forms['site'].site_name.label(id=False, class_='form-label', for='siteFormName') }}
-                            {{ forms['site'].site_name(id='siteFormName', class_='form-control') }}
-                        </div>
-                        <div class="mb-3">
-                            {{ forms['site'].uid.label(id=False, class_='form-label', for='siteFormUid') }}
-                            {{ forms['site'].uid(id='siteFormUid',class_='form-control') }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        {{ forms['site'].submit(id=False, class_='btn btn-primary text-white') }}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    </div>
-                </form>
+</div>
+
+<form id="removeUserForm" class="d-none" method="POST" action="{{url_for('main.remove_user')}}">
+    <input type="hidden" name="user_id" id="removeFormUserId">
+</form>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">ДОБАВИТЬ КАТЕГОРИЮ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form method="POST" action="{{ url_for('main.add_category') }}">
+                <div class="modal-body">
+                    {{ forms['add_category'].csrf_token(id=False) }}
+                    <div class="mb-3">
+                        {{ forms['add_category'].category_name.label(id=False, class_='form-label',
+                        for='addCategoryName') }}
+                        {{ forms['add_category'].category_name(id='addCategoryName', class_='form-control') }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ forms['add_category'].submit(id=False, class_='btn btn-primary text-white') }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="incomeModalLabel">ДОБАВИТЬ БДР</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ url_for('main.add_income') }}" id="incomeForm">
-                    <div class="modal-body">
-                        {{ forms['income'].csrf_token(id=False) }}
-                        <div class="mb-3">
-                            {{ forms['income'].income_name.label(id=False, class_='form-label', for='incomeFormName') }}
-                            {{ forms['income'].income_name(id='incomeFormName', class_='form-control') }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        {{ forms['income'].submit(id=False, class_='btn btn-primary text-white') }}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    </div>
-                </form>
+</div>
+
+<div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="projectModalLabel">ДОБАВИТЬ ПРОЕКТ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form method="POST" action="{{ url_for('main.add_project') }}" id="projectForm">
+                <div class="modal-body">
+                    {{ forms['project'].csrf_token(id=False) }}
+                    <div class="mb-3">
+                        {{ forms['project'].project_name.label(id=False, class_='form-label', for='projectFormName') }}
+                        {{ forms['project'].project_name(id='projectFormName', class_='form-control') }}
+                    </div>
+                    <div class="mb-3">
+                        {{ forms['project'].uid.label(id=False, class_='form-label', for='projectFormUid') }}
+                        {{ forms['project'].uid(id='projectFormUid', class_='form-control') }}
+                    </div>
+                    <div class="form-check">
+                        {{ forms['project'].enabled(id='projectFormEnabled', class_='form-check-input') }}
+                        {{ forms['project'].enabled.label(id=False, class_='form-check-label', for='projectFormEnabled')
+                        }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ forms['project'].submit(id=False, class_='btn btn-primary text-white') }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <div class="modal fade" id="budgetHolderModal" tabindex="-1" aria-labelledby="budgetHolderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="budgetHolderModalLabel">ДОБАВИТЬ ФДБ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ url_for('main.add_budget_holder') }}" id="budgetHolderForm">
-                    <div class="modal-body">
-                        {{ forms['budget_holder'].csrf_token(id=False) }}
-                        <div class="mb-3">
-                            {{ forms['budget_holder'].budget_holder_name.label(id=False, class_='form-label', for='budgetHolderFormName') }}
-                            {{ forms['budget_holder'].budget_holder_name(id='budgetHolderFormName', class_='form-control') }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        {{ forms['budget_holder'].submit(id=False, class_='btn btn-primary text-white') }}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    </div>
-                </form>
+</div>
+
+<div class="modal fade" id="siteModal" tabindex="-1" aria-labelledby="siteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="siteModalLabel">ДОБАВИТЬ ОБЪЕКТ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form method="POST" action="{{ url_for('main.add_site') }}" id="siteForm">
+                <div class="modal-body">
+                    {{ forms['site'].csrf_token(id=False) }}
+                    {{ forms['site'].project_id(id='siteFormProjectId', hidden='', class_='d-none') }}
+                    <div class="mb-3">
+                        {{ forms['site'].site_name.label(id=False, class_='form-label', for='siteFormName') }}
+                        {{ forms['site'].site_name(id='siteFormName', class_='form-control') }}
+                    </div>
+                    <div class="mb-3">
+                        {{ forms['site'].uid.label(id=False, class_='form-label', for='siteFormUid') }}
+                        {{ forms['site'].uid(id='siteFormUid',class_='form-control') }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ forms['site'].submit(id=False, class_='btn btn-primary text-white') }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <div class="modal fade" id="cashflowModal" tabindex="-1" aria-labelledby="cashflowModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cashflowModalLabel">ДОБАВИТЬ БДДС</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST" action="{{ url_for('main.add_cashflow') }}" id="cashflowForm">
-                    <div class="modal-body">
-                        {{ forms['cashflow'].csrf_token(id=False) }}
-                        <div class="mb-3">
-                            {{ forms['cashflow'].cashflow_name.label(id=False, class_='form-label', for='cashflowFormName') }}
-                            {{ forms['cashflow'].cashflow_name(id='cashflowFormName', class_='form-control') }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        {{ forms['cashflow'].submit(id=False, class_='btn btn-primary text-white') }}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    </div>
-                </form>
+</div>
+
+<div class="modal fade" id="incomeModal" tabindex="-1" aria-labelledby="incomeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="incomeModalLabel">ДОБАВИТЬ БДР</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form method="POST" action="{{ url_for('main.add_income') }}" id="incomeForm">
+                <div class="modal-body">
+                    {{ forms['income'].csrf_token(id=False) }}
+                    <div class="mb-3">
+                        {{ forms['income'].income_name.label(id=False, class_='form-label', for='incomeFormName') }}
+                        {{ forms['income'].income_name(id='incomeFormName', class_='form-control') }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ forms['income'].submit(id=False, class_='btn btn-primary text-white') }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
+<div class="modal fade" id="budgetHolderModal" tabindex="-1" aria-labelledby="budgetHolderModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="budgetHolderModalLabel">ДОБАВИТЬ ФДБ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.add_budget_holder') }}" id="budgetHolderForm">
+                <div class="modal-body">
+                    {{ forms['budget_holder'].csrf_token(id=False) }}
+                    <div class="mb-3">
+                        {{ forms['budget_holder'].budget_holder_name.label(id=False, class_='form-label',
+                        for='budgetHolderFormName') }}
+                        {{ forms['budget_holder'].budget_holder_name(id='budgetHolderFormName', class_='form-control')
+                        }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ forms['budget_holder'].submit(id=False, class_='btn btn-primary text-white') }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cashflowModal" tabindex="-1" aria-labelledby="cashflowModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cashflowModalLabel">ДОБАВИТЬ БДДС</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.add_cashflow') }}" id="cashflowForm">
+                <div class="modal-body">
+                    {{ forms['cashflow'].csrf_token(id=False) }}
+                    <div class="mb-3">
+                        {{ forms['cashflow'].cashflow_name.label(id=False, class_='form-label', for='cashflowFormName')
+                        }}
+                        {{ forms['cashflow'].cashflow_name(id='cashflowFormName', class_='form-control') }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ forms['cashflow'].submit(id=False, class_='btn btn-primary text-white') }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% else %}
 
-    <div class="container my-2">
-        {% include '_user.settings.form.html' %}
-    </div>
+<div class="container my-2">
+    {% include '_user.settings.form.html' %}
+</div>
 
 {% endif %}
 
@@ -554,277 +616,277 @@
     $(document).ready(function () {
         //Scripts
         {% if current_user.role.name in ['validator', 'admin', 'purchaser'] %}
-            var categoriesData = $("#about_user-categories");
-            var projectsData = $("#about_user-projects");
+        var categoriesData = $("#about_user-categories");
+        var projectsData = $("#about_user-projects");
         {% endif %}
         {% if current_user.role.name in ['validator', 'purchaser'] %}
-            categoriesData.val({{ user.categories | to_json | safe }});
-            projectsData.val({{ user.projects | to_json | safe }});
-        {% endif %}
-        
-        {% if current_user.role.name in ['validator', 'admin', 'purchaser'] %}
-            categoriesData.selectize({});
-            projectsData.selectize({});
-            selectizeCategories = categoriesData[0].selectize;
-            selectizeProjects = projectsData[0].selectize;
+        categoriesData.val({{ user.categories | to_json | safe }});
+    projectsData.val({{ user.projects | to_json | safe }});
+    {% endif %}
 
-            $('#selectAllCategories').click(function() {
-                selectizeCategories.setValue(Object.keys(selectizeCategories.options));
-            });
+    {% if current_user.role.name in ['validator', 'admin', 'purchaser'] %}
+    categoriesData.selectize({});
+    projectsData.selectize({});
+    selectizeCategories = categoriesData[0].selectize;
+    selectizeProjects = projectsData[0].selectize;
 
-            $('#selectAllProjects').click(function() {
-                selectizeProjects.setValue(Object.keys(selectizeProjects.options));
-            });
+    $('#selectAllCategories').click(function () {
+        selectizeCategories.setValue(Object.keys(selectizeCategories.options));
+    });
 
-            $('#selectNoneCategories').click(function() {
-                selectizeCategories.clear(false);
-            });
+    $('#selectAllProjects').click(function () {
+        selectizeProjects.setValue(Object.keys(selectizeProjects.options));
+    });
 
-            $('#selectNoneProjects').click(function() {
-                selectizeProjects.clear(false);
-            });
-            
-            $('.projectsDropDown').click(function(e) {
-                selectizeProjects.focus();
-            });
-            
-            $('.categoriesDropDown').click(function(e) {
-                selectizeCategories.focus();
-            });
-            
-        {% endif %}
-        
-        {% if current_user.role.name == 'admin' %}
-            var users = {{users|to_json|safe}};
+    $('#selectNoneCategories').click(function () {
+        selectizeCategories.clear(false);
+    });
 
-            function HideUserData() {
-                selectizeCategories.clear(false);
-                selectizeProjects.clear(false);
-                categoriesData.val(null);
-                projectsData.val(null);
-                projectsData.removeAttr('value');
-                categoriesData.removeAttr('value');
-                $("#userDataWrapper").hide();
+    $('#selectNoneProjects').click(function () {
+        selectizeProjects.clear(false);
+    });
+
+    $('.projectsDropDown').click(function (e) {
+        selectizeProjects.focus();
+    });
+
+    $('.categoriesDropDown').click(function (e) {
+        selectizeCategories.focus();
+    });
+
+    {% endif %}
+
+    {% if current_user.role.name == 'admin' %}
+    var users = {{ users| to_json | safe}};
+
+    function HideUserData() {
+        selectizeCategories.clear(false);
+        selectizeProjects.clear(false);
+        categoriesData.val(null);
+        projectsData.val(null);
+        projectsData.removeAttr('value');
+        categoriesData.removeAttr('value');
+        $("#userDataWrapper").hide();
+    }
+
+
+    $("#usersFilter").on("keyup", function () {
+        let value = $(this).val().toLowerCase();
+        $(".showUserModal").filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+
+    $(".showUserModal").click(function () {
+
+        let userModal = new bootstrap.Modal(document.getElementById('userModal'), {});
+
+        let user_id = Number($(this).attr('data-id'));
+        $("#user_id").val(user_id);
+        users.some(function (user) {
+            if (user["id"] == user_id) {
+                $("#about_user-email").text(user['email']);
+                $("#about_user-phone").val(user["phone"]);
+                $("#about_user-position").val(user["position"]);
+                $("#about_user-location").val(user["location"]);
+                $("#about_user-full_name").val(user["name"]);
+                $("#about_user-email_new").prop("checked", user["email_new"]);
+                $("#about_user-email_modified").prop("checked", user["email_modified"]);
+                $("#about_user-email_disapproved").prop("checked", user["email_disapproved"]);
+                $("#about_user-email_approved").prop("checked", user["email_approved"]);
+                $("#about_user-email_comment").prop("checked", user["email_comment"]);
+                $("#role").val(user["role"]['name']);
+                $("#note").val(user["note"]);
+                $("#birthday").val(user["birthday"]);
+                $("#removeFormUserId").val(user_id);
+                if (user["role"]['name'] == "validator" || user["role"]['name'] == "purchaser") {
+                    $("#userDataWrapper").show();
+                    selectizeCategories.setValue(user["categories"]);
+                    selectizeProjects.setValue(user["projects"])
+                }
+                else {
+                    HideUserData();
+                }
+                return true;
             }
+        });
+        userModal.show();
+    });
+    $("#role").change(HideUserData);
+    $('#removeUserFormSubmit').on('click', () => {
+        if (confirm('Удалить пользователя?'))
+            $('#removeUserForm').submit();
+    });
+
+    var projects = {{ projects| to_json | safe}};
+
+    var incomes = {{ incomes| to_json | safe}};
+
+    var cashflows = {{ cashflows| to_json | safe}};
+
+    var budget_holders = {{ budget_holders| to_json | safe}};
+
+    var categories = {{ categories| to_json | safe}};
 
 
-            $("#usersFilter").on("keyup", function () {
-                let value = $(this).val().toLowerCase();
-                $(".showUserModal").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
-            });
+    for (let i = 0; i < categories.length; i++) {
+        let cat = categories[i];
+        let form = $("#categoryForm" + cat["id"]);
+        let income_id = cat?.income || 0;
+        let cashflow_id = cat?.cashflow || 0;
+        let responsible_id = cat?.responsible?.email || 0;
+        let budget_holder_id = cat?.budget_holder || 0;
 
-            $(".showUserModal").click(function () {
-
-                let userModal = new bootstrap.Modal(document.getElementById('userModal'), {});
-
-                let user_id = Number($(this).attr('data-id'));
-                $("#user_id").val(user_id);
-                users.some(function (user) {
-                    if (user["id"] == user_id) {
-                        $("#about_user-email").text(user['email']);
-                        $("#about_user-phone").val(user["phone"]);
-                        $("#about_user-position").val(user["position"]);
-                        $("#about_user-location").val(user["location"]);
-                        $("#about_user-full_name").val(user["name"]);
-                        $("#about_user-email_new").prop("checked", user["email_new"]);
-                        $("#about_user-email_modified").prop("checked", user["email_modified"]);
-                        $("#about_user-email_disapproved").prop("checked", user["email_disapproved"]);
-                        $("#about_user-email_approved").prop("checked", user["email_approved"]);
-                        $("#about_user-email_comment").prop("checked", user["email_comment"]);
-                        $("#role").val(user["role"]['name']);
-                        $("#note").val(user["note"]);
-                        $("#birthday").val(user["birthday"]);
-                        $("#removeFormUserId").val(user_id);
-                        if (user["role"]['name'] == "validator" || user["role"]['name'] == "purchaser") {
-                            $("#userDataWrapper").show();
-                            selectizeCategories.setValue(user["categories"]);
-                            selectizeProjects.setValue(user["projects"])
-                        }
-                        else {
-                            HideUserData();
-                        }
-                        return true;
-                    }
-                });
-                userModal.show();
-            });
-            $("#role").change(HideUserData);
-            $('#removeUserFormSubmit').on('click',()=>{
-                if (confirm('Удалить пользователя?'))
-                    $('#removeUserForm').submit();
-            });
-
-            var projects = {{projects|to_json|safe}};
-        
-            var incomes = {{incomes|to_json|safe}};
-            
-            var cashflows = {{cashflows|to_json|safe}};
-            
-            var budget_holders = {{budget_holders|to_json|safe}};
-
-            var categories = {{categories|to_json|safe}};
+        form.find(".income option[value='" + income_id + "']").prop("selected", true);
+        form.find(".cashflow option[value='" + cashflow_id + "']").prop("selected", true);
+        form.find(".budget_holder option[value='" + budget_holder_id + "']").prop("selected", true);
+        form.find(".responsible option[value='" + responsible_id + "']").prop("selected", true);
+    }
 
 
-            for (let i = 0; i < categories.length; i++) {
-                let cat = categories[i];
-                let form = $("#categoryForm"+cat["id"]);
-                let income_id = cat?.income || 0;
-                let cashflow_id = cat?.cashflow || 0;
-                let responsible_id = cat?.responsible?.email || 0;
-                let budget_holder_id = cat?.budget_holder || 0;
+    $(".addProjectButton").click(function () {
+        $('#projectModalLabel').text('ДОБАВИТЬ ПРОЕКТ');
+        $("#projectForm").prop("action", "{{ url_for('main.add_project') }}");
+        $("#projectFormName").val(null);
+        $("#projectFormUid").val(null);
+        $("#projectFormEnabled").prop('checked', true);
+    });
+    $(".addSiteButton").click(function () {
+        $('#siteModalLabel').text('ДОБАВИТЬ ОБЪЕКТ');
+        $("#siteForm").prop("action", "{{ url_for('main.add_site') }}");
+        $("#siteFormName").val(null);
+        $("#siteFormUid").val(null);
+        let projectId = Number($(this).data("id"));
+        $("#siteFormProjectId").val(projectId);
+    });
+    $(".addIncomeButton").click(function () {
+        $('#incomeModalLabel').text('ДОБАВИТЬ БДР');
+        $("#incomeForm").prop("action", "{{ url_for('main.add_income') }}");
+        $("#incomeFormName").val(null);
+    });
+    $(".addCashflowButton").click(function () {
+        $('#cashflowModalLabel').text('ДОБАВИТЬ ФДБ');
+        $("#cashflowForm").prop("action", "{{ url_for('main.add_cashflow') }}");
+        $("#cashflowFormName").val(null);
+    });
+    $(".addBudgetHolderButton").click(function () {
+        $('#budgetHolderModalLabel').text('ДОБАВИТЬ ФДБ');
+        $("#budgetHolderForm").prop("action", "{{ url_for('main.add_budget_holder') }}");
+        $("#budgetHolderFormName").val(null);
+    });
 
-                form.find(".income option[value='"+income_id+"']").prop("selected", true);
-                form.find(".cashflow option[value='"+cashflow_id+"']").prop("selected", true);
-                form.find(".budget_holder option[value='"+budget_holder_id+"']").prop("selected", true);
-                form.find(".responsible option[value='"+responsible_id+"']").prop("selected", true);
+    $(".editBudgetHolderButton").click(function () {
+        let budgetHolderId = Number($(this).data("id"));
+        $('#budgetHolderModalLabel').text('РЕДАКТИРОВАТЬ ФДБ');
+        $("#budgetHolderForm").prop("action", "{{ url_for('main.edit_budget_holder', budget_holder_id=0) }}".replace(0, budgetHolderId));
+        budget_holders.some(function (budget_holder) {
+            if (budget_holder["id"] == budgetHolderId) {
+                $("#budgetHolderFormName").val(budget_holder["name"]);
+                return true;
             }
+        });
+    });
+
+    $(".editIncomeButton").click(function () {
+        let incomeId = Number($(this).data("id"));
+        $('#incomeModalLabel').text('РЕДАКТИРОВАТЬ БДР');
+        $("#incomeForm").prop("action", "{{ url_for('main.edit_income', income_id=0) }}".replace(0, incomeId));
+        incomes.some(function (income) {
+            if (income["id"] == incomeId) {
+                $("#incomeFormName").val(income["name"]);
+                return true;
+            }
+        });
+    });
+
+    $(".editCashflowButton").click(function () {
+        let cashflowId = Number($(this).data("id"));
+        $('#cashflowModalLabel').text('РЕДАКТИРОВАТЬ БДДС');
+        $("#cashflowForm").prop("action", "{{ url_for('main.edit_cashflow', cashflow_id=0) }}".replace(0, cashflowId));
+        cashflows.some(function (cashflow) {
+            if (cashflow["id"] == cashflowId) {
+                $("#cashflowFormName").val(cashflow["name"]);
+                return true;
+            }
+        });
+    });
 
 
-            $(".addProjectButton").click(function () {
-                $('#projectModalLabel').text('ДОБАВИТЬ ПРОЕКТ');
-                $("#projectForm").prop("action", "{{ url_for('main.add_project') }}");
-                $("#projectFormName").val(null);
-                $("#projectFormUid").val(null);
-                $("#projectFormEnabled").prop('checked', true);
-            });
-            $(".addSiteButton").click(function () {
-                $('#siteModalLabel').text('ДОБАВИТЬ ОБЪЕКТ');
-                $("#siteForm").prop("action", "{{ url_for('main.add_site') }}");
-                $("#siteFormName").val(null);
-                $("#siteFormUid").val(null);
-                let projectId = Number($(this).data("id"));
-                $("#siteFormProjectId").val(projectId);
-            });
-            $(".addIncomeButton").click(function () {
-                $('#incomeModalLabel').text('ДОБАВИТЬ БДР');
-                $("#incomeForm").prop("action", "{{ url_for('main.add_income') }}");
-                $("#incomeFormName").val(null);
-            });
-            $(".addCashflowButton").click(function () {
-                $('#cashflowModalLabel').text('ДОБАВИТЬ ФДБ');
-                $("#cashflowForm").prop("action", "{{ url_for('main.add_cashflow') }}");
-                $("#cashflowFormName").val(null);
-            });
-            $(".addBudgetHolderButton").click(function () {
-                $('#budgetHolderModalLabel').text('ДОБАВИТЬ ФДБ');
-                $("#budgetHolderForm").prop("action", "{{ url_for('main.add_budget_holder') }}");
-                $("#budgetHolderFormName").val(null);
-            });
+    $(".editProjectButton").click(function () {
+        let projectId = Number($(this).data("id"));
+        $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ПРОЕКТ');
+        $("#projectForm").prop("action", "{{ url_for('main.edit_project', project_id=0) }}".replace(0, projectId));
+        projects.some(function (project) {
+            if (project["id"] == projectId) {
+                $("#projectFormName").val(project["name"]);
+                $("#projectFormUid").val(project["uid"]);
+                $("#projectFormEnabled").prop('checked', project["enabled"]);
+                return true;
+            }
+        });
+    });
 
-            $(".editBudgetHolderButton").click(function () {
-                let budgetHolderId = Number($(this).data("id"));
-                $('#budgetHolderModalLabel').text('РЕДАКТИРОВАТЬ ФДБ');
-                $("#budgetHolderForm").prop("action", "{{ url_for('main.edit_budget_holder', budget_holder_id=0) }}".replace(0, budgetHolderId));
-                budget_holders.some(function (budget_holder) {
-                    if (budget_holder["id"] == budgetHolderId) {
-                        $("#budgetHolderFormName").val(budget_holder["name"]);
-                        return true;
-                    }
-                });
-            });
-
-            $(".editIncomeButton").click(function () {
-                let incomeId = Number($(this).data("id"));
-                $('#incomeModalLabel').text('РЕДАКТИРОВАТЬ БДР');
-                $("#incomeForm").prop("action", "{{ url_for('main.edit_income', income_id=0) }}".replace(0, incomeId));
-                incomes.some(function (income) {
-                    if (income["id"] == incomeId) {
-                        $("#incomeFormName").val(income["name"]);
-                        return true;
-                    }
-                });
-            });
-
-            $(".editCashflowButton").click(function () {
-                let cashflowId = Number($(this).data("id"));
-                $('#cashflowModalLabel').text('РЕДАКТИРОВАТЬ БДДС');
-                $("#cashflowForm").prop("action", "{{ url_for('main.edit_cashflow', cashflow_id=0) }}".replace(0, cashflowId));
-                cashflows.some(function (cashflow) {
-                    if (cashflow["id"] == cashflowId) {
-                        $("#cashflowFormName").val(cashflow["name"]);
-                        return true;
-                    }
-                });
-            });
-
-
-            $(".editProjectButton").click(function () {
-                let projectId = Number($(this).data("id"));
-                $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ПРОЕКТ');
-                $("#projectForm").prop("action", "{{ url_for('main.edit_project', project_id=0) }}".replace(0, projectId));
-                projects.some(function (project) {
-                    if (project["id"] == projectId) {
-                        $("#projectFormName").val(project["name"]);
-                        $("#projectFormUid").val(project["uid"]);
-                        $("#projectFormEnabled").prop('checked', project["enabled"]);
-                        return true;
-                    }
-                });
-            });
-
-            $(".editSiteButton").click(function () {
-                let siteId = Number($(this).data("id"));
-                $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ОБЪЕКТ');
-                $("#removeSiteButton").prop("href", "{{ url_for('main.edit_site', site_id=0) }}".replace(0, siteId));
-                projects.some(function (project) {
-                    let found = false;
-                    project["sites"].some(function (site) {
-                        if (site["id"] == siteId) {
-                            $("#siteFormProjectId").val(project["id"]);
-                            $("#siteFormName").val(site["name"]);
-                            $("#siteFormUid").val(site["uid"]);
-                            found = true;
-                            return true;
-                        }
-                    });
-                    if (found === true)
-                        return true;
-                });
-            });
-
-            $("#projectFilter").on("keyup", function () {
-                let value = $(this).val().toLowerCase();
-                $("#projectList > .row").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                });
-            });
-            $("#categoryFilter").on("keyup", function () {
-                let value = $(this).val().toLowerCase();
-                $("#categoryList > .row").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                });
-            });
-
-            $("#statementsFilter").on("keyup", function () {
-                let value = $(this).val().toLowerCase();
-                $(".statement.row").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                });
-            });
-
-            $(".income option[value='0']").prop("disabled", true);
-            $(".cashflow option[value='0']").prop("disabled", true);
-            $(".budget_holder option[value='0']").prop("disabled", true);
-            $(".responsible option[value='0']").prop("disabled", true);
-
-            $("#project_name").on('input', function () {
-                let val = this.value;
-                let sitesList = $("#sitesList");
-                sitesList.empty();
-                for (let i = 0, locLen = projects.length; i < locLen; i++) {
-                    loc = projects[i];
-                    if (loc["name"].toUpperCase() === val.toUpperCase()) {
-                        for (j = 0, siteLen = loc["sites"].length; j < siteLen; j++) {
-                            sitesList.append($("<option>").text(loc["sites"][j]["name"]));
-                        }
-                        break;
-                    }
+    $(".editSiteButton").click(function () {
+        let siteId = Number($(this).data("id"));
+        $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ОБЪЕКТ');
+        $("#removeSiteButton").prop("href", "{{ url_for('main.edit_site', site_id=0) }}".replace(0, siteId));
+        projects.some(function (project) {
+            let found = false;
+            project["sites"].some(function (site) {
+                if (site["id"] == siteId) {
+                    $("#siteFormProjectId").val(project["id"]);
+                    $("#siteFormName").val(site["name"]);
+                    $("#siteFormUid").val(site["uid"]);
+                    found = true;
+                    return true;
                 }
             });
+            if (found === true)
+                return true;
+        });
+    });
 
-        {% endif %}
+    $("#projectFilter").on("keyup", function () {
+        let value = $(this).val().toLowerCase();
+        $("#projectList > .row").filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+    $("#categoryFilter").on("keyup", function () {
+        let value = $(this).val().toLowerCase();
+        $("#categoryList > .row").filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+
+    $("#statementsFilter").on("keyup", function () {
+        let value = $(this).val().toLowerCase();
+        $(".statement.row").filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+
+    $(".income option[value='0']").prop("disabled", true);
+    $(".cashflow option[value='0']").prop("disabled", true);
+    $(".budget_holder option[value='0']").prop("disabled", true);
+    $(".responsible option[value='0']").prop("disabled", true);
+
+    $("#project_name").on('input', function () {
+        let val = this.value;
+        let sitesList = $("#sitesList");
+        sitesList.empty();
+        for (let i = 0, locLen = projects.length; i < locLen; i++) {
+            loc = projects[i];
+            if (loc["name"].toUpperCase() === val.toUpperCase()) {
+                for (j = 0, siteLen = loc["sites"].length; j < siteLen; j++) {
+                    sitesList.append($("<option>").text(loc["sites"][j]["name"]));
+                }
+                break;
+            }
+        }
+    });
+
+    {% endif %}
     });
 </script>
 {% endblock %}
