@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source venv/bin/activate
+source .venv/bin/activate
 flask db init
 revision=`flask db migrate 2>&1 | tail -n1 | cut -f9 -d ' ' | tr -d "'"`
 if [  -z "$revision" ]

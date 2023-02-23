@@ -2,9 +2,10 @@ version: '3'
 services:
   event-service:
     depends_on:
-      - database
       - mq-service
     build: ./event-service
+    volumes:
+      - db_event:/home/pushkind/db
     restart: unless-stopped
     environment:
       - DB_URL
@@ -13,7 +14,6 @@ services:
 
   frontend:
     depends_on:
-      - database
       - mq-service
     build: ./frontend
     volumes:
@@ -28,9 +28,10 @@ services:
 
   hub-service:
     depends_on:
-      - database
       - mq-service
     build: ./hub-service
+    volumes:
+      - db_hub:/home/pushkind/db
     restart: unless-stopped
     environment:
       - DB_URL
@@ -39,9 +40,10 @@ services:
 
   order-service:
     depends_on:
-      - database
       - mq-service
     build: ./order-service
+    volumes:
+      - db_order:/home/pushkind/db
     restart: unless-stopped
     environment:
       - DB_URL
@@ -50,9 +52,10 @@ services:
 
   project-service:
     depends_on:
-      - database
       - mq-service
     build: ./project-service
+    volumes:
+      - db_project:/home/pushkind/db
     restart: unless-stopped
     environment:
       - DB_URL
@@ -61,9 +64,10 @@ services:
 
   tender-service:
     depends_on:
-      - database
       - mq-service
     build: ./tender-service
+    volumes:
+      - db_tender:/home/pushkind/db
     restart: unless-stopped
     environment:
       - DB_URL
@@ -72,34 +76,32 @@ services:
 
   user-service:
     depends_on:
-      - database
       - mq-service
     build: ./user-service
+    volumes:
+      - db_user:/home/pushkind/db
     restart: unless-stopped
     environment:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
 
-  database:
-    image: mysql:latest
-    volumes:
-      - db:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_DATABASE
-    restart: unless-stopped
-
   mq-service:
     image: rabbitmq:3-management-alpine
     volumes:
       - mq:/var/lib/rabbitmq/
     ports:
-        - 127.0.0.1:15672:15672
+      - 127.0.0.1:15672:15672
     restart: unless-stopped
 
 volumes:
-  db:
+  db_event:
+  db_hub:
+  db_order:
+  db_project:
+  db_tender:
+  db_user:
   mq:
   upload:
+
 

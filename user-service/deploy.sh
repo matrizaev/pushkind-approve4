@@ -1,9 +1,9 @@
 #!/bin/bash
 
-source venv/bin/activate
+source .venv/bin/activate
 flask db init
 revision=`flask db migrate 2>&1 | tail -n1 | cut -f9 -d ' ' | tr -d "'"`
-if [  -z "$revision" ]
+if [ -z "$revision" ]
 then
     flask db upgrade
 else
@@ -13,3 +13,4 @@ else
     mv tmp ${revision}
     flask db upgrade
 fi
+flask bootstrap init admin@example.com 123456

@@ -1,10 +1,8 @@
+from config import Config
 from flask import Flask
 from flask_mail import Mail
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
-from config import Config
-
+from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
@@ -21,6 +19,9 @@ def create_app(config_class=Config):
 
     from app.api import bp as api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
+
+    from app import cli
+    cli.register(app)
 
     return app
 

@@ -13,6 +13,6 @@ python-dotenv
 PyJWT
 pytest
 pika
-requests
 pandas
 openpyxl
+requests

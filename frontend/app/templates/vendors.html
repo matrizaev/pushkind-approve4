@@ -17,140 +17,152 @@
 
 <div class="container my-2">
     {% if current_user.role.name != 'vendor' %}
-        <div class="row">
-            {% if current_user.role.name in ('admin', 'supervisor') %}
-                <div class="col">
-                    <form action="{{url_for('main.switch_hub')}}" method="POST">
-                        <select class="form-select" aria-label="Switch Hub" name="hub_id" id="switchHubFormSelect">
-                            <option disabled {%if current_user.hub_id is none %}selected{%endif%}>Выбор хаба</option>
-                            {% for hub in hubs %}
-                                {% if current_user.hub_id == hub.id %}
-                                    {% set ns.hub=hub %}
-                                {% endif %}
-                                <option value="{{hub.id}}" {%if current_user.hub_id == hub.id %}selected{%endif%}>{{hub.name}}</option>
-                            {% endfor %}
-                        </select>
-                    </form>
-                    {% if current_user.role.name == 'admin' %}
-                        {% if current_user.hub_id is not none %}
-                            <form class="my-1" action="{{url_for('main.remove_hub', hub_id=current_user.hub_id)}}" method="POST">
-                                <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addHubModal">
-                                    <i class="bi bi-plus-square"></i>
-                                </a>
-                                <a href="#" class="btn btn-primary btn-sm text-white" data-bs-toggle="modal" data-bs-target="#editHubModal" data-id="{{ current_user.hub_id }}">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </form>
-                        {% else %}
-                            <div class="row my-1">
-                                <div class="col">
-                                    <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addHubModal">
-                                        <i class="bi bi-plus-square"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        {% endif %}
+    <div class="row">
+        {% if current_user.role.name in ('admin', 'supervisor') %}
+        <div class="col">
+            <form action="{{url_for('main.switch_hub')}}" method="POST">
+                <select class="form-select" aria-label="Switch Hub" name="hub_id" id="switchHubFormSelect">
+                    <option disabled {%if current_user.hub_id is none %}selected{%endif%}>Выбор хаба</option>
+                    {% for hub in hubs %}
+                    {% if current_user.hub_id == hub.id %}
+                    {% set ns.hub=hub %}
                     {% endif %}
-                </div>
-            {% endif %}
-            <div class="col">
-                <form action="{{url_for('main.show_vendors')}}" method="GET">
-                    <select class="form-select" aria-label="Select Vendor" id="switchVendorFormSelect" name="vendor_id">
-                        <option disabled {%if vendor_id is none %}selected{%endif%}>Выбор поставщика</option>
-                        {% for vendor in vendors %}
-                            {% if vendor_id == vendor.id %}
-                                {% set ns.vendor=vendor %}
-                            {% endif %}
-                            <option {% if vendor.id == vendor_id %}selected{% endif %} value="{{ vendor.id }}">{{ vendor.name }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
-                {% if current_user.role.name == 'admin' and vendor_id is not none %}
-                    <form class="my-1 text-end" action="{{url_for('main.remove_vendor', vendor_id=vendor_id)}}" method="POST">
-                        <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addVendorModal">
-                            <i class="bi bi-plus-square"></i>
-                        </a>
-                        <a href="#" class="btn btn-primary btn-sm text-white" data-bs-toggle="modal" data-bs-target="#editVendorModal" data-id="{{ vendor_id }}">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <button class="btn btn-outline-danger btn-sm rounded" type="submit" onclick="return confirm('Вы действительно хотите удалить?')">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </form>
-                {% elif current_user.role.name == 'admin' and current_user.hub_id is not none %}
-                    <div class="row my-1 text-end">
-                        <div class="col">
-                            <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal" data-bs-target="#addVendorModal">
-                                <i class="bi bi-plus-square"></i>
-                            </a>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
-    {% if vendor_id is not none %}
-        <div class="row gx-1 justify-content-center my-2">
-            <div class="col-5 mb-1">
-                <input class="form-control" id="productFilter" type="text" placeholder="Фильтр..">
-            </div>
-            {% if queue_size == 0 and current_user.role.name not in ('default', 'initiative', 'supervisor') %}
-                <div class="col-auto">
-                    <a class="btn btn-primary" href="{{url_for('main.download_products', vendor_id=vendor_id)}}">
-                        <i class="bi bi-cloud-download"></i>
+                    <option value="{{hub.id}}" {%if current_user.hub_id==hub.id %}selected{%endif%}>{{hub.name}}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% if current_user.role.name == 'admin' %}
+            {% if current_user.hub_id is not none %}
+            <form class="my-1" action="{{url_for('main.remove_hub', hub_id=current_user.hub_id)}}" method="POST">
+                <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal"
+                    data-bs-target="#addHubModal">
+                    <i class="bi bi-plus-square"></i>
+                </a>
+                <a href="#" class="btn btn-primary btn-sm text-white" data-bs-toggle="modal"
+                    data-bs-target="#editHubModal" data-id="{{ current_user.hub_id }}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                    onclick="return confirm('Вы действительно хотите удалить?')">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </form>
+            {% else %}
+            <div class="row my-1">
+                <div class="col">
+                    <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal"
+                        data-bs-target="#addHubModal">
+                        <i class="bi bi-plus-square"></i>
                     </a>
                 </div>
-                <div class="col-auto">
-                    <form method="POST" enctype="multipart/form-data" id="uploadProductsForm" action="{{url_for('main.upload_products', vendor_id=vendor_id)}}">
-                        {{ forms['products_form'].csrf_token(id=False) }}
-                        <label for="uploadProductsButton">
-                            <span class="btn btn-warning mb-1">
-                                <i class="bi bi-cloud-upload"></i>
-                            </span>
-                        </label>
-                        <input id="uploadProductsButton" type="file" name="products" class="d-none" accept=".xlsx">
-                    </form>
-                </div>
-                <div class="col-auto">
-                    <form method="POST" enctype="multipart/form-data" id="uploadImagesForm" action="{{url_for('main.upload_images', vendor_id=vendor_id)}}">
-                        {{ forms['images_form'].csrf_token(id=False) }}
-                        <label for="uploadImagesButton">
-                            <span class="btn btn-success mb-1">
-                                <i class="bi bi-card-image"></i>
-                            </span>
-                        </label>
-                        <input id="uploadImagesButton" type="file" name="images" class="d-none" accept=".zip">
-                    </form>
-                </div>
+            </div>
+            {% endif %}
             {% endif %}
         </div>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                {% for category in categories %}
-                    <span class="text-decoration-none badge bg-secondary">{{ category.name }}</span>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="alert bg-yellow my-1" role="alert">
-                    <ol class="my-0">
-                        <li>
-                            Скачайте текущий каталог и используйте полученный Excel-файл как шаблон.
-                        </li>
-                        <li>
-                            Загрузите обновленный каталог из Excel.
-                        </li>
-                        <li>
-                            Загрузите картинки в zip-архиве (имя файла = "артикул товара")
-                        </li>
-                    </ol>
+        {% endif %}
+        <div class="col">
+            <form action="{{url_for('main.show_vendors')}}" method="GET">
+                <select class="form-select" aria-label="Select Vendor" id="switchVendorFormSelect" name="vendor_id">
+                    <option disabled {%if vendor_id is none %}selected{%endif%}>Выбор поставщика</option>
+                    {% for vendor in vendors %}
+                    {% if vendor_id == vendor.id %}
+                    {% set ns.vendor=vendor %}
+                    {% endif %}
+                    <option {% if vendor.id==vendor_id %}selected{% endif %} value="{{ vendor.id }}">{{ vendor.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% if current_user.role.name == 'admin' and vendor_id is not none %}
+            <form class="my-1 text-end" action="{{url_for('main.remove_vendor', vendor_id=vendor_id)}}" method="POST">
+                <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal"
+                    data-bs-target="#addVendorModal">
+                    <i class="bi bi-plus-square"></i>
+                </a>
+                <a href="#" class="btn btn-primary btn-sm text-white" data-bs-toggle="modal"
+                    data-bs-target="#editVendorModal" data-id="{{ vendor_id }}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <button class="btn btn-outline-danger btn-sm rounded" type="submit"
+                    onclick="return confirm('Вы действительно хотите удалить?')">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </form>
+            {% elif current_user.role.name == 'admin' and current_user.hub_id is not none %}
+            <div class="row my-1 text-end">
+                <div class="col">
+                    <a class="btn btn-primary btn-sm text-white" href="#" role="button" data-bs-toggle="modal"
+                        data-bs-target="#addVendorModal">
+                        <i class="bi bi-plus-square"></i>
+                    </a>
                 </div>
             </div>
+            {% endif %}
         </div>
+    </div>
+    {% endif %}
+    {% if vendor_id is not none %}
+    <div class="row gx-1 justify-content-center my-2">
+        <div class="col-5 mb-1">
+            <input class="form-control" id="productFilter" type="text" placeholder="Фильтр..">
+        </div>
+        {% if queue_size == 0 and current_user.role.name not in ('default', 'initiative', 'supervisor') %}
+        <div class="col-auto">
+            <a class="btn btn-primary" href="{{url_for('main.download_products', vendor_id=vendor_id)}}">
+                <i class="bi bi-cloud-download"></i>
+            </a>
+        </div>
+        <div class="col-auto">
+            <form method="POST" enctype="multipart/form-data" id="uploadProductsForm"
+                action="{{url_for('main.upload_products', vendor_id=vendor_id)}}">
+                {{ forms['products_form'].csrf_token(id=False) }}
+                <label for="uploadProductsButton">
+                    <span class="btn btn-warning mb-1">
+                        <i class="bi bi-cloud-upload"></i>
+                    </span>
+                </label>
+                <input id="uploadProductsButton" type="file" name="products" class="d-none" accept=".xlsx">
+            </form>
+        </div>
+        <div class="col-auto">
+            <form method="POST" enctype="multipart/form-data" id="uploadImagesForm"
+                action="{{url_for('main.upload_images', vendor_id=vendor_id)}}">
+                {{ forms['images_form'].csrf_token(id=False) }}
+                <label for="uploadImagesButton">
+                    <span class="btn btn-success mb-1">
+                        <i class="bi bi-card-image"></i>
+                    </span>
+                </label>
+                <input id="uploadImagesButton" type="file" name="images" class="d-none" accept=".zip">
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% for category in categories %}
+            <span class="text-decoration-none badge bg-secondary">{{ category.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert bg-yellow my-1" role="alert">
+                <ol class="my-0">
+                    <li>
+                        Скачайте текущий каталог и используйте полученный Excel-файл как шаблон.
+                    </li>
+                    <li>
+                        Загрузите обновленный каталог из Excel.
+                    </li>
+                    <li>
+                        Загрузите картинки в zip-архиве (имя файла = "артикул товара")
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
     {% endif %}
 </div>
 
@@ -158,65 +170,75 @@
 <div class="container">
     <div id="productList">
         {% for product in products %}
-            <div class="row my-1 selectable bg-white rounded" data-id="{{product.id}}">
-                <div class="col-auto">
-                    {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
-                        <form method="POST" enctype="multipart/form-data" id="uploadProductImageForm{{product.id}}" action="{{url_for('main.upload_product_image', product_id=product.id, vendor_id=vendor_id)}}">
-                            {{ forms['product_image_form'].csrf_token(id=False) }}
-                            <label for="uploadProductImageButton{{product.id}}">
-                                <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt="thumbnail" class="uploadImageIcon">
-                            </label>
-                            <input id="uploadProductImageButton{{product.id}}" type="file" name="image" class="d-none uploadProductImageButton" accept="image/png,image/jpeg">
-                        </form>
-                    {% else %}
-                        <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt="thumbnail" class="uploadImageIcon">
-                    {% endif %}
-                </div>
-                <div class="col-6 overflow-hidden">
-                    <h5>{{product.name}}</h5>
-                    <small>Артикул: {{product.sku}}</small>
-                </div>
-                <div class="col-sm">
-                    <span class="d-sm-none fw-bold">Категория:</span>
-                    {{ product.category.name }}
-                </div>
-                <div class="col-sm">
-                    <span class="d-sm-none fw-bold">Цена:</span>
-                    <strong>{{ '{:,.2f}'.format(product.price) }}</strong> ₽/{{ product.measurement }}
-                </div>
+        <div class="row my-1 selectable bg-white rounded" data-id="{{product.id}}">
+            <div class="col-auto">
+                {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
+                <form method="POST" enctype="multipart/form-data" id="uploadProductImageForm{{product.id}}"
+                    action="{{url_for('main.upload_product_image', product_id=product.id, vendor_id=vendor_id)}}">
+                    {{ forms['product_image_form'].csrf_token(id=False) }}
+                    <label for="uploadProductImageButton{{product.id}}">
+                        <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt=""
+                            class="uploadImageIcon">
+                    </label>
+                    <input id="uploadProductImageButton{{product.id}}" type="file" name="image"
+                        class="d-none uploadProductImageButton" accept="image/png,image/jpeg">
+                </form>
+                {% else %}
+                <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64" alt=""
+                    class="uploadImageIcon">
+                {% endif %}
             </div>
-            <div class="modal fade" id="descriptionModal{{product.id}}" tabindex="-1" aria-labelledby="descriptionModalLabel{{product.id}}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="descriptionModalLabel{{product.id}}">{{product.name}}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="carouselControls{{product.id}}" class="carousel carousel-dark slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    <div class="carousel-item active">
-                                        <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" class="d-block w-100" alt="Main image">
-                                    </div>
-                                    <div class="carousel-item">
-                                        <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" class="d-block w-100" alt="Media image">
-                                    </div>
+            <div class="col-6 overflow-hidden">
+                <h5>{{product.name}}</h5>
+                <small>Артикул: {{product.sku}}</small>
+            </div>
+            <div class="col-sm">
+                <span class="d-sm-none fw-bold">Категория:</span>
+                {{ product.category.name }}
+            </div>
+            <div class="col-sm">
+                <span class="d-sm-none fw-bold">Цена:</span>
+                <strong>{{ '{:,.2f}'.format(product.price) }}</strong> ₽/{{ product.measurement }}
+            </div>
+        </div>
+        <div class="modal fade" id="descriptionModal{{product.id}}" tabindex="-1"
+            aria-labelledby="descriptionModalLabel{{product.id}}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="descriptionModalLabel{{product.id}}">{{product.name}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="carouselControls{{product.id}}" class="carousel carousel-dark slide"
+                            data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item active">
+                                    <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" class="d-block w-100"
+                                        alt="Main image">
                                 </div>
-                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls{{product.id}}" data-bs-slide="prev">
-                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Previous</span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#carouselControls{{product.id}}" data-bs-slide="next">
-                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Next</span>
-                                </button>
+                                <div class="carousel-item">
+                                    <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" class="d-block w-100"
+                                        alt="Media image">
+                                </div>
                             </div>
-                            <strong>Описание:</strong>
-                            <pre>{{product.description or ''}}</pre>
+                            <button class="carousel-control-prev" type="button"
+                                data-bs-target="#carouselControls{{product.id}}" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button"
+                                data-bs-target="#carouselControls{{product.id}}" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
                         </div>
+                        <strong>Описание:</strong>
+                        <pre>{{product.description or ''}}</pre>
                     </div>
                 </div>
             </div>
+        </div>
         {% endfor %}
     </div>
 </div>
@@ -293,13 +315,15 @@
             <form method="POST" action="{{ url_for('main.edit_hub') }}">
                 <div class="modal-body">
                     {{ forms['edit_hub'].csrf_token(id=False) }}
-                    {{ forms['edit_hub'].hub_id(id='editHubId', hidden='', class_='d-none', value=current_user.hub_id) }}
+                    {{ forms['edit_hub'].hub_id(id='editHubId', hidden='', class_='d-none', value=current_user.hub_id)
+                    }}
                     <div class="mb-3">
                         {{ forms['edit_hub'].hub_name.label(id=False, class_='form-label', for='editHubName') }}
                         {{ forms['edit_hub'].hub_name(id='editHubName', class_='form-control', value=ns.hub.name) }}
                     </div>
                     <div class="mb-3 form-check">
-                        {{ forms['edit_hub'].enabled(id='editHubEnabled', class_='form-check-input', checked=ns.hub.enabled) }}
+                        {{ forms['edit_hub'].enabled(id='editHubEnabled', class_='form-check-input',
+                        checked=ns.hub.enabled) }}
                         {{ forms['edit_hub'].enabled.label(id=False, class_='form-check-label', for='editHubEnabled') }}
                     </div>
                 </div>
@@ -324,12 +348,16 @@
                     {{ forms['edit_vendor'].csrf_token(id=False) }}
                     {{ forms['edit_vendor'].vendor_id(id='editVendorId', hidden='', class_='d-none', value=vendor_id) }}
                     <div class="mb-3">
-                        {{ forms['edit_vendor'].vendor_name.label(id=False, class_='form-label', for='editVendorName') }}
-                        {{ forms['edit_vendor'].vendor_name(id='editVendorName', class_='form-control', value=ns.vendor.name) }}
+                        {{ forms['edit_vendor'].vendor_name.label(id=False, class_='form-label', for='editVendorName')
+                        }}
+                        {{ forms['edit_vendor'].vendor_name(id='editVendorName', class_='form-control',
+                        value=ns.vendor.name) }}
                     </div>
                     <div class="mb-3 form-check">
-                        {{ forms['edit_vendor'].enabled(id='editVendorEnabled',class_='form-check-input', checked=ns.vendor.enabled) }}
-                        {{ forms['edit_vendor'].enabled.label(id=False, class_='form-check-label', for='editVendorEnabled') }}
+                        {{ forms['edit_vendor'].enabled(id='editVendorEnabled',class_='form-check-input',
+                        checked=ns.vendor.enabled) }}
+                        {{ forms['edit_vendor'].enabled.label(id=False, class_='form-check-label',
+                        for='editVendorEnabled') }}
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -349,23 +377,23 @@
 <script>
     $(document).ready(function () {
         {% if current_user.role.name in ('admin', 'supervisor') %}
-            $("#switchHubFormSelect").change(function(){
-                $(this).parent('form').submit();
-            });
+        $("#switchHubFormSelect").change(function () {
+            $(this).parent('form').submit();
+        });
         {% endif %}
-        $("#switchVendorFormSelect").change(function(){
+        $("#switchVendorFormSelect").change(function () {
             $(this).parent('form').submit();
         });
         {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
-            $('#uploadProductsButton').on('change',()=>{
-                $('#uploadProductsForm').submit();
-            });
-            $('#uploadImagesButton').on('change',()=>{
-                $('#uploadImagesForm').submit();
-            });
-            $('.uploadProductImageButton').on('change', function() {
-                $(this).parent('form').submit();
-            });
+        $('#uploadProductsButton').on('change', () => {
+            $('#uploadProductsForm').submit();
+        });
+        $('#uploadImagesButton').on('change', () => {
+            $('#uploadImagesForm').submit();
+        });
+        $('.uploadProductImageButton').on('change', function () {
+            $(this).parent('form').submit();
+        });
         {% endif %}
         $("#productFilter").on("keyup", function () {
             let value = $(this).val().toLowerCase();
@@ -375,10 +403,10 @@
         });
         $(".selectable").click(function (event) {
             let productId = $(this).attr('data-id');
-            let modalElement = document.getElementById('descriptionModal'+productId);
+            let modalElement = document.getElementById('descriptionModal' + productId);
             let descriptionModal = bootstrap.Modal.getInstance(modalElement);
             if (!descriptionModal)
-                descriptionModal= new bootstrap.Modal(modalElement, {});
+                descriptionModal = new bootstrap.Modal(modalElement, {});
             descriptionModal.show();
         });
     });

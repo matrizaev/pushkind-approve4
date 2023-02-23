@@ -1,24 +1,28 @@
-from copy import copy
-from datetime import datetime, timezone, date, timedelta
 import os
+from copy import copy
+from datetime import date, datetime, timedelta, timezone
 
-from flask import render_template, redirect, url_for, flash, Response, request
+from app.api.hub import CategoryApi
+from app.api.order import OrderApi
+from app.api.project import CashflowApi, IncomeApi, ProjectApi
+from app.api.user import UserApi
+from app.main import bp
+from app.main.forms import (
+    ApproverForm,
+    ChangeQuantityForm,
+    InitiativeForm,
+    LeaveCommentForm,
+    OrderApprovalForm,
+    SplitOrderForm,
+)
+from app.main.utils import GetNewOrderNumber, SendEmail1C, send_email_notification
+from app.utils import first, role_forbidden, role_required
+from flask import Response, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from openpyxl import load_workbook
-from openpyxl.writer.excel import save_virtual_workbook
+
+# from openpyxl.writer.excel import save_virtual_workbook
 from sqlalchemy.orm.attributes import flag_modified
-
-from app.main import bp
-from app.main.forms import LeaveCommentForm, OrderApprovalForm, ChangeQuantityForm, InitiativeForm
-from app.main.forms import ApproverForm, SplitOrderForm
-from app.utils import role_required, role_forbidden
-from app.main.utils import SendEmail1C, GetNewOrderNumber, send_email_notification
-from app.api.order import OrderApi
-from app.api.project import IncomeApi, CashflowApi, ProjectApi
-from app.api.hub import CategoryApi
-from app.api.user import UserApi
-from app.utils import first
-
 
 ################################################################################
 # Approve page

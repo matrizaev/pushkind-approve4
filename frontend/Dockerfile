@@ -1,4 +1,4 @@
-FROM python:slim
+FROM python:3.11-slim
 
 ENV FLASK_APP run.py
 
@@ -9,13 +9,14 @@ RUN apt-get -y install default-libmysqlclient-dev gcc
 RUN useradd -m pushkind
 WORKDIR /home/pushkind
 USER pushkind
+ENV PATH="$PATH:/home/pushkind/.local/bin"
 
-RUN python3 -m venv venv
-RUN venv/bin/python3 -m pip install --upgrade pip
-RUN venv/bin/python3 -m pip install build wheel setuptools
+RUN python -m pip install --upgrade pip
+RUN python -m pip install build wheel setuptools poetry
 
-COPY --chown=pushkind:pushkind requirements.txt ./
-RUN venv/bin/pip install -r requirements.txt
+COPY --chown=pushkind:pushkind poetry.toml ./
+COPY --chown=pushkind:pushkind pyproject.toml ./
+RUN poetry install
 
 COPY --chown=pushkind:pushkind app app
 COPY --chown=pushkind:pushkind run.py config.py boot.sh consumer.py ./

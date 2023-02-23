@@ -1,20 +1,27 @@
 from datetime import datetime, timezone
 
-from flask import render_template, flash, request, redirect, url_for, Response
-from flask import current_app
-from flask_login import current_user, login_required
-from openpyxl import Workbook
-from openpyxl.writer.excel import save_virtual_workbook
-
-from app.email import SendEmail
-from app.main import bp
-from app.utils import role_forbidden, role_required
-from app.main.utils import send_email_notification, GetNewOrderNumber
-from app.utils import get_filter_timestamps
-from app.main.forms import MergeOrdersForm, SaveOrdersForm
+from app.api.hub import CategoryApi
 from app.api.order import OrderApi
 from app.api.project import ProjectApi
-from app.api.hub import CategoryApi
+from app.email import SendEmail
+from app.main import bp
+from app.main.forms import MergeOrdersForm, SaveOrdersForm
+from app.main.utils import GetNewOrderNumber, send_email_notification
+from app.utils import get_filter_timestamps, role_forbidden, role_required
+from flask import (
+    Response,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from flask_login import current_user, login_required
+from openpyxl import Workbook
+
+# from openpyxl.writer.excel import save_virtual_workbook
+
 
 
 ################################################################################

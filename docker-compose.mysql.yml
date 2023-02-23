@@ -1,0 +1,55 @@
+version: '3'
+services:
+  event-service:
+    depends_on:
+      - database
+    environment:
+      - DB_URL
+
+  frontend:
+    depends_on:
+      - database
+
+  hub-service:
+    depends_on:
+      - database
+    environment:
+      - DB_URL
+
+  order-service:
+    depends_on:
+      - database
+    environment:
+      - DB_URL
+
+  project-service:
+    depends_on:
+      - database
+    environment:
+      - DB_URL
+
+  tender-service:
+    depends_on:
+      - database
+    environment:
+      - DB_URL
+
+  user-service:
+    depends_on:
+      - database
+    environment:
+      - DB_URL
+
+  database:
+    image: mysql:latest
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+    restart: unless-stopped
+
+volumes:
+  db:
+
+
