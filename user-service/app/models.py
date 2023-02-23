@@ -1,13 +1,12 @@
 import enum
-from time import time
 from hashlib import md5
+from time import time
 
 import jwt
-from flask import current_app
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.sql import expression, func
-
 from app import db
+from flask import current_app
+from sqlalchemy.sql import expression, func, text
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 class UserRoles(enum.IntEnum):
@@ -260,11 +259,11 @@ class UserCategory(db.Model):
     def cleanup_unused():
         if current_app.config['SQLALCHEMY_DATABASE_URI'].lower().startswith('mysql'):
             db.session.execute(
-                'DELETE user_category FROM user_category INNER JOIN user ON user.id = user_category.user_id WHERE user.role NOT IN ("validator", "purchaser")',
+                text('DELETE user_category FROM user_category INNER JOIN user ON user.id = user_category.user_id WHERE user.role NOT IN ("validator", "purchaser")'),
             )
         else:
             db.session.execute(
-                'DELETE FROM user_category WHERE ROWID IN (SELECT user_category.ROWID FROM user_category INNER JOIN user ON user.id = user_category.user_id WHERE user.role NOT IN ("validator", "purchaser"))',
+                text('DELETE FROM user_category WHERE ROWID IN (SELECT user_category.ROWID FROM user_category INNER JOIN user ON user.id = user_category.user_id WHERE user.role NOT IN ("validator", "purchaser"))'),
             )
 
 
@@ -277,9 +276,9 @@ class UserProject(db.Model):
     def cleanup_unused():
         if current_app.config['SQLALCHEMY_DATABASE_URI'].lower().startswith('mysql'):
             db.session.execute(
-                'DELETE user_project FROM user_project INNER JOIN user ON user.id = user_project.user_id WHERE user.role NOT IN ("validator", "purchaser")',
+                text('DELETE user_project FROM user_project INNER JOIN user ON user.id = user_project.user_id WHERE user.role NOT IN ("validator", "purchaser")'),
             )
         else:
             db.session.execute(
-                'DELETE FROM user_project WHERE ROWID IN (SELECT user_project.ROWID FROM user_project INNER JOIN user ON user.id = user_project.user_id WHERE user.role NOT IN ("validator", "purchaser"))',
+                text('DELETE FROM user_project WHERE ROWID IN (SELECT user_project.ROWID FROM user_project INNER JOIN user ON user.id = user_project.user_id WHERE user.role NOT IN ("validator", "purchaser"))'),
             )

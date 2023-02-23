@@ -1,8 +1,8 @@
 from json.decoder import JSONDecodeError
 
+import requests
 from flask import abort, flash
 from flask_login import current_user
-import requests
 
 
 class EntityApi():
@@ -83,12 +83,12 @@ class EntityApi():
 
 
     @classmethod
-    def delete_entity(cls, entity_id) -> dict:
+    def delete_entity(cls, entity_id, **params) -> dict:
         headers = {
             'Authorization': f'Bearer {current_user.token}'
         }
         try:
-            response = requests.delete(f'http://{cls.__service_host__}/api/{cls.__entity_name__}/{entity_id}', headers=headers)
+            response = requests.delete(f'http://{cls.__service_host__}/api/{cls.__entity_name__}/{entity_id}', params=params, headers=headers)
         except requests.exceptions.ConnectionError:
             abort(503)
         try:

@@ -1,16 +1,15 @@
 from base64 import b64decode
 from io import BytesIO
 
-from flask import request, jsonify
-from sqlalchemy import func
 import pandas as pd
-
 from app import db
 from app.api import bp
-from app.models import Vendor, Product, Category, AppSettings
 from app.api.auth import token_auth
-from app.producer import post_entity_changed
 from app.api.errors import error_response
+from app.models import AppSettings, Category, Product, Vendor
+from app.producer import post_entity_changed
+from flask import jsonify, request
+from sqlalchemy import func
 
 
 @bp.route('/hubs', methods=['GET'])
@@ -303,16 +302,22 @@ def delete_category(category_id):
 
 
 @bp.route('/product/<int:product_id>', methods=['DELETE'])
+@bp.route('/product/', methods=['DELETE'], defaults={'product_id': None})
 @token_auth.login_required(role=['admin', 'vendor', 'validator', 'purchaser'])
 def delete_product(product_id):
     current_user = token_auth.current_user()
+    args = request.args.copy()
     hub = Vendor.query.filter_by(id=current_user['hub_id'], hub_id=None).first()
     if hub is None:
         return error_response(404, 'Хаб не существует.')
-    product = Product.query.filter_by(id=product_id).join(Vendor).filter_by(hub_id=current_user['hub_id']).first()
-    if product is None:
+    products = Product.query
+    if product_id:
+        products = products.filter_by(id=product_id, **args)
+    products = products.join(Vendor).filter_by(hub_id=current_user['hub_id']).all()
+    if not products:
         return error_response(404, 'Товар не существует.')
-    db.session.delete(product)
+    for product in products:
+        db.session.delete(product)
     db.session.commit()
     return jsonify({'status': 'success'}), 200
 

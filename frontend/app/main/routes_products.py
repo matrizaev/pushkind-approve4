@@ -1,23 +1,34 @@
-from base64 import b64encode
 import io
-from zipfile import ZipFile
+from base64 import b64encode
 from pathlib import Path
+from zipfile import ZipFile
 
-from flask import redirect, render_template, request, url_for, flash, current_app
-from flask import send_file, session
-from flask_login import current_user, login_required
 import pandas as pd
-
-from app.main import bp
-from app.utils import role_forbidden, role_required
-from app.main.forms import UploadProductsForm, UploadImagesForm
-from app.main.forms import UploadProductImageForm
-from app.main.forms import AddHubForm, AddVendorForm, EditHubForm, EditVendorForm
-from app.api.hub import HubApi, ProductApi, CategoryApi, VendorApi
+from app.api.hub import CategoryApi, HubApi, ProductApi, VendorApi
 from app.api.user import UserApi
-from app.producer import post_upload_images, get_upload_image_queue_size
-from app.utils import first
-
+from app.main import bp
+from app.main.forms import (
+    AddHubForm,
+    AddVendorForm,
+    EditHubForm,
+    EditVendorForm,
+    UploadImagesForm,
+    UploadProductImageForm,
+    UploadProductsForm,
+)
+from app.producer import get_upload_image_queue_size, post_upload_images
+from app.utils import first, role_forbidden, role_required
+from flask import (
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    session,
+    url_for,
+)
+from flask_login import current_user, login_required
 
 ################################################################################
 # Vendor products page
@@ -407,4 +418,27 @@ def switch_hub():
             flash('Хаб успешно изменён.')
             token = UserApi.get_token(None, None, current_user.token)
             session['_user_id'] = token
+    return redirect(url_for('main.show_vendors'))
+
+
+@bp.route('/products/remove', methods=['POST'])
+@login_required
+@role_forbidden(['default', 'initiative', 'supervisor'])
+def remove_products():
+    if current_user.role.name == 'vendor':
+        vendor = first(VendorApi.get_entities())
+    else:
+        vendor_id = request.args.get('vendor_id', type=int)
+        vendor = first(VendorApi.get_entities(id=vendor_id))
+
+    if not vendor:
+        flash('Такой поставщик не найден.')
+        return redirect(url_for('main.show_vendors'))
+
+    vendor_id = vendor['id']
+    response = ProductApi.delete_entity('', vendor_id=vendor_id)
+    if response is None:
+        flash('Не удалось удалить список товаров поставщика.')
+    else:
+        flash('Товары поставщика успешно удалены.')
     return redirect(url_for('main.show_vendors'))
