@@ -13,4 +13,7 @@ else
     mv tmp ${revision}
     flask db upgrade
 fi
-flask bootstrap init admin@example.com 123456
+if [ ! -z "$1" ] && [ ! -z "$2" ]
+then
+    flask bootstrap init "$1" "$2"
+fi

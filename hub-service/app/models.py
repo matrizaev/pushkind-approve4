@@ -1,6 +1,5 @@
-from sqlalchemy.sql import expression
-
 from app import db
+from sqlalchemy.sql import expression
 
 
 class Vendor(db.Model):
@@ -120,6 +119,7 @@ class Product(db.Model):
         default=False,
         server_default=expression.false()
     )
+    options = db.Column(db.JSON(), nullable=True)
     category = db.relationship('Category', back_populates='products')
     vendor = db.relationship('Vendor', back_populates='products')
 
@@ -137,6 +137,7 @@ class Product(db.Model):
             'measurement': self.measurement,
             'description': self.description,
             'input_required': self.input_required,
+            'options': self.options,
             'category': {
                 'name': self.category.name,
                 'code': self.category.code
@@ -176,13 +177,20 @@ class AppSettings(db.Model):
         default=0,
         server_default='0'
     )
+    single_category_orders = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=expression.false()
+    )
     hub = db.relationship('Vendor', back_populates='settings')
 
     def to_dict(self):
         return {
             'notify_1C': self.notify_1C,
             'email_1C': self.email_1C,
-            'order_id_bias': self.order_id_bias
+            'order_id_bias': self.order_id_bias,
+            'single_category_orders': self.single_category_orders
         }
 
     def from_dict(self, data):

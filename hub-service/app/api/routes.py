@@ -6,6 +6,7 @@ from app import db
 from app.api import bp
 from app.api.auth import token_auth
 from app.api.errors import error_response
+from app.api.utils import products_excel_to_df
 from app.models import AppSettings, Category, Product, Vendor
 from app.producer import post_entity_changed
 from flask import jsonify, request
@@ -186,53 +187,20 @@ def post_product():
     if current_user['role']['name'] == 'vendor' and vendor.email != current_user['email']:
         return error_response(403)
     if data.get('products') is not None:
+
         buf = BytesIO(b64decode(data['products'].encode()))
         buf.seek(0)
-        df = pd.read_excel(
-            buf,
-            engine='openpyxl'
-        )
-        df.columns = df.columns.str.lower()
-        if not all(key in df.columns for key in ('name', 'sku', 'price', 'category', 'measurement', 'description')):
-            return error_response(400, 'Необходимые поля отсутствуют.')
-        df.drop(
-            df.columns.difference([
-                'name',
-                'sku',
-                'price',
-                'measurement',
-                'category',
-                'description'
-            ]),
-            axis=1,
-            inplace=True
-        )
-        df = df.astype(
-            dtype = {
-                'name': str,
-                'sku': str,
-                'price': float,
-                'measurement': str,
-                'description': str,
-                'category': str
-            }
-        )
-        df['vendor_id'] = vendor.id
         categories = Category.query.filter_by(hub_id=current_user['hub_id']).all()
-        categories = {c.name.lower():c.id for c in categories}
-        df['cat_id'] = df['category'].apply(lambda x: categories.get(x.lower()))
-        df.drop(['category'], axis=1, inplace=True)
-        df.dropna(subset=['cat_id', 'name', 'sku', 'price', 'measurement'], inplace=True)
-        df['name'] = df['name'].str.slice(0,128)
-        df['sku'] = df['sku'].str.slice(0,128)
-        df['measurement'] = df['measurement'].str.slice(0,128)
-        df['description'] = df['description'].str.slice(0,512)
-        df['image'] = df["sku"].apply(lambda x: f'/static/upload/vendor{vendor.id}/{x}')
+        categories = {c.name.lower(): c.id for c in categories}
+        df = products_excel_to_df(buf, vendor.id, categories)
+        skus = df.sku.values.tolist()
+        Product.query.filter_by(vendor_id=vendor.id).filter(
+            Product.sku.in_(skus)
+        ).delete()
+        db.session.commit()
+        df.to_sql(name="product", con=db.engine, if_exists="append", index=False)
+        db.session.commit()
 
-        Product.query.filter_by(vendor_id=vendor.id).delete()
-        db.session.commit()
-        df.to_sql(name = 'product', con = db.engine, if_exists = 'append', index = False)
-        db.session.commit()
         return jsonify({'status': 'success'}), 201
     else:
         if not all(data.get(key) is not None for key in ('name', 'sku', 'price', 'category', 'measurement', 'description')):
@@ -251,7 +219,8 @@ def post_product():
             price=data['price'],
             image=f'/static/upload/vendor{vendor.id}/{data["sku"]}',
             measurement=data['measurement'],
-            description=data['description']
+            description=data['description'],
+            options=data.get('options')
         )
         db.session.add(product)
         db.session.commit()
