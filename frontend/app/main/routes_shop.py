@@ -1,21 +1,19 @@
-from flask import render_template, redirect, url_for, flash
-from flask_login import login_required
-
+from app.api.hub import AppSettingsApi, CategoryApi, ProductApi, VendorApi
+from app.api.order import OrderApi
+from app.api.project import OrderLimitApi, ProjectApi, SiteApi
+from app.api.user import ResponsibilityApi
 from app.main import bp
-from app.utils import role_required
 from app.main.forms import CreateOrderForm
 from app.main.utils import send_email_notification
-from app.api.project import ProjectApi, OrderLimitApi, SiteApi
-from app.api.hub import CategoryApi, ProductApi, VendorApi, AppSettingsApi
-from app.api.order import OrderApi
-from app.api.user import ResponsibilityApi
-from app.utils import first
+from app.utils import first, role_required
+from flask import flash, redirect, render_template, url_for
+from flask_login import login_required
 
 
 @bp.route('/shop/')
 @login_required
 @role_required(['initiative', 'purchaser', 'admin'])
-def show_categories():
+def shop_categories():
     return render_template(
         'shop_categories.html',
         projects=ProjectApi.get_entities() or [],
@@ -32,7 +30,7 @@ def shop_products(cat_id, vendor_id):
 
     category = first(CategoryApi.get_entities(id=cat_id))
     if category is None:
-        return redirect(url_for('main.show_categories'))
+        return redirect(url_for('main.shop_categories'))
 
     if vendor_id is not None:
         products = ProductApi.get_entities(cat_id=cat_id, vendor_id=vendor_id) or []
@@ -84,7 +82,19 @@ def shop_order():
         cart = form.cart.data
         for item in cart:
             if item['product'] in products:
+                product_options = products[item['product']].get('options', {})
+                item_options = item.pop('options', {})
                 item |= products[item['product']]
+                item['options'] = []
+                if product_options and item_options:
+                    for opt, values in product_options.items():
+                        if (
+                            opt in item_options
+                            and item_options[opt] in values
+                        ):
+                            item["options"].append(
+                                {"value": item_options[opt], "name": opt}
+                            )
             else:
                 del item
 
@@ -96,8 +106,11 @@ def shop_order():
         responsibilities = ResponsibilityApi.get_entities(project=project['name'], categories=categories)
 
         app_settings = AppSettingsApi.get_entities()
-        category = first(CategoryApi.get_entities(name=first(categories)))
+        if app_settings['single_category_orders'] and len(categories) > 1:
+            flash('Заявки с несколькими категориями запрещены.')
+            return redirect(url_for('main.shop_cart'))
 
+        category = first(CategoryApi.get_entities(name=first(categories)))
         order = OrderApi.post_entity(
             project=project['name'],
             site=site['name'],

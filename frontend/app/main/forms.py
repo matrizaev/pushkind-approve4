@@ -519,6 +519,9 @@ class CartItemForm(Form):
     text = TextAreaField(
         'Текст баннера'
     )
+    options = JSONField(
+        'Опции'
+    )
     def validate_quantity(self, quantity):
         if quantity.data < 0:
             raise ValidationError('Количество не может быть меньше нуля.')
