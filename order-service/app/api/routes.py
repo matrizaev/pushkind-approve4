@@ -1,13 +1,11 @@
 from datetime import datetime, timezone
 
-from flask import request, jsonify
-from sqlalchemy import func
-
 from app import db
 from app.api import bp
-from app.models import Order, OrderStatus, OrderVendor, OrderPurchaser, OrderPositionValidator
 from app.api.auth import token_auth
 from app.api.errors import error_response
+from app.models import Order, OrderPurchaser, OrderStatus, OrderValidator, OrderVendor
+from flask import jsonify, request
 
 
 @bp.route('/orders', methods=['GET'])
@@ -36,7 +34,7 @@ def get_orders():
     elif current_user['role']['name'] == 'purchaser':
         orders = orders.join(OrderPurchaser).filter(OrderPurchaser.email == current_user['email'])
     elif current_user['role']['name'] == 'validator':
-        orders = orders.join(OrderPositionValidator).filter(OrderPositionValidator.email == current_user['email'])
+        orders = orders.join(OrderValidator).filter(OrderValidator.email == current_user['email'])
     elif current_user['role']['name'] == 'vendor':
         orders = orders.join(OrderVendor).filter(OrderVendor.email == current_user['email'])
     orders = orders.order_by(Order.timestamp.desc()).all()

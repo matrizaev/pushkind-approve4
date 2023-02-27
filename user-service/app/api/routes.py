@@ -1,37 +1,38 @@
-from datetime import datetime, timezone
 from collections import Counter
-
-from flask import request, jsonify
-from sqlalchemy import or_
+from datetime import datetime, timezone
 
 from app import db
 from app.api import bp
+from app.api.auth import multi_auth, token_auth
 from app.api.errors import error_response
-from app.models import User, UserCategory, UserProject, UserRoles, Position
-from app.api.auth import token_auth, multi_auth
+from app.models import Position, User, UserCategory, UserProject, UserRoles
 from app.producer import post_entity_changed
+from flask import jsonify, request
+from sqlalchemy import or_
 
 
-@bp.route('/token', methods=['GET'])
+@bp.route("/token", methods=["GET"])
 @multi_auth.login_required
 def get_token():
     token = multi_auth.current_user().get_token()
     multi_auth.last_seen = datetime.now(tz=timezone.utc)
     db.session.commit()
-    return jsonify({'token': token})
+    return jsonify({"token": token})
 
 
-@bp.route('/users', methods=['GET'])
+@bp.route("/users", methods=["GET"])
 @token_auth.login_required
 def get_users():
     current_user = token_auth.current_user()
     args = request.args.copy()
-    emails = args.poplist('emails')
+    emails = args.poplist("emails")
     if current_user.hub_id is None:
-        return error_response(404, 'Хаб не существует.')
+        return error_response(404, "Хаб не существует.")
     users = User.query
     if current_user.role == UserRoles.admin:
-        users = users.filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
+        users = users.filter(
+            or_(User.hub_id == current_user.hub_id, User.hub_id == None)
+        )
     else:
         users = users.filter_by(hub_id=current_user.hub_id)
     users = users.filter_by(**args)
@@ -41,18 +42,16 @@ def get_users():
     return jsonify([u.to_dict() for u in users]), 200
 
 
-@bp.route('/user/<int:user_id>', methods=['DELETE'])
+@bp.route("/user/<int:user_id>", methods=["DELETE"])
 @token_auth.login_required
 def delete_user(user_id):
     current_user = token_auth.current_user()
     if current_user.hub_id is None:
-        return error_response(404, 'Хаб не существует.')
+        return error_response(404, "Хаб не существует.")
     if current_user.role != UserRoles.admin:
         user_id = current_user.id
     user = (
-        User
-        .query
-        .filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
+        User.query.filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
         .filter_by(id=user_id)
         .first()
     )
@@ -60,57 +59,52 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
         if user.role in (UserRoles.validator, UserRoles.purchaser):
-            post_entity_changed(
-                user.hub_id,
-                'user',
-                user.to_dict(),
-                'removed'
-            )
-        return jsonify({'status': 'success'}), 200
+            post_entity_changed(user.hub_id, "user", user.to_dict(), "removed")
+        return jsonify({"status": "success"}), 200
     else:
-        return error_response(404, 'Пользователь не существует.')
+        return error_response(404, "Пользователь не существует.")
 
 
-@bp.route('/roles', methods=['GET'])
+@bp.route("/roles", methods=["GET"])
 @token_auth.login_required
 def get_roles():
     current_user = token_auth.current_user()
     if current_user.hub_id is None:
-        return error_response(404, 'Хаб не существует.')
+        return error_response(404, "Хаб не существует.")
     return jsonify([role.to_dict() for role in UserRoles]), 200
 
 
-@bp.route('/positions', methods=['GET'])
+@bp.route("/positions", methods=["GET"])
 @token_auth.login_required
 def get_positions():
     current_user = token_auth.current_user()
     if current_user.hub_id is None:
-        return error_response(404, 'Хаб не существует.')
+        return error_response(404, "Хаб не существует.")
     positions = Position.query.filter_by(hub_id=current_user.hub_id).all()
     return jsonify([pos.to_dict() for pos in positions]), 200
 
 
-@bp.route('/responsibilities', methods=['GET'])
+@bp.route("/responsibilities", methods=["GET"])
 @token_auth.login_required
 def get_responsibilities():
     current_user = token_auth.current_user()
     if current_user.hub_id is None:
-        return error_response(404, 'Хаб не существует.')
-    categories = request.args.getlist('categories')
-    project = request.args.get('project', None)
+        return error_response(404, "Хаб не существует.")
+    categories = request.args.getlist("categories")
+    project = request.args.get("project", None)
     positions = Position.get_responsibility(current_user.hub_id, project, categories)
     return jsonify(positions), 200
 
 
-@bp.route('/user', methods=['POST'])
+@bp.route("/user", methods=["POST"])
 def post_user():
     data = request.get_json() or {}
-    if data.get('email') is None or data.get('password') is None:
-        return error_response(400, 'Необходимые поля отсутствуют.')
-    email = str(data['email']).lower()
+    if data.get("email") is None or data.get("password") is None:
+        return error_response(400, "Необходимые поля отсутствуют.")
+    email = str(data["email"]).lower()
     user = User.query.filter_by(email=email).first()
     if user is not None:
-        return error_response(409, 'Адрес электронной почты занят.')
+        return error_response(409, "Адрес электронной почты занят.")
     user = User(email=email, registered=datetime.now(tz=timezone.utc))
     user.from_dict(data)
     db.session.add(user)
@@ -118,27 +112,33 @@ def post_user():
     return jsonify(user.to_dict()), 201
 
 
-@bp.route('/user/<int:user_id>', methods=['PUT'])
+@bp.route("/user/<int:user_id>", methods=["PUT"])
 @token_auth.login_required
 def put_user(user_id):
     current_user = token_auth.current_user()
     data = request.get_json() or {}
-    if current_user.hub_id is None and data.get('hub_id') is None:
-        return error_response(404, 'Хаб не существует.')
+    if current_user.hub_id is None and data.get("hub_id") is None:
+        return error_response(404, "Хаб не существует.")
     if current_user.role != UserRoles.admin:
         user_id = current_user.id
-        data.pop('role', None)
-    user = User.query.filter_by(id=user_id).filter(or_(User.hub_id==current_user.hub_id, User.hub_id==None)).first()
+        data.pop("role", None)
+    user = (
+        User.query.filter_by(id=user_id)
+        .filter(or_(User.hub_id == current_user.hub_id, User.hub_id == None))
+        .first()
+    )
     if user is None:
-        return error_response(404, 'Пользователь не существует.')
+        return error_response(404, "Пользователь не существует.")
     if current_user.role in (UserRoles.admin, UserRoles.supervisor):
-        user.hub_id = data.get('hub_id', current_user.hub_id)
+        user.hub_id = data.get("hub_id", current_user.hub_id)
 
     responsibility_changed = (
-        user.role == UserRoles.validator and user.position is not None and (
-            Counter(user.categories) != Counter(data.get('categories', user.categories)) or
-            Counter(user.projects) != Counter(data.get('projects', user.projects)) or
-            user.position.name != data.get('position', user.position.name)
+        user.role == UserRoles.validator
+        and user.position is not None
+        and (
+            Counter(user.categories) != Counter(data.get("categories", user.categories))
+            or Counter(user.projects) != Counter(data.get("projects", user.projects))
+            or user.position.name != data.get("position", user.position.name)
         )
     )
     user.from_dict(data)
@@ -148,10 +148,5 @@ def put_user(user_id):
     UserProject.cleanup_unused()
     db.session.commit()
     if responsibility_changed:
-        post_entity_changed(
-            user.hub_id,
-            'user',
-            user.to_dict(),
-            'changed'
-        )
+        post_entity_changed(user.hub_id, "user", user.to_dict(), "changed")
     return jsonify(user.to_dict()), 200

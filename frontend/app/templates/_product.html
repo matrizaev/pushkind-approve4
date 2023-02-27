@@ -3,10 +3,25 @@
     <div class="col-auto">
         <img src="{{ product['image'] or config['PLACEHOLDER_IMAGE'] }}" height="96" width="96" alt="thumbnail">
     </div>
-    <div class="col-6 overflow-hidden">
+    <div class="col col-sm-6 overflow-hidden">
         <h5>{{ product['name'] }}</h5>
-        <small>Артикул: {{ product['sku'] }}</small><br>
-        {{ product.text }}
+        <div class="row">
+            <div class="col small">
+                Артикул: {{ product['sku'] }}
+            </div>
+        </div>
+        {% if 'options' in product %}
+        <div class="row">
+            <div class="col small">
+                {% for option in product['options'][1:] %}
+                {{ option['name'] }}:&nbsp;<strong>{{ option['value'] }}</strong>{% if not loop.last %},{%endif%}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if product.text %}
+        Комментарий:&nbsp;<strong>{{product.text}}</strong>
+        {% endif %}
     </div>
     <div class="col-sm overflow-hidden pt-sm-4">
         {{ product.vendor.name }}

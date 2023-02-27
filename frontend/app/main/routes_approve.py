@@ -28,6 +28,7 @@ from sqlalchemy.orm.attributes import flag_modified
 # Approve page
 ################################################################################
 
+
 @bp.app_template_filter()
 def intersect(a, b):
     return set(a).intersection(set(b))
@@ -58,21 +59,19 @@ def GetOrder(order_id):
     # return order
 
 
-@bp.route('/orders/<int:order_id>')
+@bp.route("/orders/<int:order_id>")
 @login_required
-@role_forbidden(['default'])
+@role_forbidden(["default"])
 def show_order(order_id):
     order = first(OrderApi.get_entities(id=order_id))
     if order is None:
-        flash('Заявка с таким номером не найдена.')
-        return redirect(url_for('main.show_index'))
+        flash("Заявка с таким номером не найдена.")
+        return redirect(url_for("main.show_index"))
 
-    reviewers = [order['initiative']]
-    reviewers.extend(order['purchasers'])
-    for appr in order['approvals']:
-        reviewers.extend(appr['validators'])
-
-    print(reviewers)
+    reviewers = [order["initiative"]]
+    reviewers.extend(order["purchasers"])
+    # for appr in order["approvals"]:
+    #     reviewers.extend(appr["validators"])
 
     comment_form = LeaveCommentForm()
     initiative_form = InitiativeForm()
@@ -83,39 +82,43 @@ def show_order(order_id):
     projects = ProjectApi.get_entities()
     categories = CategoryApi.get_entities()
 
-    comment_form.notify_reviewers.choices = [(u['email'], u['name'] or u['email']) for u in reviewers]
+    comment_form.notify_reviewers.choices = [
+        (u["email"], u["name"] or u["email"]) for u in reviewers
+    ]
 
-    initiative_form.categories.choices = [c['name'] for c in categories]
-    initiative_form.categories.default = order['categories']
+    initiative_form.categories.choices = [c["name"] for c in categories]
+    initiative_form.categories.default = order["categories"]
 
-    approver_form.income_statement.choices = [(i['name'], i['name']) for i in incomes]
-    approver_form.cashflow_statement.choices = [(c['name'], c['name']) for c in cashflows]
+    approver_form.income_statement.choices = [(i["name"], i["name"]) for i in incomes]
+    approver_form.cashflow_statement.choices = [
+        (c["name"], c["name"]) for c in cashflows
+    ]
 
-    if order['income'] is None:
-        approver_form.income_statement.choices.append((0, 'Выберите БДР...'))
+    if order["income"] is None:
+        approver_form.income_statement.choices.append((0, "Выберите БДР..."))
         approver_form.income_statement.default = 0
     else:
-        approver_form.income_statement.default = order['income']
+        approver_form.income_statement.default = order["income"]
 
-    if order['cashflow'] is None:
-        approver_form.cashflow_statement.choices.append((0, 'Выберите БДДС...'))
+    if order["cashflow"] is None:
+        approver_form.cashflow_statement.choices.append((0, "Выберите БДДС..."))
         approver_form.cashflow_statement.default = 0
     else:
-        approver_form.cashflow_statement.default = order['cashflow']
+        approver_form.cashflow_statement.default = order["cashflow"]
 
-    initiative_form.project.choices = [(p['name'], p['name']) for p in projects]
-    if order['site'] is None:
-        initiative_form.project.choices.append((0, 'Выберите проект...'))
+    initiative_form.project.choices = [(p["name"], p["name"]) for p in projects]
+    if order["site"] is None:
+        initiative_form.project.choices.append((0, "Выберите проект..."))
         initiative_form.project.default = 0
-        initiative_form.site.choices = [(0, 'Выберите объект...')]
+        initiative_form.site.choices = [(0, "Выберите объект...")]
         initiative_form.site.default = 0
     else:
-        initiative_form.project.default = order['project']
-        initiative_form.site.choices = [order['site']]
-        initiative_form.site.default = order['site']
+        initiative_form.project.default = order["project"]
+        initiative_form.site.choices = [order["site"]]
+        initiative_form.site.default = order["site"]
 
     return render_template(
-        'approve.html',
+        "approve.html",
         order=order,
         projects=projects,
         comment_form=comment_form,
@@ -123,15 +126,15 @@ def show_order(order_id):
         quantity_form=ChangeQuantityForm(),
         initiative_form=initiative_form,
         approver_form=approver_form,
-        split_form=SplitOrderForm()
+        split_form=SplitOrderForm(),
     )
 
 
-@bp.route('/orders/split/<int:order_id>', methods=['POST'])
+@bp.route("/orders/split/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative', 'purchaser'])
+@role_required(["admin", "initiative", "purchaser"])
 def SplitOrder(order_id):
-    return '<p>SplitOrder</p>'
+    return "<p>SplitOrder</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -232,11 +235,11 @@ def SplitOrder(order_id):
     # return redirect(url_for('main.show_index'))
 
 
-@bp.route('/orders/duplicate/<int:order_id>')
+@bp.route("/orders/duplicate/<int:order_id>")
 @login_required
-@role_required(['admin', 'initiative', 'purchaser'])
+@role_required(["admin", "initiative", "purchaser"])
 def DuplicateOrder(order_id):
-    return '<p>DuplicateOrder</p>'
+    return "<p>DuplicateOrder</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -299,11 +302,11 @@ def DuplicateOrder(order_id):
     # return redirect(url_for('main.show_order', order_id=new_order.id))
 
 
-@bp.route('/orders/quantity/<int:order_id>', methods=['POST'])
+@bp.route("/orders/quantity/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative', 'purchaser'])
+@role_required(["admin", "initiative", "purchaser"])
 def SaveQuantity(order_id):
-    return '<p>SaveQuantity</p>'
+    return "<p>SaveQuantity</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -369,11 +372,11 @@ def SaveQuantity(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/excel1/<int:order_id>')
+@bp.route("/orders/excel1/<int:order_id>")
 @login_required
-@role_forbidden(['default'])
+@role_forbidden(["default"])
 def GetExcelReport1(order_id):
-    return '<p>GetExcelReport1</p>'
+    return "<p>GetExcelReport1</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -443,11 +446,11 @@ def GetExcelReport1(order_id):
     # )
 
 
-@bp.route('/orders/excel2/<int:order_id>')
+@bp.route("/orders/excel2/<int:order_id>")
 @login_required
-@role_forbidden(['default'])
+@role_forbidden(["default"])
 def GetExcelReport2(order_id):
-    return '<p>GetExcelReport2</p>'
+    return "<p>GetExcelReport2</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -498,11 +501,11 @@ def GetExcelReport2(order_id):
     # )
 
 
-@bp.route('/orders/dealdone/<int:order_id>', methods=['POST'])
+@bp.route("/orders/dealdone/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'purchaser'])
+@role_required(["admin", "purchaser"])
 def SetDealDone(order_id):
-    return '<p>SetDealDone</p>'
+    return "<p>SetDealDone</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -622,11 +625,11 @@ def Prepare1CReport(order, excel_date):
     # return None
 
 
-@bp.route('/orders/excel1C/<int:order_id>')
+@bp.route("/orders/excel1C/<int:order_id>")
 @login_required
-@role_forbidden(['default'])
+@role_forbidden(["default"])
 def GetExcelReport1C(order_id):
-    return '<p>GetExcelReport1C</p>'
+    return "<p>GetExcelReport1C</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -672,11 +675,11 @@ def GetExcelReport1C(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/approval/<int:order_id>', methods=['POST'])
+@bp.route("/orders/approval/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['validator'])
+@role_required(["validator"])
 def SaveApproval(order_id):
-    return '<p>SaveApproval</p>'
+    return "<p>SaveApproval</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -836,11 +839,11 @@ def SaveApproval(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/statements/<int:order_id>', methods=['POST'])
+@bp.route("/orders/statements/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative', 'validator', 'purchaser'])
+@role_required(["admin", "initiative", "validator", "purchaser"])
 def SaveStatements(order_id):
-    return '<p>SaveStatements</p>'
+    return "<p>SaveStatements</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -916,11 +919,11 @@ def SaveStatements(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/parameters/<int:order_id>', methods=['POST'])
+@bp.route("/orders/parameters/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative', 'validator', 'purchaser'])
+@role_required(["admin", "initiative", "validator", "purchaser"])
 def SaveParameters(order_id):
-    return '<p>SaveParameters</p>'
+    return "<p>SaveParameters</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -999,11 +1002,11 @@ def SaveParameters(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/comment/<int:order_id>', methods=['POST'])
+@bp.route("/orders/comment/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative', 'validator', 'purchaser'])
+@role_required(["admin", "initiative", "validator", "purchaser"])
 def LeaveComment(order_id):
-    return '<p>LeaveComment</p>'
+    return "<p>LeaveComment</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -1021,11 +1024,11 @@ def LeaveComment(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/process/<int:order_id>')
+@bp.route("/orders/process/<int:order_id>")
 @login_required
-@role_required(['admin', 'purchaser'])
+@role_required(["admin", "purchaser"])
 def ProcessHubOrder(order_id):
-    return '<p>ProcessHubOrder</p>'
+    return "<p>ProcessHubOrder</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')
@@ -1054,11 +1057,11 @@ def ProcessHubOrder(order_id):
     # return redirect(url_for('main.show_order', order_id=order_id))
 
 
-@bp.route('/orders/cancel/<int:order_id>', methods=['POST'])
+@bp.route("/orders/cancel/<int:order_id>", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative'])
+@role_required(["admin", "initiative"])
 def CancelOrder(order_id):
-    return '<p>CancelOrder</p>'
+    return "<p>CancelOrder</p>"
     # order = GetOrder(order_id)
     # if order is None:
     #     flash('Заявка с таким номером не найдена.')

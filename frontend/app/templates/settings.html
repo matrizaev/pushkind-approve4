@@ -828,8 +828,8 @@
 
     $(".editSiteButton").click(function () {
         let siteId = Number($(this).data("id"));
-        $('#projectModalLabel').text('РЕДАКТИРОВАТЬ ОБЪЕКТ');
-        $("#removeSiteButton").prop("href", "{{ url_for('main.edit_site', site_id=0) }}".replace(0, siteId));
+        $('#siteModalLabel').text('РЕДАКТИРОВАТЬ ОБЪЕКТ');
+        $("#siteForm").prop("action", "{{ url_for('main.edit_site', site_id=0) }}".replace(0, siteId));
         projects.some(function (project) {
             let found = false;
             project["sites"].some(function (site) {

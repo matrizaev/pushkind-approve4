@@ -4,12 +4,15 @@ ENV FLASK_APP run.py
 
 RUN apt-get update
 
-RUN apt-get -y install default-libmysqlclient-dev gcc
+RUN apt-get -y install default-libmysqlclient-dev gcc libicu-dev libsqlite3-dev pkg-config
 
 RUN useradd -m pushkind
 WORKDIR /home/pushkind
 USER pushkind
 ENV PATH="$PATH:/home/pushkind/.local/bin"
+
+COPY --chown=pushkind:pushkind icu.c ./
+RUN gcc -shared icu.c -g -o libsqliteicu.so -fPIC `pkg-config --libs --cflags icu-uc icu-io`
 
 RUN python -m pip install --upgrade pip
 RUN python -m pip install build wheel setuptools poetry
