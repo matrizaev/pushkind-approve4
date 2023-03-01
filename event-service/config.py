@@ -12,6 +12,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MYSQL_DATABASE_CHARSET = "utf8mb4"
     MYSQL_CHARSET = "utf8mb4"
+    ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = int(os.environ.get("MAIL_PORT") or 25)
     MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL") is not None

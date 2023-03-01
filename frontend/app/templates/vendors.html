@@ -399,39 +399,74 @@
 
 {% block scripts %}
 <script>
-    $(document).ready(function () {
-        {% if current_user.role.name in ('admin', 'supervisor') %}
-        $("#switchHubFormSelect").change(function () {
-            $(this).parent('form').submit();
-        });
-        {% endif %}
-        $("#switchVendorFormSelect").change(function () {
-            $(this).parent('form').submit();
-        });
-        {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
-        $('#uploadProductsButton').on('change', () => {
-            $('#uploadProductsForm').submit();
-        });
-        $('#uploadImagesButton').on('change', () => {
-            $('#uploadImagesForm').submit();
-        });
-        $('.uploadProductImageButton').on('change', function () {
-            $(this).parent('form').submit();
-        });
-        {% endif %}
-        $("#productFilter").on("keyup", function () {
-            let value = $(this).val().toLowerCase();
-            $("#productList .row").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // Switch Hub Form Select
+        const switchHubFormSelect = document.querySelector('#switchHubFormSelect');
+        if (switchHubFormSelect) {
+            switchHubFormSelect.addEventListener('change', () => {
+                switchHubFormSelect.parentNode.submit();
+            });
+        }
+
+        // Switch Vendor Form Select
+        const switchVendorFormSelect = document.querySelector('#switchVendorFormSelect');
+        if (switchVendorFormSelect) {
+            switchVendorFormSelect.addEventListener('change', () => {
+                switchVendorFormSelect.parentNode.submit();
+            });
+        }
+
+        // Upload Products Button
+        const uploadProductsButton = document.querySelector('#uploadProductsButton');
+        if (uploadProductsButton) {
+            uploadProductsButton.addEventListener('change', () => {
+                document.querySelector('#uploadProductsForm').submit();
+            });
+        }
+
+        // Upload Images Button
+        const uploadImagesButton = document.querySelector('#uploadImagesButton');
+        if (uploadImagesButton) {
+            uploadImagesButton.addEventListener('change', () => {
+                document.querySelector('#uploadImagesForm').submit();
+            });
+        }
+
+        // Upload Product Image Button
+        const uploadProductImageButtons = document.querySelectorAll('.uploadProductImageButton');
+        uploadProductImageButtons.forEach((uploadProductImageButton) => {
+            uploadProductImageButton.addEventListener('change', () => {
+                uploadProductImageButton.parentNode.submit();
             });
         });
-        $(".selectable").click(function (event) {
-            let productId = $(this).parent('.row').attr('data-id');
-            let modalElement = document.getElementById('descriptionModal' + productId);
-            let descriptionModal = bootstrap.Modal.getInstance(modalElement);
-            if (!descriptionModal)
-                descriptionModal = new bootstrap.Modal(modalElement, {});
-            descriptionModal.show();
+
+        // Product Filter
+        const productFilter = document.querySelector('#productFilter');
+        if (productFilter) {
+            productFilter.addEventListener('keyup', () => {
+                const value = productFilter.value.toLowerCase();
+                const productRows = document.querySelectorAll('#productList > .row');
+                productRows.forEach((productRow) => {
+                    const text = productRow.textContent.toLowerCase();
+                    const show = text.indexOf(value);
+                    productRow.style.display = show > -1 ? 'flex' : 'none'
+                });
+            });
+        }
+
+        // Selectable Products
+        const selectableProducts = document.querySelectorAll('.selectable');
+        selectableProducts.forEach((selectableProduct) => {
+            selectableProduct.addEventListener('click', () => {
+                const productId = selectableProduct.parentNode.dataset.id;
+                const modalElement = document.getElementById('descriptionModal' + productId);
+                var descriptionModal = bootstrap.Modal.getInstance(modalElement);
+                if (!descriptionModal) {
+                    descriptionModal = new bootstrap.Modal(modalElement, {});
+                }
+                descriptionModal.show();
+            });
         });
     });
 </script>

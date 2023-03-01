@@ -2,116 +2,122 @@
 
 {% block content %}
 <div class="container my-2">
-	<div class="row justify-content-center">
-		<div class="col-md-8">
-			<input class="form-control" id="orderFilter" type="text" placeholder="Фильтр..">
-		</div>
-	</div>
-	<div class="row justify-content-center">
-		<div class="col-md-8">
-			{% for d in dates %}
-				<a href="{{ url_for('main.show_index', from=dates[d]['value'], focus=filter_focus, disapproved=filter_disapproved) }}" class="text-decoration-none badge {% if filter_from == dates[d]['value'] %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{ dates[d]['pretty'] }}</a>
-			{% endfor %}
-			<a href="{{ url_for('main.show_index', from=0, focus=filter_focus, disapproved=filter_disapproved) }}" class="text-decoration-none badge {% if filter_from == 0 %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
-		</div>
-	</div>
-	<div class="row justify-content-center">
-		<div class="col-md-8 fs-7">
-			<div class="row">
-				<div class="col">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="filterDisapproved" {%if filter_disapproved %}checked{% endif %}>
-						<label class="form-check-label" for="filterDisapproved">
-							Показывать отклоненные заявки.
-						</label>
-					</div>
-				</div>
-				{% if current_user.role.name in ['validator', 'purchaser'] %}
-					<div class="col">
-						<div class="form-check form-check-inline">
-							<input class="form-check-input" type="checkbox" id="filterFocus" {%if not filter_focus %}checked{% endif %}>
-							<label class="form-check-label" for="filterFocus">
-								{% if current_user.role.name == 'validator' %}
-									Показывать только заявки, которые я должен согласовать.
-								{% else %}
-									Показывать только не законтрактованные заявки.
-								{% endif %}
-							</label>
-						</div>
-					</div>
-				{% endif %}
-			</div>
-		</div>
-	</div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <input class="form-control" id="orderFilter" type="text" placeholder="Фильтр..">
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% for d in dates %}
+            <a href="{{ url_for('main.show_index', from=dates[d]['value'], focus=filter_focus, disapproved=filter_disapproved) }}"
+                class="text-decoration-none badge {% if filter_from == dates[d]['value'] %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{
+                dates[d]['pretty'] }}</a>
+            {% endfor %}
+            <a href="{{ url_for('main.show_index', from=0, focus=filter_focus, disapproved=filter_disapproved) }}"
+                class="text-decoration-none badge {% if filter_from == 0 %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8 fs-7">
+            <div class="row">
+                <div class="col">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="filterDisapproved" {%if filter_disapproved
+                            %}checked{% endif %}>
+                        <label class="form-check-label" for="filterDisapproved">
+                            Показывать отклоненные заявки.
+                        </label>
+                    </div>
+                </div>
+                {% if current_user.role.name in ['validator', 'purchaser'] %}
+                <div class="col">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="filterFocus" {%if not filter_focus
+                            %}checked{% endif %}>
+                        <label class="form-check-label" for="filterFocus">
+                            {% if current_user.role.name == 'validator' %}
+                            Показывать только заявки, которые я должен согласовать.
+                            {% else %}
+                            Показывать только не законтрактованные заявки.
+                            {% endif %}
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
 </div>
 <div class="container">
-	<div class="row my-2 fs-7">
-		<div class="col">
-			Выбрано заявок: <span id="orderCount">{{ orders|length }}</span> на сумму <span id="orderTotal">{{"%.2f"|format(orders| sum(attribute='total') / 1000000 ) }}</span> млн руб.
-		</div>
-		<div class="col text-end">
-			<a href="#" id="saveOrdersButton">скачать</a><br>
-			{% if current_user.role.name in ['admin', 'initiative', 'purchaser'] %}
-				<a href="#" id="startMerging">объединить</a>
-			{% endif %}
-		</div>
-	</div>
-	<div class="row bg-light d-none d-sm-flex border">
-		<div class="col overflow-hidden">
-			Заявка
-		</div>
-		<div class="col overflow-hidden">
-			Категории
-		</div>
-		<div class="col-3 overflow-hidden">
-			Инициатор
-		</div>
-		<div class="col overflow-hidden">
-			Согласен
-		</div>
-		<div class="col overflow-hidden">
-			Не&nbsp;согласен
-		</div>
-		<div class="col overflow-hidden">
-			Ожидаем
-		</div>
-		<div class="col overflow-hidden text-center">
-			Статус
-		</div>
-	</div>
-	<div id="orderList">
-		{% for order in orders %}
-			{% include '_order.html' %}
-		{% endfor %}
-	</div>
+    <div class="row my-2 fs-7">
+        <div class="col">
+            Выбрано заявок: <span id="orderCount">{{ orders|length }}</span> на сумму <span
+                id="orderTotal">{{"%.2f"|format(orders| sum(attribute='total') / 1000000 ) }}</span> млн руб.
+        </div>
+        <div class="col text-end">
+            <a href="#" id="saveOrdersButton">скачать</a><br>
+            {% if current_user.role.name in ['admin', 'initiative', 'purchaser'] %}
+            <a href="#" id="startMerging">объединить</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row bg-light d-none d-sm-flex border fw-bold">
+        <div class="col overflow-hidden">
+            Заявка
+        </div>
+        <div class="col overflow-hidden">
+            Категории
+        </div>
+        <div class="col-3 overflow-hidden">
+            Инициатор
+        </div>
+        <div class="col overflow-hidden">
+            Согласен
+        </div>
+        <div class="col overflow-hidden">
+            Не&nbsp;согласен
+        </div>
+        <div class="col overflow-hidden">
+            Ожидаем
+        </div>
+        <div class="col overflow-hidden text-center">
+            Статус
+        </div>
+    </div>
+    <div id="orderList">
+        {% for order in orders %}
+        {% include '_order.html' %}
+        {% endfor %}
+    </div>
 </div>
 
 {% if current_user.role.name in ['admin', 'initiative', 'purchaser'] %}
-	<form id="mergeForm" class="d-none" method="POST" action="{{ url_for('main.MergeOrders') }}">
-		<div class="fixed-top">
-			<div class="container">
-				<div class="row bg-dark text-white py-1">
-					<div class="col-auto">
-						<button id="cancelMerging" type="button" class="btn btn-danger text-white">Отменить</button>
-					</div>
-					<div class="col text-center">
-						Укажите заявки, которые необходимо объединить.
-					</div>
-					<div class="col-auto text-end">
-						{{ merge_form.csrf_token(id=False) }}
-						{{ merge_form.orders(id='mergeOrders', class_='d-none', readonly=True) }}
-						{{ merge_form.submit(id=False, class_='btn btn-primary text-white') }}
-					</div>
-				</div>
-			</div>
-		</div>
-	</form>
+<form id="mergeForm" class="d-none" method="POST" action="{{ url_for('main.MergeOrders') }}">
+    <div class="fixed-top">
+        <div class="container">
+            <div class="row bg-dark text-white py-1">
+                <div class="col-auto">
+                    <button id="cancelMerging" type="button" class="btn btn-danger text-white">Отменить</button>
+                </div>
+                <div class="col text-center">
+                    Укажите заявки, которые необходимо объединить.
+                </div>
+                <div class="col-auto text-end">
+                    {{ merge_form.csrf_token(id=False) }}
+                    {{ merge_form.orders(id='mergeOrders', class_='d-none', readonly=True) }}
+                    {{ merge_form.submit(id=False, class_='btn btn-primary text-white') }}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
 {% endif %}
 
 <form id="saveForm" class="d-none" method="POST" action="{{ url_for('main.SaveOrders') }}">
-	{{ save_form.csrf_token(id=False) }}
-	{{ save_form.orders(id="saveOrders", class_="d-none") }}
+    {{ save_form.csrf_token(id=False) }}
+    {{ save_form.orders(id="saveOrders", class_="d-none") }}
 </form>
 
 {% endblock %}
@@ -119,86 +125,107 @@
 {% block scripts %}
 
 <script>
-	$(document).ready(function () {
+    document.addEventListener("DOMContentLoaded", () => {
 
-		var isMerging = false;
+        var isMerging = false;
+        var mergeOrders = [];
 
-		$("#filterFocus").change(function () {
-			if (this.checked)
-				document.location.href = "{{ url_for('main.show_index', from=filter_from, disapproved=filter_disapproved) | safe }}";
-			else
-				document.location.href = "{{ url_for('main.show_index', from=filter_from, focus=True, disapproved=filter_disapproved) | safe }}";
-		});
+        const filterFocus = document.getElementById("filterFocus");
 
-		$("#filterDisapproved").change(function () {
-			if (this.checked)
-				document.location.href = "{{ url_for('main.show_index', from=filter_from, focus=filter_focus, disapproved=True) | safe }}";
-			else
-				document.location.href = "{{ url_for('main.show_index', from=filter_from, focus=filter_focus) | safe }}";
-		});
+        if (filterFocus) {
+            filterFocus.addEventListener("change", () => {
+                if (filterFocus.checked)
+                    document.location.href = "{{ url_for('main.show_index', from=filter_from, disapproved=filter_disapproved) | safe }}";
+                else
+                    document.location.href = "{{ url_for('main.show_index', from=filter_from, focus=True, disapproved=filter_disapproved) | safe }}";
+            });
+        }
 
-		$("#saveOrdersButton").click(function () {
-			$("#saveForm").submit()
-		});
+        const filterDisapproved = document.getElementById("filterDisapproved");
 
-		{% if current_user.role.name in ['admin', 'initiative', 'purchaser'] %}
+        if (filterDisapproved) {
+            filterDisapproved.addEventListener("change", () => {
+                if (filterDisapproved.checked)
+                    document.location.href = "{{ url_for('main.show_index', from=filter_from, focus=filter_focus, disapproved=True) | safe }}";
+                else
+                    document.location.href = "{{ url_for('main.show_index', from=filter_from, focus=filter_focus) | safe }}";
+            });
+        }
 
-			var mergeOrders = [];
+        const saveOrdersButton = document.getElementById("saveOrdersButton");
 
-			$("#startMerging").click(function () {
-				isMerging = true;
-				mergeOrders = [];
-				$("#mergeForm").removeClass("d-none");
-				$(this).hide();
-			});
+        if (saveOrdersButton)
+            saveOrdersButton.addEventListener("click", () => {
+                document.getElementById("saveForm").submit();
+            });
 
-			$("#cancelMerging").click(function () {
-				isMerging = false;
-				$("#mergeForm").addClass("d-none");
-				$("#startMerging").show();
-				$(".selectable.bg-dark.text-white").removeClass("bg-dark text-white");
-				$(".selectable").addClass("bg-white");
-			});
+        const startMerging = document.getElementById("startMerging");
 
-		{% endif %}
+        if (startMerging)
+            startMerging.addEventListener("click", () => {
+                isMerging = true;
+                mergeOrders = [];
+                document.getElementById("mergeForm").classList.remove("d-none");
+                startMerging.style.display = "none";
+            });
 
-		$("#orderFilter").on("keyup", function () {
-			let value = $(this).val().toLowerCase();
-			let order_list = [];
-			let orderTotal = 0;
-			$("#orderList > .row").filter(function () {
-				let show = $(this).text().toLowerCase().indexOf(value) > -1;
-				$(this).toggle(show);
-				if (show) {
-					order_list.push($(this).data("id"));
-					orderTotal += Number($(this).data("total"));
-				}
-			});
-			orderTotal /= 1000000;
-			$("#orderCount").text(order_list.length);
-			$("#orderTotal").text(orderTotal.toFixed(2));
-			$("#saveOrders").val(JSON.stringify(order_list));
-		});
+        const cancelMerging = document.getElementById("cancelMerging");
+        if (cancelMerging)
+            cancelMerging.addEventListener("click", () => {
+                isMerging = false;
+                document.getElementById("mergeForm").classList.add("d-none");
+                document.getElementById("startMerging").style.display = "inline";
+                const selectableList = document.querySelectorAll(".selectable");
+                selectableList.forEach((selectable) => {
+                    selectable.classList.remove("bg-dark", "text-white");
+                    selectable.classList.add("bg-white");
+                });
+            });
 
-		$(".selectable").click(function (event) {
-			let orderId = $(this).attr('data-id');
-			if (isMerging == false) {
-				document.location.href = "{{ url_for('main.show_order', order_id='0') }}".replace("0", orderId);
-			} else {
-				if (mergeOrders.includes(orderId)) {
-					$(this).removeClass("bg-dark text-white");
-					$(this).addClass("bg-white");
-					let index = mergeOrders.indexOf(orderId);
-					mergeOrders.splice(index, 1);
-				} else {
-					mergeOrders.push(orderId);
-					$(this).removeClass("bg-white");
-					$(this).addClass("bg-dark text-white");
-				}
-				console.log(JSON.stringify(mergeOrders));
-				$("#mergeOrders").val(JSON.stringify(mergeOrders));
-			}
-		});
-	});
+        const orderFilter = document.getElementById("orderFilter");
+        if (orderFilter)
+            orderFilter.addEventListener("keyup",() => {
+                let value = orderFilter.value.toLowerCase();
+                let order_list = [];
+                let orderTotal = 0;
+                const orderList = document.getElementById("orderList");
+                const orderRows = orderList.querySelectorAll(".row");
+                orderRows.forEach((orderRow) => {
+                    const show = orderRow.textContent.toLowerCase().indexOf(value) > -1;
+                    orderRow.style.display = show ? "flex" : "none";
+                    if (show) {
+                        order_list.push(orderRow.dataset.id);
+                        orderTotal += Number(orderRow.dataset.total);
+                    }
+                });
+                orderTotal /= 1000000;
+                document.getElementById("orderCount").textContent = order_list.length;
+                document.getElementById("orderTotal").textContent = orderTotal.toFixed(2);
+                document.getElementById("saveOrders").value = JSON.stringify(order_list);
+            });
+
+        var selectableList = document.querySelectorAll(".selectable");
+        selectableList.forEach((selectable) => {
+            selectable.addEventListener("click",() => {
+                const orderId = selectable.dataset.id;
+                if (isMerging == false) {
+                    document.location.href = "{{ url_for('main.show_order', order_id='0') }}".replace("0", orderId);
+                } else {
+                    if (mergeOrders.includes(orderId)) {
+                        selectable.classList.remove("bg-dark", "text-white");
+                        selectable.classList.add("bg-white");
+                        const index = mergeOrders.indexOf(orderId);
+                        mergeOrders.splice(index, 1);
+                    } else {
+                        mergeOrders.push(orderId);
+                        selectable.classList.remove("bg-white");
+                        selectable.classList.add("bg-dark", "text-white");
+                    }
+                    console.log(JSON.stringify(mergeOrders));
+                    document.getElementById("mergeOrders").value = JSON.stringify(mergeOrders);
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}

@@ -53,10 +53,10 @@
 
 {% endblock %}
 
-{%  block scripts %}
-    <script>
-        $(document).ready(function () {
-            sessionStorage.clear();
-        });
-    </script>
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        sessionStorage.clear();
+    });
+</script>
 {% endblock %}

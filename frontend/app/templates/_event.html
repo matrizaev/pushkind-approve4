@@ -1,0 +1,29 @@
+<div class="row border bg-white my-1 rounded event" data-id="{{ event.id }}">
+    <div class="col-sm-1 overflow-hidden mt-sm-3">
+        <span class="d-sm-none fw-bold">Время:</span>
+        {{ event.timestamp }}
+    </div>
+    <div class="col-sm-1 overflow-hidden mt-sm-3">
+        {% if event.entity_type.name == 'order' %}
+        <a class="text-decoration-none" href="{{ url_for('main.show_order', order_id=event.entity_id) }}">Заявка</a>
+        {% elif event.entity_type.name == 'tender' %}
+        <a class="text-decoration-none" href="{{ url_for('main.show_tender', tender_id=event.entity_id) }}">Тендер</a>
+        {% else %}
+        Хаб
+        {% endif %}
+    </div>
+    <div class="col-sm-2 overflow-hidden mt-sm-3">
+        <span class="d-sm-none fw-bold">Пользователь:</span>
+        {% set user = event.user %}
+        {% include '_user.popover.html' %}
+        {{ event.user.name or event.user.email }}
+    </div>
+    <div class="col-sm-2 overflow-hidden mt-sm-3">
+        <span class="d-sm-none fw-bold">Событие:</span>
+        <span class="fw-bold text-{{event.event_type.color}}">{{ event.event_type.pretty }}</span>
+    </div>
+    <div class="col-sm overflow-hidden mt-sm-3">
+        <span class="d-sm-none fw-bold">Описание:</span>
+        {{ event.data or '' }}
+    </div>
+</div>

@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block styles %}
+    {% include '_selectize.html' %}
+{% endblock %}
+
 {% set glob={} %}
 
 {% block content %}
@@ -516,7 +520,7 @@
 {% block scripts %}
 
 <script>
-    $(document).ready(function () {
+    document.addEventListener("DOMContentLoaded", () => {
 
         var projects = [{% for project in projects %}{{ project| safe }}, {% endfor %}];
 

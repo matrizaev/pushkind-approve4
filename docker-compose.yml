@@ -11,6 +11,7 @@ services:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - ADMIN_EMAIL
 
   frontend:
     depends_on:
@@ -25,6 +26,7 @@ services:
       - SECRET_KEY
       - CONFIGURATION_SETUP
       - APPLICATION_TITLE
+      - ADMIN_EMAIL
 
   hub-service:
     depends_on:
@@ -37,6 +39,7 @@ services:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - ADMIN_EMAIL
 
   order-service:
     depends_on:
@@ -49,6 +52,7 @@ services:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - ADMIN_EMAIL
 
   project-service:
     depends_on:
@@ -61,6 +65,7 @@ services:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - ADMIN_EMAIL
 
   tender-service:
     depends_on:
@@ -73,6 +78,7 @@ services:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - ADMIN_EMAIL
 
   user-service:
     depends_on:
@@ -85,6 +91,7 @@ services:
       - DB_URL
       - SECRET_KEY
       - CONFIGURATION_SETUP
+      - ADMIN_EMAIL
 
   mq-service:
     image: rabbitmq:3-management-alpine

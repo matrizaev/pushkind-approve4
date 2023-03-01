@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block styles %}
+    {% include '_selectize.html' %}
+{% endblock %}
+
 {% block content %}
 {% if current_user.role.name == "admin" %}
 
@@ -613,7 +617,7 @@
 {% block scripts %}
 
 <script>
-    $(document).ready(function () {
+    document.addEventListener("DOMContentLoaded", () => {
         //Scripts
         {% if current_user.role.name in ['validator', 'admin', 'purchaser'] %}
         var categoriesData = $("#about_user-categories");

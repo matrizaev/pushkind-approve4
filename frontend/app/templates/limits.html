@@ -3,114 +3,127 @@
 {% block content %}
 
 {% set show_remove_limit = current_user.role.name in ['admin', 'purchaser'] %}
-{% if show_remove_limit %}
-    <div class="container my-2">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <input class="form-control" id="limitFilter" type="text" placeholder="Фильтр..">
-            </div>
-        </div>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                {% for i in intervals %}
-                    <a href="{{ url_for('main.show_limits', from=i.name) }}" class="text-decoration-none badge {% if filter_from == i.name %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{ i.pretty }}</a>
-                {% endfor %}
-                <a href="{{ url_for('main.show_limits') }}" class="text-decoration-none badge {% if filter_from is none %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col text-end">
-                <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#limitFormCollapse" aria-expanded="false" aria-controls="limitFormCollapse">
-                    Добавить лимит
-                </button>
-            </div>
-        </div>
-        <div class="collapse" id="limitFormCollapse">
-            <form method="POST" action="{{ url_for('main.add_limit') }}">
-                {{ form.csrf_token(id=False) }}
-                <div class="row mb-3">
-                    {{ form.interval.label(class_='col-md-2 col-form-label') }}
-                    <div class="col-md-10">
-                        {{ form.interval(class_ = 'form-select') }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    {{ form.value.label(class_='col-md-2 col-form-label') }}
-                    <div class="col-md-10">
-                        {{ form.value(class_='form-control') }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    {{ form.project.label(class_='col-md-2 col-form-label') }}
-                    <div class="col-md-10">
-                        {{ form.project(class_='form-select') }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    {{ form.cashflow.label(class_='col-md-2 col-form-label') }}
-                    <div class="col-md-10">
-                        {{ form.cashflow(class_='form-select') }}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col">
-                        {{ form.submit(class_='btn btn-primary text-white') }}
-                    </div>
-                </div>
-            </form>
+
+<div class="container my-2">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <input class="form-control" id="limitFilter" type="text" placeholder="Фильтр..">
         </div>
     </div>
-{% endif %}
-{% if limits|length > 0 %}
-    <div class="container bg-white border rounded my-2">
-        <div class="row d-none d-sm-flex fw-bold">
-            <div class="col">
-                <div class="row">
-                    <div class="col overflow-hidden">
-                        Проект
-                    </div>
-                    <div class="col overflow-hidden">
-                        БДДС
-                    </div>
-                    <div class="col overflow-hidden">
-                        Интервал
-                    </div>
-                    <div class="col overflow-hidden">
-                        Лимит
-                    </div>
-                    <div class="col overflow-hidden">
-                        Сумма
-                    </div>
-                    <div class="col overflow-hidden">
-                        Остаток
-                    </div>
+    {% if show_remove_limit %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% for i in intervals %}
+            <a href="{{ url_for('main.show_limits', from=i.name) }}"
+                class="text-decoration-none badge {% if filter_from == i.name %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{
+                i.pretty }}</a>
+            {% endfor %}
+            <a href="{{ url_for('main.show_limits') }}"
+                class="text-decoration-none badge {% if filter_from is none %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col text-end">
+            <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#limitFormCollapse"
+                aria-expanded="false" aria-controls="limitFormCollapse">
+                Добавить лимит
+            </button>
+        </div>
+    </div>
+    <div class="collapse" id="limitFormCollapse">
+        <form method="POST" action="{{ url_for('main.add_limit') }}">
+            {{ form.csrf_token(id=False) }}
+            <div class="row mb-3">
+                {{ form.interval.label(class_='col-md-2 col-form-label') }}
+                <div class="col-md-10">
+                    {{ form.interval(class_ = 'form-select') }}
                 </div>
             </div>
-            {% if show_remove_limit %}
-                <div class="col-auto overflow-hidden">
-                    Удалить
+            <div class="row mb-3">
+                {{ form.value.label(class_='col-md-2 col-form-label') }}
+                <div class="col-md-10">
+                    {{ form.value(class_='form-control') }}
                 </div>
-            {% endif %}
+            </div>
+            <div class="row mb-3">
+                {{ form.project.label(class_='col-md-2 col-form-label') }}
+                <div class="col-md-10">
+                    {{ form.project(class_='form-select') }}
+                </div>
+            </div>
+            <div class="row mb-3">
+                {{ form.cashflow.label(class_='col-md-2 col-form-label') }}
+                <div class="col-md-10">
+                    {{ form.cashflow(class_='form-select') }}
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    {{ form.submit(class_='btn btn-primary text-white') }}
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<div class="container">
+    <div class="row bg-light d-none d-sm-flex border fw-bold">
+        <div class="col">
+            <div class="row">
+                <div class="col overflow-hidden">
+                    Проект
+                </div>
+                <div class="col overflow-hidden">
+                    БДДС
+                </div>
+                <div class="col overflow-hidden">
+                    Интервал
+                </div>
+                <div class="col overflow-hidden">
+                    Лимит
+                </div>
+                <div class="col overflow-hidden">
+                    Сумма
+                </div>
+                <div class="col overflow-hidden">
+                    Остаток
+                </div>
+            </div>
         </div>
+        {% if show_remove_limit %}
+        <div class="col-auto overflow-hidden">
+            Удалить
+        </div>
+        {% endif %}
+    </div>
+    <div id="limitList">
         {% for limit in limits %}
-            {% include '_limit.html' %}
+        {% include '_limit.html' %}
         {% endfor %}
     </div>
-{% endif %}
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 
 <script>
-    $(document).ready(function () {
+    document.addEventListener("DOMContentLoaded", () => {
 
-		$("#limitFilter").on("keyup", function () {
-			let value = $(this).val().toLowerCase();
-			$(".limit").filter(function () {
-				let show = $(this).text().toLowerCase().indexOf(value) > -1;
-				$(this).toggle(show);
-			});
-		});
+        // Limit Filter
+        const limitFilter = document.querySelector('#limitFilter');
+        if (limitFilter) {
+            limitFilter.addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                const limitRows = document.querySelectorAll('.limit');
+                limitRows.forEach((limitRow) => {
+                    const text = limitRow.textContent.toLowerCase();
+                    const show = text.indexOf(value);
+                    limitRow.style.display = show > -1 ? 'flex' : 'none'
+                });
+            });
+        }
     });
 </script>
 

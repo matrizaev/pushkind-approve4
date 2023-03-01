@@ -80,14 +80,14 @@
                 <div class="col-md">
                     {{ forms['user'].about_user.projects.label(class_='form-label projectsDropDown') }}
                     <a class="projectsDropDown" href="#">добавить из списка</a>
-                    {{ forms['user'].about_user.projects(class_='form-control', style="width:100%") }}
+                    {{ forms['user'].about_user.projects }}
                     <a id="selectAllProjects" href="#">выделить все</a>
                     <a id="selectNoneProjects" href="#" class="text-danger">удалить все</a>
                 </div>
                 <div class="col-md">
                     {{ forms['user'].about_user.categories.label(class_='form-label categoriesDropDown') }}
                     <a class="categoriesDropDown" href="#">добавить из списка</a>
-                    {{ forms['user'].about_user.categories(class_='form-control', style="width:100%") }}
+                    {{ forms['user'].about_user.categories }}
                     <a id="selectAllCategories" href="#">выделить все</a>
                     <a id="selectNoneCategories" href="#" class="text-danger">удалить все</a>
                 </div>

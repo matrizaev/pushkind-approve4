@@ -11,15 +11,18 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             {% for d in dates %}
-                <a href="{{ url_for('main.show_history', from=dates[d]['value']) }}" class="text-decoration-none badge {% if filter_from == dates[d]['value'] %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{ dates[d]['pretty'] }}</a>
+            <a href="{{ url_for('main.show_history', from=dates[d]['value']) }}"
+                class="text-decoration-none badge {% if filter_from == dates[d]['value'] %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">{{
+                dates[d]['pretty'] }}</a>
             {% endfor %}
-            <a href="{{ url_for('main.show_history', from=0) }}" class="text-decoration-none badge {% if filter_from == 0 %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
+            <a href="{{ url_for('main.show_history', from=0) }}"
+                class="text-decoration-none badge {% if filter_from == 0 %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
         </div>
     </div>
 </div>
 
 <div class="container">
-    <div class="row bg-light d-none d-sm-flex border">
+    <div class="row bg-light d-none d-sm-flex border fw-bold">
         <div class="col-1 overflow-hidden">
             Время
         </div>
@@ -38,35 +41,7 @@
     </div>
     <div id="eventList">
         {% for event in events %}
-            <div class="row border bg-white my-1 rounded event" data-id="{{ event.id }}">
-                <div class="col-sm-1 overflow-hidden mt-sm-3">
-                    <span class="d-sm-none fw-bold">Время:</span>
-                    {{ event.timestamp }}
-                </div>
-                <div class="col-sm-1 overflow-hidden mt-sm-3">
-                    {% if event.entity_type.name == 'order' %}
-                        <a class="text-decoration-none" href="{{ url_for('main.show_order', order_id=event.entity_id) }}">Заявка</a>
-                    {% elif event.entity_type.name == 'tender' %}
-                        <a class="text-decoration-none" href="{{ url_for('main.show_tender', tender_id=event.entity_id) }}">Тендер</a>
-                    {% else %}
-                        Хаб
-                    {% endif %}
-                </div>
-                <div class="col-sm-2 overflow-hidden mt-sm-3">
-                    <span class="d-sm-none fw-bold">Пользователь:</span>
-                    {% set user = event.user %}
-                    {% include '_user.popover.html' %}
-                    {{ event.user.name or event.user.email }}
-                </div>
-                <div class="col-sm-2 overflow-hidden mt-sm-3">
-                    <span class="d-sm-none fw-bold">Событие:</span>
-                    <span class="fw-bold text-{{event.event_type.color}}">{{ event.event_type.pretty }}</span>
-                </div>
-                <div class="col-sm overflow-hidden mt-sm-3">
-                    <span class="d-sm-none fw-bold">Описание:</span>
-                    {{ event.data or '' }}
-                </div>
-            </div>
+        {% include '_event.html' %}
         {% endfor %}
     </div>
 </div>
@@ -75,13 +50,21 @@
 {% block scripts %}
 
 <script>
-    $(document).ready(function () {
-        $("#eventFilter").on("keyup", function () {
-            let value = $(this).val().toLowerCase();
-            $(".event").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // Event Filter
+        const eventFilter = document.querySelector('#eventFilter');
+        if (eventFilter) {
+            eventFilter.addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                const eventRows = document.querySelectorAll('.event');
+                eventRows.forEach((eventRow) => {
+                    const text = eventRow.textContent.toLowerCase();
+                    const show = text.indexOf(value);
+                    eventRow.style.display = show > -1 ? 'flex' : 'none'
+                });
             });
-        });
+        }
     });
 </script>
 {% endblock %}
