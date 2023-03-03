@@ -16,4 +16,4 @@ jobs:
           known_hosts: ${{ secrets.CICD_KNOWN_HOSTS }}
           if_key_exists: fail # replace / ignore / fail; optional (defaults to fail)
       - name: Pull
-        run: ssh cicd@admin.pushkind.com "cd /var/www5/html/pushkind-approve4 && git pull origin development && docker-compose up -d --build"
+        run: ssh cicd@admin.pushkind.com "cd /var/www5/html/pushkind-approve4 && git pull origin master && docker-compose up -d --build"
