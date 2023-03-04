@@ -1,12 +1,10 @@
-from datetime import datetime, timezone
+import io
 
-from app.api.hub import CategoryApi
+from app.api.hub import AppSettingsApi
 from app.api.order import OrderApi
-from app.api.project import ProjectApi
 from app.email import SendEmail
 from app.main import bp
 from app.main.forms import MergeOrdersForm, SaveOrdersForm
-from app.main.utils import GetNewOrderNumber, send_email_notification
 from app.utils import get_filter_timestamps, role_forbidden, role_required
 from flask import (
     Response,
@@ -20,40 +18,35 @@ from flask import (
 from flask_login import current_user, login_required
 from openpyxl import Workbook
 
-# from openpyxl.writer.excel import save_virtual_workbook
-
-
-
 ################################################################################
 # Index page
 ################################################################################
 
-@bp.route('/')
-@bp.route('/index/')
+
+@bp.route("/")
+@bp.route("/index/")
 @login_required
-@role_forbidden(['default'])
+@role_forbidden(["default"])
 def show_index():
 
     dates = get_filter_timestamps()
     filters = {}
-    filter_from = request.args.get('from', default=dates['recently']['value'], type=int)
-    filters['timestamp'] = filter_from
-    filter_disapproved = request.args.get('disapproved', default=None, type=str)
+    filter_from = request.args.get("from", default=dates["recently"]["value"], type=int)
+    filters["timestamp"] = filter_from
+    filter_disapproved = request.args.get("disapproved", default=None, type=str)
     if filter_disapproved is not None:
         filter_disapproved = True
-        filters['disapproved'] = 'true'
+        filters["disapproved"] = "true"
 
-    if current_user.role.name in ['purchaser', 'validator']:
-        filter_focus = request.args.get('focus', default=None, type=str)
+    if current_user.role.name in ["purchaser", "validator"]:
+        filter_focus = request.args.get("focus", default=None, type=str)
         if filter_focus is not None:
             filter_focus = True
-            filters['focus'] = 'true'
+            filters["focus"] = "true"
     else:
         filter_focus = None
 
-    orders = OrderApi.get_entities(
-        **filters
-    ) or []
+    orders = OrderApi.get_entities(**filters) or []
 
     # if current_user.role in [UserRoles.purchaser, UserRoles.validator]:
 
@@ -94,24 +87,25 @@ def show_index():
     #             # Order.purchased == True,
     #             Order.vendors.any(OrderVendor.vendor_id == None)
     #         )
-
+    app_data = AppSettingsApi.get_entities()
     return render_template(
-        'index.html',
+        "index.html",
         orders=orders,
         dates=dates,
         filter_from=filter_from,
         filter_focus=filter_focus,
         filter_disapproved=filter_disapproved,
         merge_form=MergeOrdersForm(),
-        save_form=SaveOrdersForm(orders=[order['id'] for order in orders])
+        save_form=SaveOrdersForm(orders=[order["id"] for order in orders]),
+        alert=app_data["alert"] if app_data else None,
     )
 
 
-@bp.route('/orders/merge/', methods=['POST'])
+@bp.route("/orders/merge/", methods=["POST"])
 @login_required
-@role_required(['admin', 'initiative', 'purchaser'])
+@role_required(["admin", "initiative", "purchaser"])
 def MergeOrders():
-    return '<p>MergeOrders</p>'
+    return "<p>MergeOrders</p>"
     # form = MergeOrdersForm()
     # if form.validate_on_submit():
     #     orders_list = form.orders.data
@@ -233,106 +227,108 @@ def MergeOrders():
     # return redirect(url_for('main.show_index'))
 
 
-@bp.route('/orders/save/', methods=['POST'])
+@bp.route("/orders/save/", methods=["POST"])
 @login_required
-@role_forbidden(['default'])
-def SaveOrders():
-    return '<p>SaveOrders</p>'
-    # form = SaveOrdersForm()
-    # if form.validate_on_submit():
-    #     orders_list = form.orders.data
-    #     if not isinstance(orders_list, list):
-    #         flash('Некорректный список заявок.')
-    #         return redirect(url_for('main.show_index'))
+@role_forbidden(["default"])
+def save_orders():
+    form = SaveOrdersForm()
+    if form.validate_on_submit():
+        orders_list = form.orders.data
+        if not isinstance(orders_list, list):
+            flash("Некорректный список заявок.")
+            return redirect(url_for("main.show_index"))
 
-    #     orders = []
+        orders = OrderApi.get_entities(ids=orders_list)
 
-    #     orders = Order.query.filter(Order.id.in_(orders_list), Order.hub_id == current_user.hub_id)
-    #     if current_user.role == UserRoles.initiative:
-    #         orders = orders.filter(Order.initiative_id == current_user.id)
+        if not orders:
+            flash("Некорректный список заявок.")
+            return redirect(url_for("main.show_index"))
 
-    #     orders = orders.all()
+        wb = Workbook()
 
-    #     wb = Workbook()
+        ws = wb.active
 
-    #     ws = wb.active
+        ws["A1"] = "Номер"
+        ws["B1"] = "Дата"
+        ws["C1"] = "Проект"
+        ws["D1"] = "Объект"
+        ws["E1"] = "Сумма"
+        ws["F1"] = "Позиций"
+        ws["G1"] = "Статус"
+        ws["H1"] = "Инициатор"
+        ws["I1"] = "Статья БДР"
+        ws["J1"] = "Статья БДДС"
+        ws["K1"] = "Кем согласована"
+        ws["L1"] = "Ждём согласования"
+        ws["M1"] = "Категории"
 
-    #     ws['A1'] = 'Номер'
-    #     ws['B1'] = 'Дата'
-    #     ws['C1'] = 'Проект'
-    #     ws['D1'] = 'Объект'
-    #     ws['E1'] = 'Сумма'
-    #     ws['F1'] = 'Позиций'
-    #     ws['G1'] = 'Статус'
-    #     ws['H1'] = 'Инициатор'
-    #     ws['I1'] = 'Статья БДР'
-    #     ws['J1'] = 'Статья БДДС'
-    #     ws['K1'] = 'Кем согласована'
-    #     ws['L1'] = 'Ждём согласования'
-    #     ws['M1'] = 'Категории'
+        for i, order in enumerate(orders, start=2):
+            ws.cell(row=i, column=1, value=order["number"])
+            ws.cell(row=i, column=2, value=order["timestamp"])
+            ws.cell(
+                row=i,
+                column=3,
+                value=order["project"] or "",
+            )
+            ws.cell(row=i, column=4, value=order["site"] or "")
+            ws.cell(row=i, column=5, value=order["total"])
+            ws.cell(row=i, column=6, value=len(order["products"]))
+            ws.cell(row=i, column=7, value=str(order["status"]["pretty"]))
+            ws.cell(row=i, column=8, value=order["initiative"]["name"])
+            ws.cell(
+                row=i,
+                column=9,
+                value=order["income"] or "",
+            )
+            ws.cell(row=i, column=10, value=order["cashflow"] or "")
+            ws.cell(
+                row=i,
+                column=11,
+                value=", ".join(pos for pos in order["positions"]["approved"])
+                if order["positions"] and "approved" in order["positions"]
+                else "",
+            )
+            ws.cell(
+                row=i,
+                column=12,
+                value=", ".join(pos for pos in order["positions"]["waiting"])
+                if order["positions"] and "waiting" in order["positions"]
+                else "",
+            )
+            ws.cell(
+                row=i,
+                column=13,
+                value=", ".join(order["categories"]),
+            )
 
-    #     for i, order in enumerate(orders, start=2):
-    #         ws.cell(row=i, column=1, value=order.number)
-    #         ws.cell(row=i, column=2, value=datetime.fromtimestamp(order.create_timestamp))
-    #         if order.site is not None:
-    #             ws.cell(row=i, column=3, value=order.site.project.name)
-    #             ws.cell(row=i, column=4, value=order.site.name)
-    #         ws.cell(row=i, column=5, value=order.total)
-    #         ws.cell(row=i, column=6, value=len(order.products))
-    #         ws.cell(row=i, column=7, value=str(order.status))
-    #         ws.cell(row=i, column=8, value=order.initiative.name)
-    #         ws.cell(
-    #             row=i,
-    #             column=9,
-    #             value=order.income_statement.name if order.income_statement is not None else ''
-    #         )
-    #         ws.cell(
-    #             row=i,
-    #             column=10,
-    #             value=order.cashflow_statement.name if order.cashflow_statement is not None else ''
-    #         )
-    #         ws.cell(
-    #             row=i,
-    #             column=11,
-    #             value=', '.join(
-    #                 pos.position.name for pos in order.approvals if pos.approved is True
-    #             )
-    #         )
-    #         ws.cell(
-    #             row=i,
-    #             column=12,
-    #             value=', '.join(
-    #                 pos.position.name for pos in order.approvals if pos.approved is False
-    #             )
-    #         )
-    #         ws.cell(row=i, column=13, value=', '.join([cat.name for cat in order.categories]))
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return Response(
+            buffer,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment;filename=export.xlsx"},
+        )
 
-    #     data = save_virtual_workbook(wb)
-    #     return Response(
-    #         data,
-    #         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    #         headers={'Content-Disposition': 'attachment;filename=export.xlsx'}
-    #     )
-
-    # for error in form.orders.errors:
-    #     flash(error)
-    # return redirect(url_for('main.show_index'))
+    for error in form.orders.errors:
+        flash(error)
+    return redirect(url_for("main.show_index"))
 
 
-@bp.route('/support/call/', methods=['POST'])
+@bp.route("/support/call/", methods=["POST"])
 @login_required
-@role_forbidden(['default'])
+@role_forbidden(["default"])
 def call_support():
-    comment = request.form.get('comment', '', type=str)
+    comment = request.form.get("comment", "", type=str)
     if len(comment) > 0 and len(comment) < 2048:
         SendEmail(
-            'Обращение в поддержку',
-            current_app.config['MAIL_USERNAME'],
-            [current_app.config['ADMIN_EMAIL']],
-            text_body=render_template('email/support.txt', comment=comment),
-            html_body=render_template('email/support.html', comment=comment),
+            "Обращение в поддержку",
+            current_app.config["MAIL_USERNAME"],
+            [current_app.config["ADMIN_EMAIL"]],
+            text_body=render_template("email/support.txt", comment=comment),
+            html_body=render_template("email/support.html", comment=comment),
         )
-        flash('Сообщение отправлено в поддержку.')
+        flash("Сообщение отправлено в поддержку.")
     else:
-        flash('Сообщение некорректной длины (максимум 2048 символов).')
-    return redirect(url_for('main.show_index'))
+        flash("Сообщение некорректной длины (максимум 2048 символов).")
+    return redirect(url_for("main.show_index"))

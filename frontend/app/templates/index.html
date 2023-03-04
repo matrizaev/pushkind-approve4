@@ -115,10 +115,26 @@
 </form>
 {% endif %}
 
-<form id="saveForm" class="d-none" method="POST" action="{{ url_for('main.SaveOrders') }}">
+<form id="saveForm" class="d-none" method="POST" action="{{ url_for('main.save_orders') }}">
     {{ save_form.csrf_token(id=False) }}
     {{ save_form.orders(id="saveOrders", class_="d-none") }}
 </form>
+
+{% if alert %}
+    <div class="modal" tabindex="-1" id="alertModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Предупреждение</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ alert }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
 
 {% endblock %}
 
@@ -126,6 +142,12 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+
+        let alertModal = document.getElementById('alertModal');
+        if (alertModal){
+            alertModal = new bootstrap.Modal(alertModal, {});
+            alertModal.show();
+        }
 
         var isMerging = false;
         var mergeOrders = [];
