@@ -1,9 +1,7 @@
-import io
 from base64 import b64encode
 from pathlib import Path
 from zipfile import ZipFile
 
-import pandas as pd
 from app.api.hub import CategoryApi, HubApi, ProductApi, VendorApi
 from app.api.user import UserApi
 from app.main import bp
@@ -95,7 +93,7 @@ def show_vendors():
 
 @bp.route("/products/upload", methods=["POST"])
 @login_required
-@role_forbidden(["default", "initiative", "supervisor"])
+@role_forbidden(["default", "initiative", "supervisor", "validator"])
 def upload_products():
 
     if current_user.role.name == "vendor":
@@ -130,7 +128,7 @@ def upload_products():
 
 @bp.route("/products/upload/images", methods=["POST"])
 @login_required
-@role_forbidden(["default", "initiative", "supervisor"])
+@role_forbidden(["default", "initiative", "supervisor", "validator"])
 def upload_images():
 
     if current_user.role.name == "vendor":
@@ -180,7 +178,7 @@ def upload_images():
 
 @bp.route("/products/download", methods=["GET"])
 @login_required
-@role_forbidden(["default", "initiative", "supervisor"])
+@role_forbidden(["default", "initiative", "supervisor", "validator"])
 def download_products():
 
     if current_user.role.name == "vendor":
@@ -207,7 +205,7 @@ def download_products():
 
 @bp.route("/products/<int:product_id>/upload/image", methods=["POST"])
 @login_required
-@role_forbidden(["default", "initiative", "supervisor"])
+@role_forbidden(["default", "initiative", "supervisor", "validator"])
 def upload_product_image(product_id):
     if current_user.role.name == "vendor":
         vendor = first(VendorApi.get_entities())
