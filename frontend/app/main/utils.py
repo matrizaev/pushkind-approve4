@@ -1,15 +1,22 @@
-from functools import wraps
+import io
+import re
 
-from flask import current_app
-from flask import render_template, url_for, jsonify
-from flask_login import current_user
-
-from app.email import SendEmail
-
+import pandas as pd
 
 ################################################################################
 # Utilities
 ################################################################################
+
+MANDATORY_COLUMNS = [
+    "name",
+    "sku",
+    "price",
+    "measurement",
+    "category",
+    "description",
+    "input_required",
+]
+
 
 def send_email_notification(kind, order, recipients_id=[], data=None):
     pass
@@ -72,3 +79,26 @@ def GetNewOrderNumber():
     # order_id_bias = settings.order_id_bias if settings is not None else 0
     # count = db.session.query(Order).count() + order_id_bias
     # return f'{count}'
+
+
+def products_json_to_excel(products: list[dict]) -> io.BytesIO:
+
+    df = pd.json_normalize(products)
+    df.drop(
+        ["id", "image", "vendor.name", "vendor.name", "vendor.email", "category.code"],
+        axis="columns",
+        inplace=True,
+    )
+    df.rename({"category.name": "category"}, inplace=True, axis=1)
+    df.columns = [col.replace("options.", "") for col in df.columns]
+    extra_columns = list(df.columns.difference(MANDATORY_COLUMNS))
+    for col in extra_columns:
+        df[col] = df[col].apply(
+            lambda values: ", ".join(re.sub(r"\"|'", "", str(v)) for v in values)
+            if isinstance(values, list)
+            else None
+        )
+    buffer = io.BytesIO()
+    df.to_excel(buffer, index=False)
+    buffer.seek(0)
+    return buffer

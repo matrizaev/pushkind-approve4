@@ -17,9 +17,9 @@
 
 <div class="container my-2">
     {% if current_user.role.name != 'vendor' %}
-    <div class="row">
+    <div class="row justify-content-center">
         {% if current_user.role.name in ('admin', 'supervisor') %}
-        <div class="col">
+        <div class="col-md-4">
             <form action="{{url_for('main.switch_hub')}}" method="POST">
                 <select class="form-select" aria-label="Switch Hub" name="hub_id" id="switchHubFormSelect">
                     <option disabled {%if current_user.hub_id is none %}selected{%endif%}>Выбор хаба</option>
@@ -61,7 +61,7 @@
             {% endif %}
         </div>
         {% endif %}
-        <div class="col">
+        <div class="col-md-4">
             <form action="{{url_for('main.show_vendors')}}" method="GET">
                 <select class="form-select" aria-label="Select Vendor" id="switchVendorFormSelect" name="vendor_id">
                     <option disabled {%if vendor_id is none %}selected{%endif%}>Выбор поставщика</option>
@@ -104,7 +104,7 @@
     {% endif %}
     {% if vendor_id is not none %}
     <div class="row gx-1 justify-content-center my-2">
-        <div class="col-5 mb-1">
+        <div class="col-md-6 mb-1">
             <input class="form-control" id="productFilter" type="text" placeholder="Фильтр..">
         </div>
         {% if queue_size == 0 and current_user.role.name not in ('default', 'initiative', 'supervisor') %}
@@ -160,12 +160,14 @@
                 <ol class="my-0">
                     <li>
                         Скачайте текущий каталог и используйте полученный Excel-файл как шаблон.
+                        Помимо обязательных столбцов вы можете добавить столбцы с опциями товаров.
+                        Значения ячеек таких столбцов - список опций через запятую.
                     </li>
                     <li>
                         Загрузите обновленный каталог из Excel.
                     </li>
                     <li>
-                        Загрузите картинки в zip-архиве (имя файла = "артикул товара")
+                        Загрузите картинки в zip-архиве (имя файла = "артикул товара") или добавьте по одной (ссылка "фото")
                     </li>
                 </ol>
             </div>
@@ -178,52 +180,60 @@
 <div class="container">
     <div id="productList">
         {% for product in products %}
-        <div class="row my-1 bg-white rounded" data-id="{{product.id}}">
-            <div class="col-auto">
-                {% if current_user.role.name not in ('default', 'initiative', 'supervisor') %}
+        <div class="row my-1 bg-white rounded">
+            <div class="col-auto text-center">
                 <form method="POST" enctype="multipart/form-data" id="uploadProductImageForm{{product.id}}"
                     action="{{url_for('main.upload_product_image', product_id=product.id, vendor_id=vendor_id)}}">
                     {{ forms['product_image_form'].csrf_token(id=False) }}
                     <label for="uploadProductImageButton{{product.id}}">
                         <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64"
                             class="uploadImageIcon">
+                        <br>
+                        <span class="text-primary">фото</span>
                     </label>
                     <input id="uploadProductImageButton{{product.id}}" type="file" name="image"
                         class="d-none uploadProductImageButton" accept="image/png,image/jpeg">
                 </form>
-                {% else %}
-                <img src="{{product.image or config['PLACEHOLDER_IMAGE']}}" height="64" width="64"
-                    class="uploadImageIcon">
-                {% endif %}
             </div>
-            <div class="col col-sm-6 overflow-hidden selectable">
-                <h5>{{product.name}}</h5>
-                <small>Артикул: {{product.sku}}</small>
-            </div>
-            <div class="col-sm overflow-hidden pt-sm-4">
-                {{ product.category.name }}
-            </div>
-            <div class="col overflow-hidden pt-sm-4 pt-2">
-                <strong>{{ '{:,.2f}'.format(product.price) }}</strong> ₽/{{ product.measurement }}
-            </div>
-            {% if product.options %}
-            <div class="col-12">
-                {% for rows in product.options|batch(4) %}
-                <div class="row">
-                    {% for option in rows %}
-                    <div class="col-sm-3 my-1">
-                        <select class="form-select">
-                            <option selected disabled>{{ option }}</option>
-                            {% for value in product.options[option]%}
-                            <option value="{{value}}">{{value}}</option>
-                            {% endfor %}
-                        </select>
+            <div class="col">
+                <div class="row" data-id="{{product.id}}">
+                    <div class="col col-sm-6 overflow-hidden selectable">
+                        <h5>{{product.name}}</h5>
+                        <small>Артикул: {{product.sku}}</small>
                     </div>
-                    {% endfor %}
+                    <div class="col-sm overflow-hidden pt-sm-4 selectable">
+                        {{ product.category.name }}
+                    </div>
+                    <div class="col overflow-hidden pt-sm-4 pt-2 selectable">
+                        <strong>{{ '{:,.2f}'.format(product.price) }}</strong> ₽/{{ product.measurement }}
+                    </div>
+                    {% if product.options %}
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-auto fw-bold pt-2">
+                                Опции:
+                            </div>
+                            <div class="col">
+                                {% for rows in product.options|batch(4) %}
+                                <div class="row">
+                                    {% for option in rows %}
+                                    <div class="col-sm-3 my-1">
+                                        <select class="form-select">
+                                            <option selected disabled>{{ option }}</option>
+                                            {% for value in product.options[option]%}
+                                            <option value="{{value}}">{{value}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            {% endif %}
         </div>
         <div class="modal fade" id="descriptionModal{{product.id}}" tabindex="-1"
             aria-labelledby="descriptionModalLabel{{product.id}}" aria-hidden="true">
