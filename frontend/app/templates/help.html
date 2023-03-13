@@ -159,7 +159,7 @@
                 <div class="accordion-body">
                     <div class="row">
                         <div class="col">
-                            <input class="form-control" id="projectFilter" type="text" placeholder="Фильтр..">
+                            <input class="form-control" id="projectFilter" type="text" placeholder="Фильтр...">
                         </div>
                     </div>
                     <div class="table-responsive-md">
@@ -208,7 +208,7 @@
                 <div class="accordion-body">
                     <div class="row">
                         <div class="col">
-                            <input class="form-control" id="categoryFilter" type="text" placeholder="Фильтр..">
+                            <input class="form-control" id="categoryFilter" type="text" placeholder="Фильтр...">
                         </div>
                     </div>
                     <div class="table-responsive-md">
@@ -257,8 +257,8 @@
         // Project Filter
         const projectFilter = document.querySelector('#projectFilter');
         if (projectFilter) {
-            projectFilter.addEventListener('keyup', function () {
-                const value = this.value.toLowerCase();
+            projectFilter.addEventListener('keyup', () => {
+                const value = projectFilter.value.toLowerCase();
                 const projectRows = document.querySelectorAll('.project');
                 projectRows.forEach((projectRow) => {
                     const text = projectRow.textContent.toLowerCase();
@@ -271,8 +271,8 @@
         // Category Filter
         const categoryFilter = document.querySelector('#categoryFilter');
         if (categoryFilter) {
-            categoryFilter.addEventListener('keyup', function () {
-                const value = this.value.toLowerCase();
+            categoryFilter.addEventListener('keyup', () => {
+                const value = categoryFilter.value.toLowerCase();
                 const categoryRows = document.querySelectorAll('.category');
                 categoryRows.forEach((categoryRow) => {
                     const text = categoryRow.textContent.toLowerCase();

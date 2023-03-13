@@ -4,7 +4,7 @@
 <div class="container my-2">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <input class="form-control" id="orderFilter" type="text" placeholder="Фильтр..">
+            <input class="form-control" id="orderFilter" type="text" placeholder="Фильтр...">
         </div>
     </div>
     <div class="row justify-content-center">
@@ -206,7 +206,7 @@
 
         const orderFilter = document.getElementById("orderFilter");
         if (orderFilter)
-            orderFilter.addEventListener("keyup",() => {
+            orderFilter.addEventListener("keyup", () => {
                 let value = orderFilter.value.toLowerCase();
                 let order_list = [];
                 let orderTotal = 0;

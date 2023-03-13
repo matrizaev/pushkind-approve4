@@ -105,7 +105,7 @@
     {% if vendor_id is not none %}
     <div class="row gx-1 justify-content-center my-2">
         <div class="col-md-6 mb-1">
-            <input class="form-control" id="productFilter" type="text" placeholder="Фильтр..">
+            <input class="form-control" id="productFilter" type="text" placeholder="Фильтр...">
         </div>
         {% if queue_size == 0 and current_user.role.name not in ('default', 'initiative', 'supervisor') %}
         <div class="col-auto">

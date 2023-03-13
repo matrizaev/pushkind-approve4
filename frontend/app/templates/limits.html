@@ -7,7 +7,7 @@
 <div class="container my-2">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <input class="form-control" id="limitFilter" type="text" placeholder="Фильтр..">
+            <input class="form-control" id="limitFilter" type="text" placeholder="Фильтр...">
         </div>
     </div>
     {% if show_remove_limit %}
@@ -114,8 +114,8 @@
         // Limit Filter
         const limitFilter = document.querySelector('#limitFilter');
         if (limitFilter) {
-            limitFilter.addEventListener('keyup', function () {
-                const value = this.value.toLowerCase();
+            limitFilter.addEventListener('keyup', () => {
+                const value = limitFilter.value.toLowerCase();
                 const limitRows = document.querySelectorAll('.limit');
                 limitRows.forEach((limitRow) => {
                     const text = limitRow.textContent.toLowerCase();
