@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 
 {% block styles%}
+    <style>
+        @keyframes addedToCart {
+            from {background-color: #089feb;}
+            to {background-color: #157347;}
+        }
+        .addedToCart {
+            animation-name: addedToCart;
+            animation-duration: 2s;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -24,7 +34,7 @@
                 class="text-decoration-none badge bg-white fw-normal text-secondary border">{{ vendor.name }}</a>
             {% endif %}
             {% endfor %}
-            <a href="{{ url_for('main.shop_products',cat_id=category.id) }}"
+            <a href="{{ url_for('main.shop_products', cat_id=category.id) }}"
                 class="text-decoration-none badge {% if vendor_id is none %}bg-primary{% else %}bg-white fw-normal text-secondary border{% endif %}">все</a>
         </div>
     </div>
@@ -133,12 +143,34 @@
                                     </div>
                                 </div>
                                 <div class="col-sm">
+                                    <div class="row my-1 py-1 d-none border rounded bg-yellow">
+                                        <div class="col">
+                                            <div class="mb-1">
+                                                <label
+                                                    for="descriptionModalProductClones{{product.id}}"
+                                                    class="form-label">
+                                                    Выберите ранее сохраненный вариант для просмотра/изменения или добавьте новый
+                                                </label>
+                                                <select class="form-select selectClones" id="descriptionModalProductClones{{product.id}}">
+                                                </select>
+                                            </div>
+                                            <div class="text-center">
+                                                <button type="button" class="btn btn-primary addToCart">Добавить</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h6 class="text-center">
+                                        Редактирование варианта
+                                    </h6>
                                     <div class="row">
                                         <div class="col">
-                                            <label for="descriptionModalProductText{{product.id}}"
-                                                class="form-label">Для некоторых товаров можно добавить
-                                                пояснение/опции</label>
-                                            <textarea class="form-control" rows="3" placeholder="Комментарий"
+                                            <label
+                                                for="descriptionModalProductText{{product.id}}"
+                                                class="form-label">
+                                                Для некоторых товаров можно добавить
+                                                пояснение/опции
+                                            </label>
+                                            <textarea class="form-control productText" rows="3" placeholder="Комментарий"
                                                 id="descriptionModalProductText{{product.id}}"></textarea>
                                         </div>
                                     </div>
@@ -147,7 +179,7 @@
                                     <div class="row">
                                         {% for option in rows %}
                                         <div class="col-md-4 my-1">
-                                            <select class="form-select" data-name="{{option}}">
+                                            <select class="form-select productOption" data-name="{{option}}">
                                                 <option selected disabled value="0">{{ option }}</option>
                                                 {% for value in product.options[option]%}
                                                 <option value="{{value}}">{{value}}</option>
@@ -160,28 +192,18 @@
                                     {% endif %}
                                     <div class="row my-1">
                                         <div class="col">
-                                            <div class="input-group mb-3">
+                                            <div class="input-group">
                                                 <span class="input-group-text">Количество</span>
-                                                <input type="number" class="form-control" min="0" step="1"
-                                                    aria-label="Количество" value="0">
+                                                <input type="number" class="form-control productQuantity" min="0" step="1"
+                                                    aria-label="Количество" value="">
                                                 <span class="input-group-text">{{product.measurement}}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col text-end">
-                                            <button type="button" class="btn btn-primary addToCart text-white"
-                                                data-bs-dismiss="modal">Сохранить</button>
-                                            <button type="button" class="btn btn-primary addToCart text-white"
-                                                data-bs-dismiss="modal">Клонировать</button>
-                                        </div>
-                                    </div>
                                     <div class="row justify-content-center my-1">
                                         <div class="col-auto">
-                                            <nav>
-                                                <ul class="pagination">
-                                                </ul>
-                                            </nav>
+                                            <button type="button" class="btn btn-primary addToCart">Сохранить</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                                         </div>
                                     </div>
                                 </div>
@@ -211,17 +233,6 @@
             window.location = "{{ url_for('main.shop_categories') }}";
         });
 
-        const addToCartButtons = document.querySelectorAll(".addToCart");
-        addToCartButtons.forEach(addToCartButton => {
-            addToCartButton.addEventListener("click", event => {
-                const currentButton = event.target;
-                const form = currentButton.closest('.modal');
-                const itemPos = currentButton.dataset.pos;
-                AddToCart(form, itemPos);
-                SetInCartText();
-            });
-        });
-
         const productFilter = document.querySelector("#productFilter");
         const productList = document.querySelector("#productList");
 
@@ -236,8 +247,23 @@
             });
         });
 
-        const selectableElements = document.querySelectorAll(".selectable");
+        const addToCartButtons = document.querySelectorAll(".addToCart");
+        addToCartButtons.forEach(button => {
+            button.addEventListener("click", (event) => {
+                button.classList.add('addedToCart');
+                HandleAddToCart(event);
+            });
+            button.addEventListener("animationend", (event) => {
+                button.classList.remove('addedToCart');
+            });
+        });
 
+        const selectClones = document.querySelectorAll(".selectClones");
+        selectClones.forEach(select => {
+            select.addEventListener("change", HandleProductModalChangeClone);
+        });
+
+        const selectableElements = document.querySelectorAll(".selectable");
         selectableElements.forEach(selectable => {
             selectable.addEventListener("click", event => {
                 const productId = Number(selectable.dataset.id);
@@ -246,47 +272,15 @@
                 if (!descriptionModal) {
                     descriptionModal = new bootstrap.Modal(modalElement, {});
                 }
-                const items = GetShoppingCart().filter((item, index) => {
-                    item.pos = index;
-                    return item.id === productId
-                });
-                const addToCartButton = modalElement.querySelectorAll("button.addToCart")[1];
-                const pagination = modalElement.querySelector('.pagination');
-                pagination.innerHTML = "";
-                const saveToCartButton = modalElement.querySelector("button.addToCart");
-                if (items.length > 0) {
-                    addToCartButton.classList.remove("d-none");
-                    let content = document.createDocumentFragment();
-                    items.forEach((item, index) => {
-                        const li = document.createElement('li');
-                        li.classList.add('page-item', 'cartItemPage');
-                        let a = document.createElement('a');
-                        a.classList.add('page-link');
-                        a.textContent = index + 1;
-                        a.dataset.pos = item.pos;
-                        a.href = "#"
-                        a.addEventListener('click', HandleCartItemPageClick);
-                        li.appendChild(a);
-                        if (index == 0) {
-                            li.classList.add('active');
-                        }
-                        content.appendChild(li);
-                    });
-                    pagination.appendChild(content);
-                    saveToCartButton.dataset.pos = items[0].pos;
-                    SyncProductModal(modalElement, items[0]);
-                }
-                else {
-                    addToCartButton.classList.add("d-none");
-                    saveToCartButton.removeAttribute("data-pos");
-                }
+                SyncProductModal(modalElement, null);
                 descriptionModal.show();
             });
         });
+
         const modals = document.querySelectorAll(".modal");
         modals.forEach(modal => {
             modal.addEventListener('shown.bs.modal', event => {
-                let quantityInput = modal.querySelector("input");
+                let quantityInput = modal.querySelector(".productQuantity");
                 quantityInput.focus();
             });
         });
