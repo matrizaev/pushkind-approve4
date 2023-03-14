@@ -242,7 +242,7 @@
             const orderRows = orderList.querySelectorAll(".order");
             if (filterValue.length > 0){
                 orderRows.forEach((orderRow) => {
-                    const show = orderRow.textContent.toLowerCase().indexOf(value) > -1;
+                    const show = orderRow.textContent.toLowerCase().indexOf(filterValue) > -1;
                     orderRow.style.display = show ? "flex" : "none";
                 });
             } else {
