@@ -180,7 +180,7 @@
 <div class="container">
     <div id="productList">
         {% for product in products %}
-        <div class="row my-1 bg-white rounded">
+        <div class="row my-1 bg-white rounded product">
             <div class="col-auto text-center">
                 <form method="POST" enctype="multipart/form-data" id="uploadProductImageForm{{product.id}}"
                     action="{{url_for('main.upload_product_image', product_id=product.id, vendor_id=vendor_id)}}">
@@ -275,6 +275,12 @@
         </div>
         {% endfor %}
     </div>
+
+    <nav aria-label="Products pagination">
+        <ul class="pagination justify-content-center" id="productPagination">
+        </ul>
+    </nav>
+
 </div>
 
 
@@ -408,8 +414,11 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+
+        InstantiatePagination("productList", "product", "productPagination", 10);
 
         // Switch Hub Form Select
         const switchHubFormSelect = document.querySelector('#switchHubFormSelect');
@@ -451,19 +460,24 @@
             });
         });
 
-        // Product Filter
-        const productFilter = document.querySelector('#productFilter');
-        if (productFilter) {
-            productFilter.addEventListener('keyup', () => {
-                const value = productFilter.value.toLowerCase();
-                const productRows = document.querySelectorAll('#productList > .row');
-                productRows.forEach((productRow) => {
-                    const text = productRow.textContent.toLowerCase();
-                    const show = text.indexOf(value);
-                    productRow.style.display = show > -1 ? 'flex' : 'none'
+
+        const productFilter = document.querySelector("#productFilter");
+        const productList = document.querySelector("#productList");
+
+        productFilter.addEventListener("keyup", () => {
+            const filterValue = productFilter.value.toLowerCase();
+            const productRows = productList.querySelectorAll(".product");
+            if (filterValue.length > 0){
+                productRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    const showRow = rowText.indexOf(filterValue) > -1;
+                    row.style.display = showRow ? "flex" : "none";
                 });
-            });
-        }
+            } else {
+                const page = document.querySelector("#productPagination li.active");
+                page.click();
+            }
+        });
 
         // Selectable Products
         const selectableProducts = document.querySelectorAll('.selectable');
