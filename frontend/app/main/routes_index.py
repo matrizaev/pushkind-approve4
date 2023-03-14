@@ -324,7 +324,7 @@ def call_support():
         SendEmail(
             "Обращение в поддержку",
             current_app.config["MAIL_USERNAME"],
-            [current_app.config["ADMIN_EMAIL"]],
+            [current_app.config["ADMIN_EMAIL"], current_user.email],
             text_body=render_template("email/support.txt", comment=comment),
             html_body=render_template("email/support.html", comment=comment),
         )
