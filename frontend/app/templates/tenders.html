@@ -9,7 +9,7 @@
         </div>
         {% if current_user.role.name in ('admin', 'purchaser') %}
         <div class="col-auto">
-            <a class="btn btn-primary" href="{{url_for('static', filename='upload/tenders.xlsx')}}">
+            <a class="btn btn-primary text-white" href="{{url_for('static', filename='upload/tenders.xlsx')}}">
                 <i class="bi bi-cloud-download"></i>
             </a>
         </div>
@@ -18,7 +18,7 @@
                 action="{{url_for('main.add_tender')}}">
                 {{ form.csrf_token(id=False) }}
                 <label for="addTenderFormSubmit">
-                    <span class="btn btn-warning mb-1">
+                    <span class="btn btn-warning text-white mb-1">
                         <i class="bi bi-cloud-upload"></i>
                     </span>
                 </label>

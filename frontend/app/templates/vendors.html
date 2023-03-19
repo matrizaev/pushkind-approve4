@@ -109,7 +109,7 @@
         </div>
         {% if queue_size == 0 and current_user.role.name not in ('default', 'initiative', 'supervisor') %}
         <div class="col-auto">
-            <a class="btn btn-primary" href="{{url_for('main.download_products', vendor_id=vendor_id)}}">
+            <a class="btn btn-primary text-white" href="{{url_for('main.download_products', vendor_id=vendor_id)}}">
                 <i class="bi bi-cloud-download"></i>
             </a>
         </div>
@@ -118,7 +118,7 @@
                 action="{{url_for('main.upload_products', vendor_id=vendor_id)}}">
                 {{ forms['products_form'].csrf_token(id=False) }}
                 <label for="uploadProductsButton">
-                    <span class="btn btn-warning mb-1">
+                    <span class="btn btn-warning text-white mb-1">
                         <i class="bi bi-cloud-upload"></i>
                     </span>
                 </label>
@@ -130,7 +130,7 @@
                 action="{{url_for('main.upload_images', vendor_id=vendor_id)}}">
                 {{ forms['images_form'].csrf_token(id=False) }}
                 <label for="uploadImagesButton">
-                    <span class="btn btn-success mb-1">
+                    <span class="btn btn-success text-white mb-1">
                         <i class="bi bi-card-image"></i>
                     </span>
                 </label>
