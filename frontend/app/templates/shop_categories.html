@@ -225,9 +225,12 @@
             const limitElements = document.querySelectorAll(".limit");
             limitElements.forEach((element) => {
                 let show = element.dataset.project == id;
-                element.style.display = show ? "block" : "none";
-                if (show)
+                if (show){
+                    element.classList.remove("d-none")
                     show_limit_alert |= element.dataset.overlimit;
+                }
+                else
+                    element.classList.add("d-none");
             });
             if (show_limit_alert)
                 limitAlert.classList.remove("d-none");
@@ -268,7 +271,10 @@
             cards.forEach(function (card) {
                 const cardText = card.textContent.toLowerCase();
                 const show = cardText.indexOf(value) > -1;
-                card.style.display = show ? "flex" : "none";
+                if (show)
+                    card.classList.remove("d-none")
+                else
+                    card.classList.add("d-none");
             });
         });
     });

@@ -120,7 +120,10 @@
                 limitRows.forEach((limitRow) => {
                     const text = limitRow.textContent.toLowerCase();
                     const show = text.indexOf(value);
-                    limitRow.style.display = show > -1 ? 'flex' : 'none'
+                    if (show > -1)
+                        limitRow.classList.remove("d-none")
+                    else
+                        limitRow.classList.add("d-none");
                 });
             });
         }

@@ -263,7 +263,10 @@
                 projectRows.forEach((projectRow) => {
                     const text = projectRow.textContent.toLowerCase();
                     const show = text.indexOf(value);
-                    projectRow.style.display = show > -1 ? 'table-row' : 'none'
+                    if (show > -1)
+                        projectRow.classList.remove("d-none")
+                    else
+                        projectRow.classList.add("d-none");
                 });
             });
         }
@@ -277,7 +280,10 @@
                 categoryRows.forEach((categoryRow) => {
                     const text = categoryRow.textContent.toLowerCase();
                     const show = text.indexOf(value);
-                    categoryRow.style.display = show > -1 ? 'table-row' : 'none'
+                    if (show > -1)
+                        categoryRow.classList.remove("d-none")
+                    else
+                        categoryRow.classList.add("d-none");
                 });
             });
         }

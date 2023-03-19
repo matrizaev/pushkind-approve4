@@ -148,6 +148,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
 
+        const orderFilter = document.getElementById("orderFilter");
         const orderList = document.getElementById("orderList");
 
         const updateVisibleOrdersTotal = () => {
@@ -155,7 +156,7 @@
             let order_list = [];
             let orderTotal = 0;
             orderRows.forEach((orderRow) => {
-                if (orderRow.style.display != "none") {
+                if (orderFilter.value.length === 0 || !orderRow.classList.contains("d-none")) {
                     order_list.push(orderRow.dataset.id);
                     orderTotal += Number(orderRow.dataset.total);
                 }
@@ -172,7 +173,7 @@
 
         const pages = document.querySelectorAll("#orderPagination li");
         pages.forEach(page => {
-            page.addEventListener("click", updateVisibleOrdersTotal);
+            page.addEventListener("click", () => orderFilter.value = "");
         })
 
         let alertModal = document.getElementById('alertModal');
@@ -236,14 +237,16 @@
                 });
             });
 
-        const orderFilter = document.getElementById("orderFilter");
         orderFilter.addEventListener("keyup", () => {
             let filterValue = orderFilter.value.toLowerCase();
             const orderRows = orderList.querySelectorAll(".order");
             if (filterValue.length > 0){
                 orderRows.forEach((orderRow) => {
                     const show = orderRow.textContent.toLowerCase().indexOf(filterValue) > -1;
-                    orderRow.style.display = show ? "flex" : "none";
+                    if (show)
+                        orderRow.classList.remove("d-none")
+                    else
+                        orderRow.classList.add("d-none");
                 });
             } else {
                 const page = document.querySelector("#orderPagination li.active");

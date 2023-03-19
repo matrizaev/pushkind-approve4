@@ -61,7 +61,10 @@
                 eventRows.forEach((eventRow) => {
                     const text = eventRow.textContent.toLowerCase();
                     const show = text.indexOf(value);
-                    eventRow.style.display = show > -1 ? 'flex' : 'none'
+                    if (show > -1)
+                        eventRow.classList.remove("d-none")
+                    else
+                        eventRow.classList.add("d-none");
                 });
             });
         }

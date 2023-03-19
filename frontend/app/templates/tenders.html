@@ -94,7 +94,10 @@
                 tenderRows.forEach((tenderRow) => {
                     const text = tenderRow.textContent.toLowerCase();
                     const show = text.indexOf(value);
-                    tenderRow.style.display = show > -1 ? 'flex' : 'none'
+                    if (show)
+                        tenderRow.classList.remove("d-none")
+                    else
+                        tenderRow.classList.add("d-none");
                 });
             });
         }
