@@ -171,6 +171,11 @@
         InstantiatePagination("orderList", "order", "orderPagination", 10, 'orderFilter');
         updateVisibleOrdersTotal();
 
+        const pages = document.querySelectorAll("#orderPagination li");
+        pages.forEach(page => {
+            page.addEventListener("click", updateVisibleOrdersTotal);
+        })
+
         let alertModal = document.getElementById('alertModal');
         if (alertModal){
             alertModal = new bootstrap.Modal(alertModal, {});
